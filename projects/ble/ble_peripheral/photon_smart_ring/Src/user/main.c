@@ -82,10 +82,11 @@ int main(void)
     // Initialize ble stack.
     ble_stack_init(&s_app_ble_callback, &heaps_table); /*< init ble stack*/
 
+    printf("log test success\n");
+
     // loop
     while (1)
     {
-        printf("sfdfdfsdfsfd\n");
         app_log_flush();
         pwr_mgmt_schedule();
     }
