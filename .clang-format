@@ -1,0 +1,82 @@
+---
+# clang-format version 15.0.0
+
+Language: Cpp
+
+# 缩进样式
+IndentWidth: 4
+UseTab: Never
+TabWidth: 4
+UseCRLF: false
+ColumnLimit: 120
+MaxEmptyLinesToKeep: 1
+PointerAlignment: Right # Right, Left
+
+# 对齐方式
+AlignAfterOpenBracket: Align
+AlignArrayOfStructures: Right
+# AlignConsecutiveAssignments: true
+AlignConsecutiveAssignments:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+  AlignCompound: false
+  PadOperators: true
+# AlignConsecutiveDeclarations: true
+AlignConsecutiveDeclarations:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+# AlignConsecutiveMacros: true
+AlignConsecutiveMacros:
+  Enabled: true
+  AcrossEmptyLines: false
+  AcrossComments: false
+AlignEscapedNewlines: Left
+AlignOperands: true
+AlignTrailingComments: true
+
+# 换行设置
+AllowAllArgumentsOnNextLine: true
+AllowAllParametersOfDeclarationOnNextLine: true
+BinPackArguments: true
+BinPackParameters: true
+AllowShortBlocksOnASingleLine: Empty
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortEnumsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: Never
+AllowShortLambdasOnASingleLine: Empty
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakTemplateDeclarations: No
+
+# 括号
+BreakBeforeBraces: Allman # Attach, Linux, Allman
+
+# 对#include进行排序的规则
+IncludeBlocks: Preserve
+SortIncludes: CaseInsensitive
+
+# 缩进
+ContinuationIndentWidth: 4
+BreakBeforeBinaryOperators: None
+IndentCaseLabels: true
+IndentExternBlock: AfterExternBlock
+IndentGotoLabels: true
+IndentPPDirectives: None # None, AfterHash, BeforeHash
+
+# 空格
+SpaceBeforeAssignmentOperators: true
+SpaceBeforeCaseColon: false
+SpaceBeforeCpp11BracedList: true
+SpaceBeforeParens: ControlStatements
+SpacesBeforeTrailingComments: 1
+# SpacesInParens: Never
+SpacesInAngles: Never
+SpacesInCStyleCastParentheses: false
+SpacesInParentheses: false
+SpacesInSquareBrackets: false
+SpacesInContainerLiterals: true
+# 其他
