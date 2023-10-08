@@ -459,6 +459,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\drivers\src\gr55xx_hal_uart.c</FilePath>
             </File>
+            <File>
+              <FileName>gr55xx_hal_calendar.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\drivers\src\gr55xx_hal_calendar.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -493,6 +498,11 @@
               <FileName>app_systick.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\components\app_drivers\src\app_systick.c</FilePath>
+            </File>
+            <File>
+              <FileName>app_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\components\app_drivers\src\app_rtc.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -643,6 +653,11 @@
               <FileName>GR5515_SK.h</FileName>
               <FileType>5</FileType>
               <FilePath>..\..\..\..\..\components\boards\GR5515_SK.h</FilePath>
+            </File>
+            <File>
+              <FileName>user_rtc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\user\user_rtc.c</FilePath>
             </File>
           </Files>
         </Group>

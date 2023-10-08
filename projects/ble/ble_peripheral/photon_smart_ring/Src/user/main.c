@@ -39,16 +39,18 @@
  * INCLUDE FILES
  *****************************************************************************************
  */
-#include "app_log.h"
 #include "custom_config.h"
+
+#include "app_log.h"
 #include "flash_scatter_config.h"
 #include "gr55xx_pwr.h"
 #include "gr55xx_sys.h"
 #include "patch.h"
 #include "scatter_common.h"
+
 #include "user_app.h"
 #include "user_periph_setup.h"
-
+#include "user_rtc.h"
 
 /*
  * GLOBAL VARIABLE DEFINITIONS
@@ -84,9 +86,14 @@ int main(void)
 
     printf("log test success\n");
 
+    rtc_init();
+    rtc_set_alarm();
+
     // loop
     while (1)
     {
+        // uint32_t cur_time = rtc_get_current_time_ms();
+        // printf("cur_time: %u\n", cur_time);
         app_log_flush();
         pwr_mgmt_schedule();
     }
