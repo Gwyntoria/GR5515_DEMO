@@ -10,7 +10,7 @@ TabWidth: 4
 UseCRLF: false
 ColumnLimit: 120
 MaxEmptyLinesToKeep: 1
-PointerAlignment: Right # Right, Left
+PointerAlignment: Left # Right, Left
 
 # 对齐方式
 AlignAfterOpenBracket: Align
@@ -53,7 +53,7 @@ AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: No
 
 # 括号
-BreakBeforeBraces: Allman # Attach, Linux, Allman
+BreakBeforeBraces: Attach # Attach, Linux, Allman
 
 # 对#include进行排序的规则
 IncludeBlocks: Preserve
