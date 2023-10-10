@@ -37,7 +37,11 @@
 #ifndef __GR5515_SK_H__
 #define __GR5515_SK_H__
 
+#include "custom_config.h"
+
 #if APP_DRIVER_USE_ENABLE
+
+#include "app_uart.h"
 
 /*******HCI UART IO CONFIG***********************/
 #define HCI_UART_ID                     APP_UART_ID_0

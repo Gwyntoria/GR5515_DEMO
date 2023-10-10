@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "name": "goodix",
+            "includePath": [
+                "${workspaceFolder}/**",
+                "${workspaceFolder}/projects/ble/ble_peripheral/photon_smart_ring/Src/config/",
+                "${workspaceFolder}/components/boards/"
+            ],
+            "defines": [
+                "_DEBUG",
+                "UNICODE",
+                "_UNICODE"
+            ],
+            "compilerPath": "D:\\Development\\mingw64\\bin\\gcc.exe",
+            "cStandard": "c11",
+            "cppStandard": "gnu++11",
+            "intelliSenseMode": "windows-gcc-x64"
+        }
+    ],
+    "version": 4
+}
