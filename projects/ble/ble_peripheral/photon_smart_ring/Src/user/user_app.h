@@ -65,4 +65,3 @@ void app_connected_handler(uint8_t conn_idx, const gap_conn_cmp_t *p_param);
 void app_disconnected_handler(uint8_t conn_idx, uint8_t reason);
 
 #endif
-

@@ -76,22 +76,28 @@ static app_callback_t s_app_ble_callback = {
     .app_sec_callback          = &app_sec_callback,
 };
 
-int main(void)
-{
+#define VER_MAJOR 0
+#define VER_MINOR 1
+#define VER_BUILD 0
+
+static char APP_VERSION[16];
+
+int main(void) {
+
     // Initialize user peripherals.
     app_periph_init();
 
     // Initialize ble stack.
     ble_stack_init(&s_app_ble_callback, &heaps_table); /*< init ble stack*/
 
-    printf("log test success\n");
+    sprintf(APP_VERSION, "%d.%d.%d", VER_MAJOR, VER_MINOR, VER_BUILD);
+    APP_LOG_INFO("App Version: %s\n", APP_VERSION);
 
     rtc_init();
-    rtc_set_alarm();
+    rtc_set_tick_alarm(1000);
 
     // loop
-    while (1)
-    {
+    while (1) {
         // uint32_t cur_time = rtc_get_current_time_ms();
         // printf("cur_time: %u\n", cur_time);
         app_log_flush();
