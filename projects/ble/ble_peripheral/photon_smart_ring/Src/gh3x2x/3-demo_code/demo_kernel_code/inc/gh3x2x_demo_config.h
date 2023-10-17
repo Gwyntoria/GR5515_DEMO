@@ -57,12 +57,12 @@
 /* ppg function type */
 #define __FUNC_TYPE_HR_ENABLE__             (1)    /**< hb function tye */
 #define __FUNC_TYPE_HRV_ENABLE__            (1)    /**< hrv function tye */
-#define __FUNC_TYPE_HSM_ENABLE__            (1)    /**< hsm function tye */
+#define __FUNC_TYPE_HSM_ENABLE__            (0)    /**< hsm function tye */
 #define __FUNC_TYPE_SPO2_ENABLE__           (1)    /**< spo2 function tye */
-#define __FUNC_TYPE_BT_ENABLE__             (1)    /**< bt function tye */
-#define __FUNC_TYPE_RESP_ENABLE__           (1)    /**< resp function tye */
-#define __FUNC_TYPE_AF_ENABLE__             (1)    /**< af function tye */
-#define __FUNC_TYPE_TEST_ENABLE__           (1)    /**< test function tye */
+#define __FUNC_TYPE_BT_ENABLE__             (0)    /**< bt function tye */
+#define __FUNC_TYPE_RESP_ENABLE__           (0)    /**< resp function tye */
+#define __FUNC_TYPE_AF_ENABLE__             (0)    /**< af function tye */
+#define __FUNC_TYPE_TEST_ENABLE__           (0)    /**< test function tye */
 #define __SUPPORT_HARD_ADT_CONFIG__         (1)    /**< support hard adt config */
 #define __SUPPORT_SOFT_AGC_CONFIG__         (1)    /**< support soft agc config */
 
@@ -74,10 +74,10 @@
 #define __ADT_ONLY_PARTICULAR_WM_CONFIG__   (0)  //0: Do not set particular watermark at openning function is ADT only  N (N>3&&N<800): set particular watermark, and this value is N at openning function is ADT only
 
 /* ecg function type */
-#define __FUNC_TYPE_ECG_ENABLE__            (1)    /**< ecg algorithm tye */
+#define __FUNC_TYPE_ECG_ENABLE__            (0)    /**< ecg algorithm tye */
 #if __FUNC_TYPE_ECG_ENABLE__
-#define __FUNC_TYPE_PWTT_ENABLE__           (1)    /**< pwtt algorithm tye */
-#define __FUNC_TYPE_BP_ENABLE__             (1)    /**< bp algorithm tye */
+#define __FUNC_TYPE_PWTT_ENABLE__           (0)    /**< pwtt algorithm tye */
+#define __FUNC_TYPE_BP_ENABLE__             (0)    /**< bp algorithm tye */
 #define __SUPPORT_ECG_LEAD_OFF_DET_800HZ__  (1)    
 #endif
 

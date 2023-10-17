@@ -48,6 +48,9 @@
 #include "patch.h"
 #include "scatter_common.h"
 
+#include "gh3x2x_demo.h"
+#include "gh3x2x_drv.h"
+
 #include "user_app.h"
 #include "user_periph_setup.h"
 #include "user_rtc.h"
@@ -60,6 +63,8 @@ extern gap_cb_fun_t         app_gap_callbacks;
 extern gatt_common_cb_fun_t app_gatt_common_callback;
 extern gattc_cb_fun_t       app_gattc_callback;
 extern sec_cb_fun_t         app_sec_callback;
+
+extern GU8 g_uchGh3x2xIntCallBackIsCalled;
 
 /*
  * LOCAL VARIABLE DEFINITIONS
@@ -83,23 +88,32 @@ static app_callback_t s_app_ble_callback = {
 static char APP_VERSION[16];
 
 int main(void) {
-
     // Initialize user peripherals.
     app_periph_init();
+    hal_init();
 
     // Initialize ble stack.
     ble_stack_init(&s_app_ble_callback, &heaps_table); /*< init ble stack*/
 
     sprintf(APP_VERSION, "%d.%d.%d", VER_MAJOR, VER_MINOR, VER_BUILD);
-    APP_LOG_INFO("App Version: %s\n", APP_VERSION);
+    APP_LOG_INFO("App Version: %s\r\n", APP_VERSION);
 
     rtc_init();
+    Gh3x2xDemoInit();
+
     rtc_set_tick_alarm(1000);
+    Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
+
 
     // loop
     while (1) {
         // uint32_t cur_time = rtc_get_current_time_ms();
         // printf("cur_time: %u\n", cur_time);
+
+        if (1 == g_uchGh3x2xIntCallBackIsCalled) {
+            Gh3x2xDemoInterruptProcess();
+        }
+
         app_log_flush();
         pwr_mgmt_schedule();
     }

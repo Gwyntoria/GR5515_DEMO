@@ -25,12 +25,12 @@ void rtc_evt_date_alarm_handler() {
 void rtc_alarm_evt_handler(app_rtc_evt_t* p_evt) {
     switch (p_evt->type) {
         case APP_RTC_EVT_TICK_ALARM:
-            // printf("[%s] APP_RTC_EVT_TICK_ALARM\n", __FUNCTION__);
+            // APP_LOG_INFO("[%s] APP_RTC_EVT_TICK_ALARM\n", __FUNCTION__);
             rtc_evt_tick_alarm_handler();
             break;
 
         case APP_RTC_EVT_DATE_ALARM:
-            // printf("[%s] APP_RTC_EVT_DATE_ALARM\n", __FUNCTION__);
+            // APP_LOG_INFO("[%s] APP_RTC_EVT_DATE_ALARM\n", __FUNCTION__);
             rtc_evt_date_alarm_handler();
             break;
 

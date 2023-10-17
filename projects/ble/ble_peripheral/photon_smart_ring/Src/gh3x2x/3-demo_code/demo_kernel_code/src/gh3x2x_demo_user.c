@@ -12,10 +12,15 @@
 /* includes */
 #include "stdint.h"
 #include "string.h"
-#include "gh3x2x_drv.h"
+
+#include "gh3x2x_demo.h"
 #include "gh3x2x_demo_config.h"
 #include "gh3x2x_demo_inner.h"
-#include "gh3x2x_demo.h"
+#include "gh3x2x_demo_io_config.h"
+#include "gh3x2x_drv.h"
+
+#include "ghealth.h"
+#include "user_common.h"
 
 #if (__DRIVER_LIB_MODE__ == __DRV_LIB_WITH_ALGO__)
 #include "gh3x2x_demo_algo_call.h"
@@ -24,6 +29,9 @@
 #if (__GH3X2X_MP_MODE__)
 #include "gh3x2x_mp_common.h"
 #endif
+
+app_timer_id_t gh3x2x_soft_adt_timer_id;
+app_timer_id_t gh3x2x_serial_timer_id;
 
 #if ( __GH3X2X_INTERFACE__ == __GH3X2X_INTERFACE_I2C__ )
 
@@ -105,6 +113,25 @@ GU8 hal_gh3x2x_i2c_read(GU8 device_id, const GU8 write_buffer[], GU16 write_leng
 #else // __GH3X2X_INTERFACE__ == __GH3X2X_INTERFACE_SPI__
 
 /* spi interface */
+
+volatile uint8_t spi_master_tdone = 0;
+volatile uint8_t spi_master_rdone = 0;
+
+void spi_evt_handler(app_spi_evt_t* p_evt) {
+    if (p_evt->type == APP_SPI_EVT_TX_CPLT) {
+        spi_master_tdone = 1;
+    }
+
+    if (p_evt->type == APP_SPI_EVT_RX_DATA) {
+        spi_master_rdone = 1;
+    }
+
+    if (p_evt->type == APP_SPI_EVT_ERROR) {
+        spi_master_tdone = 1;
+        spi_master_rdone = 1;
+    }
+}
+
 /**
  * @fn     void hal_gh3x2x_spi_init(void)
  * 
@@ -121,7 +148,62 @@ GU8 hal_gh3x2x_i2c_read(GU8 device_id, const GU8 write_buffer[], GU16 write_leng
 void hal_gh3x2x_spi_init(void)
 {
     /* init spi and cs pin */
-    GOODIX_PLANFROM_SPI_INIT_ENTITY();
+    uint16_t         ret;
+    app_spi_params_t spi_params = {0};
+
+    spi_params.id = APP_SPI_ID_MASTER;
+
+    spi_params.pin_cfg.cs.type   = GH3x2x_CS_PORT;
+    spi_params.pin_cfg.cs.mux    = GH3x2x_CS_MUX;
+    spi_params.pin_cfg.cs.pin    = GH3x2x_CS_PIN;
+    spi_params.pin_cfg.cs.pull   = APP_IO_NOPULL;
+    spi_params.pin_cfg.cs.enable = APP_SPI_PIN_ENABLE;
+
+    spi_params.pin_cfg.clk.type   = GH3x2x_CLK_PORT;
+    spi_params.pin_cfg.clk.mux    = GH3x2x_CLK_MUX;
+    spi_params.pin_cfg.clk.pin    = GH3x2x_CLK_PIN;
+    spi_params.pin_cfg.clk.pull   = APP_IO_NOPULL;
+    spi_params.pin_cfg.clk.enable = APP_SPI_PIN_ENABLE;
+
+    spi_params.pin_cfg.mosi.type   = GH3x2x_SI_PORT;
+    spi_params.pin_cfg.mosi.mux    = GH3x2x_SI_MUX;
+    spi_params.pin_cfg.mosi.pin    = GH3x2x_SI_PIN;
+    spi_params.pin_cfg.mosi.pull   = APP_IO_NOPULL;
+    spi_params.pin_cfg.mosi.enable = APP_SPI_PIN_ENABLE;
+
+    spi_params.pin_cfg.miso.type   = GH3x2x_SO_PORT;
+    spi_params.pin_cfg.miso.mux    = GH3x2x_SO_MUX;
+    spi_params.pin_cfg.miso.pin    = GH3x2x_SO_PIN;
+    spi_params.pin_cfg.miso.pull   = APP_IO_NOPULL;
+    spi_params.pin_cfg.miso.enable = APP_SPI_PIN_ENABLE;
+
+    spi_params.use_mode.type           = APP_SPI_TYPE_DMA;
+    spi_params.use_mode.tx_dma_channel = DMA_Channel0;
+    spi_params.use_mode.rx_dma_channel = DMA_Channel1;
+
+    spi_params.init.data_size          = SPI_DATASIZE_8BIT;
+    spi_params.init.clock_polarity     = SPI_POLARITY_LOW;
+    spi_params.init.clock_phase        = SPI_PHASE_1EDGE;
+    spi_params.init.baudrate_prescaler = (SystemCoreClock / 4000000);
+    spi_params.init.ti_mode            = SPI_TIMODE_DISABLE;
+    spi_params.init.slave_select       = SPI_SLAVE_SELECT_0;
+
+    ret = app_spi_init(&spi_params, spi_evt_handler);
+    if (ret != 0) {
+        EXAMPLE_LOG("SPIM initial failed! Please check the input paraments. ret = %d.\r\n", ret);
+    } else {
+        EXAMPLE_LOG("%s: app_spi_init success! \r\n", __FUNCTION__);
+    }
+
+#if (__GH3X2X_SPI_TYPE__ == __GH3X2X_SPI_TYPE_SOFTWARE_CS__)
+    app_io_init_t gpio_config = APP_IO_DEFAULT_CONFIG;
+    gpio_config.pin           = GH3x2x_CS_PIN;
+    gpio_config.mode          = APP_IO_MODE_OUT_PUT;
+    gpio_config.pull          = APP_IO_PULLUP;
+    gpio_config.mux           = GH3x2x_CS_MUX;
+    app_io_init(GH3x2x_CS_PORT, &gpio_config);
+    app_io_write_pin(GH3x2x_CS_PORT, GH3x2x_CS_PIN, APP_IO_PIN_SET);
+#endif
 }
 
 /**
@@ -142,14 +224,22 @@ void hal_gh3x2x_spi_init(void)
  */
 GU8 hal_gh3x2x_spi_write(GU8 write_buffer[], GU16 length)
 {
-    GU8 ret = 1;
+    spi_master_tdone = 0;
 
-    
-      GOODIX_PLANFROM_SPI_WRITE_ENTITY(write_buffer, length);
+    GU8 ret = app_spi_transmit_async(APP_SPI_ID_MASTER, write_buffer, length);
+    if (ret) {
+        EXAMPLE_LOG("spi write error. ret = %d.\r\n", ret);
+        return 0;
+    }
 
-    return ret;
+    while (!spi_master_tdone)
+        ;
+
+    printf("spi_write:\n");
+    print_data_stream_hex(write_buffer, length);
+
+    return 1;
 }
-
 
 #if (__GH3X2X_SPI_TYPE__ == __GH3X2X_SPI_TYPE_SOFTWARE_CS__) 
 /**
@@ -168,12 +258,23 @@ GU8 hal_gh3x2x_spi_write(GU8 write_buffer[], GU16 length)
  */
 GU8 hal_gh3x2x_spi_read(GU8 read_buffer[], GU16 length)
 {
-    GU8 ret = 1;
+    spi_master_rdone = 0;
 
-    GOODIX_PLANFROM_SPI_READ_ENTITY();
+    GU16 err = app_spi_receive_async(APP_SPI_ID_MASTER, read_buffer, length);
+    if (err) {
+        EXAMPLE_LOG("spi read error, err = %d \r\n", err);
+        return 0;
+    }
 
-    return ret;
+    while (!spi_master_rdone)
+        ;
+
+    printf("spi_read:\n");
+    print_data_stream_hex(read_buffer, length);
+
+    return 1;
 }
+
 #elif (__GH3X2X_SPI_TYPE__ == __GH3X2X_SPI_TYPE_HARDWARE_CS__)
 /**
  * @fn     GU8 hal_gh3x2x_spi_write_F1_and_read(GU8 read_buffer[], GU16 length)
@@ -191,11 +292,34 @@ GU8 hal_gh3x2x_spi_read(GU8 read_buffer[], GU16 length)
  */
 GU8 hal_gh3x2x_spi_write_F1_and_read(GU8 read_buffer[], GU16 length)
 {
-    GU8 ret = 1;
-    
-     GOODIX_PLANFROM_SPI_READ_ENTITY();
-    
-    return ret;
+    GU8 write_buffer[1] = {0xf1};
+
+    app_io_write_pin(APP_IO_TYPE_NORMAL, APP_IO_PIN_15, APP_IO_PIN_RESET);
+
+    spi_master_rdone = 0;
+    spi_master_tdone = 0;
+
+    GU16 err = app_spi_transmit_async(APP_SPI_ID_MASTER, write_buffer, 1);
+    if (err) {
+        EXAMPLE_LOG("spi write error, err = %d \r\n", err);
+        return 0;
+    }
+
+    err = app_spi_receive_async(APP_SPI_ID_MASTER, read_buffer, length);
+    if (err) {
+        EXAMPLE_LOG("spi read error, err = %d \r\n", err);
+        return 0;
+    }
+
+    while (!spi_master_tdone)
+        ;
+
+    while (!spi_master_rdone)
+        ;
+
+    app_io_write_pin(APP_IO_TYPE_NORMAL, APP_IO_PIN_15, APP_IO_PIN_SET);
+
+    return 1;
 }
 #endif
 
@@ -211,12 +335,10 @@ GU8 hal_gh3x2x_spi_write_F1_and_read(GU8 read_buffer[], GU16 length)
  *
  * @return  None
  */
-#if (__GH3X2X_SPI_TYPE__ == __GH3X2X_SPI_TYPE_SOFTWARE_CS__) 
+#if (__GH3X2X_SPI_TYPE__ == __GH3X2X_SPI_TYPE_SOFTWARE_CS__)
 void hal_gh3x2x_spi_cs_ctrl(GU8 cs_pin_level)
 {
-
-    GOODIX_PLANFROM_SPI_CS_CTRL_ENTITY();
-
+    app_io_write_pin(GH3x2x_CS_PORT, GH3x2x_CS_PIN, (cs_pin_level) ? (APP_IO_PIN_SET) : (APP_IO_PIN_RESET));
 }
 #endif
 
@@ -236,12 +358,19 @@ void hal_gh3x2x_spi_cs_ctrl(GU8 cs_pin_level)
  *
  * @return  None
  */
-
-
-
 void hal_gh3x2x_reset_pin_init(void)
 {
-    GOODIX_PLANFROM_RESET_PIN_INIT_ENTITY();
+    app_io_init_t gpio_config = APP_IO_DEFAULT_CONFIG;
+
+    gpio_config.pin  = GH3x2x_RST_PIN;
+    gpio_config.mode = APP_IO_MODE_OUT_PUT;
+    gpio_config.pull = APP_IO_PULLUP;
+    gpio_config.mux  = GH3x2x_RST_MUX;
+    app_io_init(APP_IO_TYPE_NORMAL, &gpio_config);
+
+    app_io_write_pin(GH3x2x_RST_PORT, GH3x2x_RST_PIN, APP_IO_PIN_RESET);
+    sys_delay_ms(5);
+    app_io_write_pin(GH3x2x_RST_PORT, GH3x2x_RST_PIN, APP_IO_PIN_SET);
 }
 
 /**
@@ -256,14 +385,53 @@ void hal_gh3x2x_reset_pin_init(void)
  *
  * @return  None
  */
-
 void hal_gh3x2x_reset_pin_ctrl(GU8 pin_level)
 {
-
-   GOODIX_PLANFROM_SPI_RESET_PIN_ENTITY();
+   app_io_write_pin(GH3x2x_RST_PORT, GH3x2x_RST_PIN, (pin_level) ? (APP_IO_PIN_SET) : (APP_IO_PIN_RESET));
 }
 
 #endif
+
+static void gh3x2x_interrput_handler(app_gpiote_evt_t* p_evt)
+{
+    // app_io_pin_state_t pin_level = APP_IO_PIN_RESET;
+
+    switch (p_evt->type) {
+        case APP_IO_TYPE_NORMAL: {
+            if ((p_evt->pin & APP_IO_PIN_ALL) == GH3x2x_INT_PIN) {
+                // printf("hal_gh3x2x_int_handler_call_back start\r\n");
+
+                // pin_level = app_io_read_pin(GH3x2x_INT_PORT, GH3x2x_INT_PIN);
+                // if (pin_level == APP_IO_PIN_SET) {
+                //     hal_gh3x2x_int_handler_call_back();
+                //     printf("hal_gh3x2x_int_handler_call_back end\r\n");
+                // }
+
+                hal_gh3x2x_int_handler_call_back();
+            }
+            break;
+        }
+
+        case APP_IO_TYPE_AON: {
+            sys_delay_ms(1);
+            break;
+        }
+
+        case APP_IO_TYPE_MSIO: {
+            sys_delay_ms(1);
+            break;
+        }
+
+        case APP_IO_TYPE_MAX: {
+            sys_delay_ms(1);
+            break;
+        }
+
+        default:
+            sys_delay_ms(1);
+            break;
+    }
+}
 
 /**
  * @fn     void hal_gh3x2x_int_init(void)
@@ -279,7 +447,12 @@ void hal_gh3x2x_reset_pin_ctrl(GU8 pin_level)
  */
 void hal_gh3x2x_int_init(void)
 {
-    GOODIX_PLANFROM_INT_INIT_ENTITY();
+    const app_gpiote_param_t param[] = {
+        {GH3x2x_INT_PORT, GH3x2x_INT_PIN, APP_IO_MODE_IT_RISING, 
+         APP_IO_PULLDOWN, APP_IO_NONE_WAKEUP, gh3x2x_interrput_handler}
+    };
+
+    app_gpiote_init(param, sizeof(param) / sizeof(app_gpiote_param_t));
 }
 
 #if (__NORMAL_INT_PROCESS_MODE__ == __INTERRUPT_PROCESS_MODE__ || __MIX_INT_PROCESS_MODE__ == __INTERRUPT_PROCESS_MODE__)
@@ -327,6 +500,8 @@ void hal_gsensor_start_cache_data(void)
     GH3X2X_TimestampSyncAccInit();
 #endif
     GOODIX_PLANFROM_INT_GS_START_CACHE_ENTITY();
+    // gsensor_clear_buffer();
+    // gsensor_start_sampling(25);
 }
 
 /**
@@ -343,8 +518,10 @@ void hal_gsensor_start_cache_data(void)
  */
 void hal_gsensor_stop_cache_data(void)
 {
-        
+
     GOODIX_PLANFROM_INT_GS_STOP_CACHE_ENTITY();
+    // gsensor_clear_buffer();
+    // gsensor_stop_sampling(25);
 }
 
 void hal_cap_start_cache_data(void)
@@ -405,8 +582,12 @@ void hal_gsensor_drv_get_fifo_data(STGsensorRawdata gsensor_buffer[], GU16 *gsen
     }
 #endif
 
-    GOODIX_PLANFROM_INT_GET_GS_DATA_ENTITY();
-
+    *gsensor_buffer_index = 25;
+    for (int i = 0; i < *gsensor_buffer_index; i++) {
+        gsensor_buffer[i].sXAxisVal = i > 20 ? 512 : 0;
+        gsensor_buffer[i].sYAxisVal = 512;
+        gsensor_buffer[i].sZAxisVal = i > 20 ? 512 : 0;
+    }
 
 /**************************** WARNNING: DO NOT REMOVE OR MODIFY THIS CODE   ---START***************************************************/
     if((*gsensor_buffer_index) > (__GSENSOR_DATA_BUFFER_SIZE__))
@@ -452,6 +633,7 @@ void hal_temp_drv_get_fifo_data(STTempRawdata temp_data_buffer[], GU16 *temp_buf
 void GH3X2X_Log(GCHAR *log_string)
 {
     GOODIX_PLANFROM_LOG_ENTITY();
+    printf("%s\n", log_string);
 }
 #endif
 
@@ -484,6 +666,8 @@ void GH3X2X_RegisterPrintf(int (**pPrintfUser)(const char *format, ...))
 void Gh3x2x_BspDelayUs(GU16 usUsec)
 {
     GOODIX_PLANFROM_DELAY_US_ENTITY();
+
+    sys_delay_us(usUsec);
 }
 
 void GH3X2X_AdtFuncStartWithGsDetectHook(void)
@@ -506,6 +690,7 @@ void GH3X2X_AdtFuncStartWithGsDetectHook(void)
 void Gh3x2x_BspDelayMs(GU16 usMsec)
 {
     GOODIX_PLANFROM_DELAY_MS_ENTITY();
+    sys_delay_ms(usMsec);
 }
 
 #if (__FUNC_TYPE_SOFT_ADT_ENABLE__)
@@ -524,9 +709,16 @@ void Gh3x2x_BspDelayMs(GU16 usMsec)
 #if (__USE_POLLING_TIMER_AS_ADT_TIMER__)&&\
     (__POLLING_INT_PROCESS_MODE__ == __INTERRUPT_PROCESS_MODE__ || __MIX_INT_PROCESS_MODE__ == __INTERRUPT_PROCESS_MODE__)
 #else
+void gh3x2x_soft_adt_timer_call(void* p_ctx)
+{
+    Gh3x2xDemoMoveDetectTimerHandler();
+}
+
 void Gh3x2xCreateAdtConfirmTimer(void)
 {
     GOODIX_PLANFROM_CREAT_ADT_CONFIRM_ENTITY();
+
+    app_timer_create(&gh3x2x_soft_adt_timer_id, ATIMER_REPEAT, gh3x2x_soft_adt_timer_call);
 }
 #endif
 
@@ -549,6 +741,8 @@ void Gh3x2xCreateAdtConfirmTimer(void)
 void Gh3x2x_StartAdtConfirmTimer(void)
 {
     GOODIX_PLANFROM_START_TIMER_ENTITY();
+
+    app_timer_start(gh3x2x_soft_adt_timer_id, 50, NULL);
 }
 #endif
 #endif
@@ -572,6 +766,8 @@ void Gh3x2x_StartAdtConfirmTimer(void)
 void Gh3x2x_StopAdtConfirmTimer(void)
 {
     GOODIX_PLANFROM_STOP_TIMER_ENTITY();
+
+    app_timer_stop(gh3x2x_soft_adt_timer_id);
 }
 #endif
 #endif
@@ -620,8 +816,16 @@ void Gh3x2x_UserHandleCurrentInfo(void)
 void Gh3x2x_HalSerialSendData(GU8* uchTxDataBuf, GU16 usBufLen)
 {
     GOODIX_PLANFROM_SERIAL_SEND_ENTITY();
+
+    ghealth_tx_data_send(0, uchTxDataBuf, usBufLen);
 }
 
+void gh3x2x_serial_timer_call(void* p_ctx)
+{
+    Gh3x2xSerialSendTimerHandle();
+}
+
+GU8 SerialPeriodMs = 0;
 
 /**
  * @fn      void Gh3x2xSerialSendTimerInit(GU8 uchPeriodMs)
@@ -637,7 +841,8 @@ void Gh3x2x_HalSerialSendData(GU8* uchTxDataBuf, GU16 usBufLen)
  */
 void Gh3x2xSerialSendTimerInit(GU8 uchPeriodMs)
 {
-    
+    SerialPeriodMs = uchPeriodMs;
+    app_timer_create(&gh3x2x_serial_timer_id, ATIMER_REPEAT, gh3x2x_serial_timer_call);
 }
 
 
@@ -656,6 +861,8 @@ void Gh3x2xSerialSendTimerInit(GU8 uchPeriodMs)
 void Gh3x2xSerialSendTimerStop(void)
 {
     GOODIX_PLANFROM_SERIAL_TIMER_STOP_ENTITY();
+
+    app_timer_stop(gh3x2x_serial_timer_id);
 }
 
 
@@ -675,6 +882,8 @@ void Gh3x2xSerialSendTimerStop(void)
 void Gh3x2xSerialSendTimerStart(void)
 {
     GOODIX_PLANFROM_SERIAL_TIMER_START_ENTITY();
+
+    app_timer_start(gh3x2x_serial_timer_id, __GH3X2X_PROTOCOL_SEND_TIMER_PERIOD__, NULL);
 }
 
 #endif

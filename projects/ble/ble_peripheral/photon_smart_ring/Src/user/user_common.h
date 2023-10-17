@@ -12,6 +12,8 @@
 #ifndef USER_COMMON_H
 #define USER_COMMON_H
 
+#include "stdint.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -24,6 +26,8 @@ extern "C" {
 #define MIN_TO_SEC (60)
 #define HOR_TO_SEC (60 * 60)
 #define DAY_TO_SEC (60 * 60 * 24)
+
+void print_data_stream_hex(const uint8_t* data, unsigned long len);
 
 #ifdef __cplusplus
 }

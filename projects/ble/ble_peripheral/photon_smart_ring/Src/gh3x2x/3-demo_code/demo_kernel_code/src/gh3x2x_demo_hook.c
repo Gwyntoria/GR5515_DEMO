@@ -278,6 +278,7 @@ void Gh3x2x_LeadOffEventHook(void)
 
 
 #if (__SUPPORT_HARD_ADT_CONFIG__)
+GU8 WearEventState = 0x00;
 /**
  * @fn     extern void Gh3x2x_WearEventHook(GU16 usGotEvent, GU8 uchWearOffType);
  * 
@@ -293,19 +294,22 @@ void Gh3x2x_LeadOffEventHook(void)
  */
 void Gh3x2x_WearEventHook(GU16 usGotEvent, GU8 uchExentEx)
 {
-    if (usGotEvent & GH3X2X_IRQ_MSK_WEAR_OFF_BIT)
-    {
-        //Gh3x2xDemoStopSampling(g_unDemoFuncMode & (~GH3X2X_FUNCTION_ADT));
+    if (usGotEvent & GH3X2X_IRQ_MSK_WEAR_OFF_BIT) {
+        // Gh3x2xDemoStopSampling(g_unDemoFuncMode & (~GH3X2X_FUNCTION_ADT));
+        WearEventState = 0x00;
         GOODIX_PLANFROM_WEAR_OFF_EVENT();
+        Gh3x2xDemoStopSampling(g_unDemoFuncMode & (~GH3X2X_FUNCTION_ADT));
         EXAMPLE_LOG("Wear off, no object!!!\r\n");
-    }
-    else if (usGotEvent & GH3X2X_IRQ_MSK_WEAR_ON_BIT)
-    {
+
+    } else if (usGotEvent & GH3X2X_IRQ_MSK_WEAR_ON_BIT) {
 #if (__DRIVER_LIB_MODE__ == __DRV_LIB_WITH_ALGO__)
-        //Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_IR);
+        // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_IR);
+        Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN | GH3X2X_FUNCTION_HR);
+
 #else
-        //Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
+        // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
 #endif
+        WearEventState = 0x01;
         GOODIX_PLANFROM_WEAR_ON_EVENT();
         EXAMPLE_LOG("Wear on, object !!!\r\n");
     }

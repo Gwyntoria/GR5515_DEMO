@@ -53,7 +53,7 @@ AlwaysBreakAfterReturnType: None
 AlwaysBreakTemplateDeclarations: No
 
 # 括号
-BreakBeforeBraces: Attach # Attach, Linux, Allman
+BreakBeforeBraces: Linux # Attach, Linux, Allman
 
 # 对#include进行排序的规则
 IncludeBlocks: Preserve

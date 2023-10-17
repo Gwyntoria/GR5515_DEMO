@@ -40,9 +40,12 @@
  *****************************************************************************************
  */
 #include "user_app.h"
+
 #include "gr55xx_sys.h"
 #include "app_log.h"
 #include "app_error.h"
+#include "ghealth.h"
+#include "gh3x2x_demo_config.h"
 
 /*
  * DEFINES
@@ -147,6 +150,18 @@ static void gap_params_init(void)
     s_gap_adv_time_param.max_adv_evt  = 0;
 }
 
+static void ghealth_service_process_event(ghealth_evt_t* p_evt)
+{
+    switch (p_evt->evt_type) {
+        case GHEALTH_EVT_RX_DATA_RECEIVED: {
+#if (__SUPPORT_PROTOCOL_ANALYZE__)
+            Gh3x2xDemoProtocolProcess(p_evt->p_data, p_evt->length);
+#endif
+        }
+        default:
+            break;
+    }
+}
 
 /**
  *****************************************************************************************
@@ -155,6 +170,12 @@ static void gap_params_init(void)
  */
 static void services_init(void)
 {
+    sdk_err_t      error_code;
+    ghealth_init_t ghealth_init;
+    ghealth_init.evt_handler = ghealth_service_process_event;
+
+    error_code = ghealth_service_init(&ghealth_init);
+    APP_ERROR_CHECK(error_code);
 }
 
 /*
