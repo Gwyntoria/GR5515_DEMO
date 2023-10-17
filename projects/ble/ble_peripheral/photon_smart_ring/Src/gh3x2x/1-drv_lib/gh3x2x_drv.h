@@ -72,13 +72,7 @@ typedef long long           GS64;   /**< 64bit signed integer type */
 #define __EXAMPLE_LOG_LV_1__                (1)    /** include EXAMPLE log(default) **/
 #define __EXAMPLE_LOG_LV_2__                (2)    /** include EXAMPLE and soft adt log **/
 
-/* algorithm config */
-/**
- * @brief support multi algorithm run simultaneously type enum
- */
-#define SUPPORT_NO_MULTI_ALGORITHM             (0)
-#define SUPPORT_MULTI_ALGORITHM                (1)
-#define SUPPORT_GROUP_MULTI_ALGORITHM          (2)
+
 
 
 
@@ -1917,6 +1911,23 @@ GS8 GH3X2X_CustomizeFuncStartedBitSet(void);
  * @retval  #GH3X2X_RET_OK                      return algorithm run successfully
  */
 GS8 GH3X2X_CustomizeFuncStartedBitClear(void);
+
+/**
+ * @fn     GS8 GH3X2X_FifoWatermarkThrConfigEx(GU16 usFifoWatermarkThr)
+ *
+ * @brief  Fifo water mark threshold config
+ *
+ * @attention   Watermark threshold val must in (2, 800]. if val <= 2, will set 3, if val > 800, set 800;
+ *              Be careful that fifo_use_cnt greater than val, gh3x2x willn't generate fifo_watermark interrupt after!
+ *              Please configure according to usage, effect @GH3X2X_GetRawdataForAlgorithmEx last fifo Watermark irq!
+ *
+ * @param[in]   usFifoWatermarkThr         watermark threshold val
+ * @param[out]  None
+ *
+ * @return  errcode
+ * @retval  #GH3X2X_RET_OK               return successfully
+ */
+GS8 GH3X2X_FifoWatermarkThrConfigEx(GU16 usFifoWatermarkThr);
 
 /**
  * @fn     GS8 GH3X2X_GetRawdataForAlgorithmEx(GU8 *puchPackageDataBuffer)

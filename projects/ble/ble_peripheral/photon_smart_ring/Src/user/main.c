@@ -39,22 +39,21 @@
  * INCLUDE FILES
  *****************************************************************************************
  */
-#include "custom_config.h"
-
+#include "app_io.h"
 #include "app_log.h"
+#include "app_timer.h"
+#include "custom_config.h"
 #include "flash_scatter_config.h"
+#include "gr55xx_dfu.h"
 #include "gr55xx_pwr.h"
 #include "gr55xx_sys.h"
 #include "patch.h"
 #include "scatter_common.h"
-
-#include "gh3x2x_demo.h"
-#include "gh3x2x_drv.h"
-
 #include "user_app.h"
 #include "user_periph_setup.h"
-#include "user_rtc.h"
 
+#include "gh3x2x_demo.h"
+#include "gh3x2x_demo_config.h"
 /*
  * GLOBAL VARIABLE DEFINITIONS
  *****************************************************************************************
@@ -81,40 +80,32 @@ static app_callback_t s_app_ble_callback = {
     .app_sec_callback          = &app_sec_callback,
 };
 
-#define VER_MAJOR 0
-#define VER_MINOR 1
-#define VER_BUILD 0
-
-static char APP_VERSION[16];
-
-int main(void) {
+int main(void)
+{
     // Initialize user peripherals.
-    app_periph_init();
-    hal_init();
+    app_periph_init(); // app层外设初始化
 
     // Initialize ble stack.
     ble_stack_init(&s_app_ble_callback, &heaps_table); /*< init ble stack*/
 
-    sprintf(APP_VERSION, "%d.%d.%d", VER_MAJOR, VER_MINOR, VER_BUILD);
-    APP_LOG_INFO("App Version: %s\r\n", APP_VERSION);
-
-    rtc_init();
     Gh3x2xDemoInit();
 
-    rtc_set_tick_alarm(1000);
-    Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
+    // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
 
-
-    // loop
     while (1) {
-        // uint32_t cur_time = rtc_get_current_time_ms();
-        // printf("cur_time: %u\n", cur_time);
-
-        if (1 == g_uchGh3x2xIntCallBackIsCalled) {
+#if (__INTERRUPT_PROCESS_BY_POLLING__)
+        extern GU8 g_uchGh3x2xInt;
+        if (g_uchGh3x2xInt) {
+            g_uchGh3x2xInt = 0;
             Gh3x2xDemoInterruptProcess();
         }
-
-        app_log_flush();
-        pwr_mgmt_schedule();
+#else
+        if (g_uchGh3x2xIntCallBackIsCalled) {
+            Gh3x2xDemoInterruptProcess();
+        }
+#endif
+        app_log_flush();     // 刷新log缓存
+        pwr_mgmt_schedule(); // 电源管理调度，负责管理查询是否可以进入睡眠
+        dfu_schedule();
     }
 }

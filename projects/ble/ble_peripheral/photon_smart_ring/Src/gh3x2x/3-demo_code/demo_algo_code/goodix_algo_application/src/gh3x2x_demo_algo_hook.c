@@ -4,6 +4,9 @@
 #include "gh3x2x_demo_algo_config.h"
 #include "gh3x2x_demo_algo_hook.h"
 
+#include "gh3x2x_demo.h"
+
+#include "hrs.h"
 #if (__GOODIX_ALGO_CALL_MODE__)
 
 /**
@@ -21,7 +24,7 @@
 
 void GH3X2X_AlgoLog(GCHAR *log_string)
 {
-    GOODIX_PLANFROM_LOG_ENTITY();
+    printf("%s", log_string);
 }
 
 /**
@@ -45,20 +48,20 @@ void GH3X2X_AdtAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
     {
         if (pstAlgoResult->snResult[0] == 1)
         {
-					#if __GH_MSG_WTIH_DRV_LAYER_EN__
-						GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_ON);
-					#else
-            GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_ON);
-					#endif
+            #if __GH_MSG_WTIH_DRV_LAYER_EN__
+                GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_ON);
+            #else
+                GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_ON);
+            #endif
             /* code implement by user */
         }
         else if (pstAlgoResult->snResult[0] == 2)
         {
-          #if __GH_MSG_WTIH_DRV_LAYER_EN__
-						GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
-					#else
-						GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_OFF);
-					#endif
+            #if __GH_MSG_WTIH_DRV_LAYER_EN__
+                GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
+            #else
+                GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_OFF);
+            #endif
             /* code implement by user */
         }
     }
@@ -82,8 +85,17 @@ void GH3X2X_AdtAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
 {
 #if (__USE_GOODIX_HR_ALGORITHM__)
-    /* code implement by user */
-    //GOODIX_PLANFROM_HR_RESULT_REPORT_ENTITY();
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:%dbpm %d %d\r\n", 
+                      __FUNCTION__, pstAlgoResult->snResult[0],
+                                    pstAlgoResult->snResult[1],
+                                    pstAlgoResult->snResult[2]);
+    
+    extern GU32 g_unDemoFuncMode;
+//    if((g_unDemoFuncMode & GH3X2X_FUNCTION_SOFT_ADT_GREEN) != GH3X2X_FUNCTION_SOFT_ADT_GREEN)
+    {
+        hrs_heart_rate_measurement_send(0, pstAlgoResult->snResult[0], 1);
+    }
+
 #endif
 }
 
@@ -105,9 +117,15 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
 void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
 {
 #if (__USE_GOODIX_SPO2_ALGORITHM__)
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:%d%% R=%d %d %d %d %d\r\n", 
+                      __FUNCTION__, pstAlgoResult->snResult[0],
+                                    pstAlgoResult->snResult[1],
+                                    pstAlgoResult->snResult[2],
+                                    pstAlgoResult->snResult[3],
+                                    pstAlgoResult->snResult[4],
+                                    pstAlgoResult->snResult[5]);
+            
 
-    /* code implement by user */
-    //GOODIX_PLANFROM_SPO2_RESULT_REPORT_ENTITY();
 #endif
 }
 
@@ -174,20 +192,34 @@ void GH3X2X_EcgAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
 {
 #if (__USE_GOODIX_SOFT_ADT_ALGORITHM__)
-    GH3X2X_ALGO_LOG_PARAM("[%s]:result = %d,%d\r\n", __FUNCTION__, pstAlgoResult->snResult[0], pstAlgoResult->snResult[1]);
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:result = %d,%d\r\n", __FUNCTION__, pstAlgoResult->snResult[0], pstAlgoResult->snResult[1]);
+    static GU8 lower_lvl_cnt = 0;
+    
+    if(pstAlgoResult->snResult[1] < 20)
+    {
+//        lower_lvl_cnt ++;
+    }
+    else
+    {
+        lower_lvl_cnt = 0;
+    }
     //live object
     if (pstAlgoResult->snResult[0] == 0x1)
     {
-        /* code implement by user */
+        extern GU32 g_unDemoFuncMode;
+        if((g_unDemoFuncMode & GH3X2X_FUNCTION_HR) != GH3X2X_FUNCTION_HR)
+        {
+            Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
+        }
     }
     //non live object
-    else if (pstAlgoResult->snResult[0] & 0x2)
+    else if ((pstAlgoResult->snResult[0] & 0x2) || (lower_lvl_cnt > (25 * 6) ))
     {
         #if __GH_MSG_WTIH_DRV_LAYER_EN__
-			      GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
-				#else
-				    GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_OFF);
-			  #endif
+          GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
+        #else
+            GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_OFF);
+        #endif
         /* code implement by user */
     }
     GOODIX_PLANFROM_NADT_RESULT_HANDLE_ENTITY();
@@ -223,10 +255,10 @@ void GH3X2X_SoftAdtIrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, G
     else if (pstAlgoResult->snResult[0] & 0x2)
     {
         #if __GH_MSG_WTIH_DRV_LAYER_EN__
-			      GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
-				#else
-			      GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_OFF);
-			  #endif
+          GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
+        #else
+          GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_OFF);
+        #endif
         /* code implement by user */
     }
     GOODIX_PLANFROM_NADT_RESULT_HANDLE_ENTITY();

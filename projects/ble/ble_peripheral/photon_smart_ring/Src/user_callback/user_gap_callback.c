@@ -186,7 +186,7 @@ static void app_gap_adv_start_cb(uint8_t inst_idx, uint8_t status)
 {
     if (BLE_SUCCESS != status)
     {
-        APP_LOG_DEBUG("Adverting started failed(0X%02X).", status);
+        APP_LOG_INFO("Adverting started failed(0X%02X).", status);
     }
 }
 
@@ -326,6 +326,7 @@ static void app_gap_connect_cb(uint8_t conn_idx, uint8_t status, const gap_conn_
                      p_conn_param->peer_addr.addr[1],
                      p_conn_param->peer_addr.addr[0]);
         app_connected_handler(conn_idx, p_conn_param);
+
     }
 }
 
@@ -338,12 +339,14 @@ static void app_gap_connect_cb(uint8_t conn_idx, uint8_t status, const gap_conn_
  * @param[in] reason:   The reason of disconnect. See @ref BLE_STACK_ERROR_CODES.
  ****************************************************************************************
  */
+extern void DemoWorkModeUpdata(void);
 static void app_gap_disconnect_cb(uint8_t conn_idx, uint8_t status, uint8_t reason)
 {
     if (BLE_SUCCESS == status)
     {
         APP_LOG_INFO("Disconnected (0x%02X).", reason);
         app_disconnected_handler(conn_idx, reason);
+        //DemoWorkModeUpdata();
     }
 }
 

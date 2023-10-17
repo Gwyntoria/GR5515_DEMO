@@ -40,14 +40,14 @@ void gh3x2x_init_hook_func(void)
 #if (__DRIVER_LIB_MODE__ == __DRV_LIB_WITH_ALGO__)
     if(0 == GH3x2x_GetChipResetRecoveringFlag())
     {
-        GH3X2X_AlgoCallConfigInit(g_pstGh3x2xFrameInfo, g_uchGh3x2xRegCfgArrIndex);
+    GH3X2X_AlgoCallConfigInit(g_pstGh3x2xFrameInfo, g_uchGh3x2xRegCfgArrIndex);
     }
 #endif
 
 #if __GH_MSG_WITH_ALGO_LAYER_EN__
     if(0 == GH3x2x_GetChipResetRecoveringFlag())
     {
-        GH3X2X_SEND_MSG_ALGO_CFG_INIT(g_pstGh3x2xFrameInfo, g_uchGh3x2xRegCfgArrIndex);
+    GH3X2X_SEND_MSG_ALGO_CFG_INIT(g_pstGh3x2xFrameInfo, g_uchGh3x2xRegCfgArrIndex);
     }
 #endif
 
@@ -131,6 +131,7 @@ void gh3x2x_get_rawdata_hook_func(GU8 *read_buffer_ptr, GU16 length)
                 stTempFifoInfo.ubAdcNo = ((temp >> 27) & 0x00000003);
                 stTempFifoInfo.ubFlagLedAdjIsAgc_EcgRecover = ((temp >> 26) & 0x00000001);
                 stTempFifoInfo.ubFlagLedAdjAgcUp = ((temp >> 25) & 0x00000001);
+                if(stTempFifoInfo.ubSlotNo == 5)
                 EXAMPLE_LOG("Received rawdata:slot%d,adc%d,AdcCode = %d\r\n", stTempFifoInfo.ubSlotNo, stTempFifoInfo.ubAdcNo, \
                                                                     stTempFifoInfo.uiAdcCode);
             }
@@ -150,6 +151,7 @@ void gh3x2x_get_rawdata_hook_func(GU8 *read_buffer_ptr, GU16 length)
  *
  * @return  None
  */
+
 void gh3x2x_algorithm_get_io_data_hook_func(const STGh3x2xFrameInfo * const pstFrameInfo)
 {
     /* algo calculate */
@@ -160,8 +162,9 @@ void gh3x2x_algorithm_get_io_data_hook_func(const STGh3x2xFrameInfo * const pstF
 
 #if __GH_MSG_WITH_ALGO_LAYER_EN__
     GH3X2X_SEND_MSG_ALGO_CAL(pstFrameInfo->unFunctionID);
+    
 #endif
-
+    EXAMPLE_LOG("[IO_DATA]Function ID: 0x%X, channel num = %d, frame cnt = %d\r\n",(int)(pstFrameInfo->unFunctionID),(int)(pstFrameInfo->pstFunctionInfo->uchChnlNum),(int)(pstFrameInfo->punFrameCnt[0]));
 #if (__SUPPORT_ALGO_INPUT_OUTPUT_DATA_HOOK_CONFIG__)
     /****************** FOLLOWING CODE IS EXAMPLE **********************************/
 #if 0
@@ -178,6 +181,7 @@ void gh3x2x_algorithm_get_io_data_hook_func(const STGh3x2xFrameInfo * const pstF
     {
         EXAMPLE_LOG("[IO_DATA]Ch%d rawdata= %d\r\n",(int)(uchChnlCnt),(int)(pstFrameInfo->punFrameRawdata[uchChnlCnt]));
     }
+    
 #endif
 #endif
 }
@@ -256,6 +260,7 @@ void gh3x2x_write_algo_config_hook(GU16 usVirtualRegAddr, GU16 usVirtualRegValue
 void Gh3x2x_LeadOnEventHook(void)
 {
     GOODIX_PLANFROM_LEAD_ON_EVENT();
+    Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_ECG);
 }
 
 /**
@@ -273,12 +278,12 @@ void Gh3x2x_LeadOnEventHook(void)
 void Gh3x2x_LeadOffEventHook(void)
 {
     GOODIX_PLANFROM_LEAD_OFF_EVENT();
+    Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_ECG);
 }
 #endif
 
 
 #if (__SUPPORT_HARD_ADT_CONFIG__)
-GU8 WearEventState = 0x00;
 /**
  * @fn     extern void Gh3x2x_WearEventHook(GU16 usGotEvent, GU8 uchWearOffType);
  * 
@@ -292,25 +297,23 @@ GU8 WearEventState = 0x00;
  *
  * @return  None
  */
+GU8 WearEventState = 0x00;
 void Gh3x2x_WearEventHook(GU16 usGotEvent, GU8 uchExentEx)
 {
-    if (usGotEvent & GH3X2X_IRQ_MSK_WEAR_OFF_BIT) {
-        // Gh3x2xDemoStopSampling(g_unDemoFuncMode & (~GH3X2X_FUNCTION_ADT));
+    if (usGotEvent & GH3X2X_IRQ_MSK_WEAR_OFF_BIT)
+    {
         WearEventState = 0x00;
-        GOODIX_PLANFROM_WEAR_OFF_EVENT();
         Gh3x2xDemoStopSampling(g_unDemoFuncMode & (~GH3X2X_FUNCTION_ADT));
         EXAMPLE_LOG("Wear off, no object!!!\r\n");
-
-    } else if (usGotEvent & GH3X2X_IRQ_MSK_WEAR_ON_BIT) {
-#if (__DRIVER_LIB_MODE__ == __DRV_LIB_WITH_ALGO__)
-        // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_IR);
-        Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN | GH3X2X_FUNCTION_HR);
-
-#else
-        // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
-#endif
+    }
+    else if (usGotEvent & GH3X2X_IRQ_MSK_WEAR_ON_BIT)
+    {
         WearEventState = 0x01;
-        GOODIX_PLANFROM_WEAR_ON_EVENT();
+#if ((__DRIVER_LIB_MODE__ == __DRV_LIB_WITH_ALGO__) && (__FUNC_TYPE_SOFT_ADT_ENABLE__))
+        Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN|GH3X2X_FUNCTION_SPO2);
+#else
+        Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
+#endif
         EXAMPLE_LOG("Wear on, object !!!\r\n");
     }
 }

@@ -102,7 +102,7 @@
 #define __GSENSOR_MOVE_THRESHOLD__                      (65)        /**< DIFF of sqrt(x^2+y^2+z^2) */
 #define __GSENSOR_MOVE_CNT_THRESHOLD__                  (1)         /**< (recomended value = 1) more than how many times of movement can be judged as effective moveing*/
 #define __GSENSOR_NOT_MOVE_CNT_THRESHOLD__              (150)       /**< (recommended value = 1.5 * sample rate of g-sensor ) more than how many times of movement can be judged as effective non-moveing*/
-#define __USE_POLLING_TIMER_AS_ADT_TIMER__              (1)         /** use polling timer as soft adt timer **/
+#define __USE_POLLING_TIMER_AS_ADT_TIMER__              (0)         /** use polling timer as soft adt timer **/
 #define __SOFT_ADT_CTRL_WEAR_OFF_ENABLE__               (1)         /**< support auto ctrl wear off */
 #endif
 
@@ -142,8 +142,8 @@
 #define __SUPPORT_ALGO_INPUT_OUTPUT_DATA_HOOK_CONFIG__  (1)         /**< enable it ,we can get algo input and output data **/
 
 /* gh3x2x data buffer size config,this is related to gh3x2x fifo water mark config */
-#define __GH3X2X_RAWDATA_BUFFER_SIZE__                  (200 * 4)     /**< rawdata buffer size in byte */
-#define __GH3X2X_RAWDATA_SLAVE_BUFFER_SIZE__            (200 * 4)     /**< rawdata buffer size in byte for slave chip*/
+#define __GH3X2X_RAWDATA_BUFFER_SIZE__                  (800 * 4)     /**< rawdata buffer size in byte */
+#define __GH3X2X_RAWDATA_SLAVE_BUFFER_SIZE__            (300 * 4)     /**< rawdata buffer size in byte for slave chip*/
 
 /* gsensor data buffer size config,every g sensor data has 6 bytes(x,y,z) */
 #define __GSENSOR_DATA_BUFFER_SIZE__                    (300)       /**< max num of gsensor data */

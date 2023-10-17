@@ -93,7 +93,8 @@ GU8 g_uchDemoAlgoEnableFlag = 1;
 #if __SLOT_SEQUENCE_DYNAMIC_ADJUST_EN__
 GU16 g_usGh3x2xSlotTime[8];
 #endif
-#if (__FUNC_TYPE_SOFT_ADT_ENABLE__)
+
+#if (__FUNC_TYPE_SOFT_ADT_ENABLE__) 
 GU8 g_uchHardAdtFuncStatus = 0;    //0: stop   1: start
 GU8 g_uchVirtualAdtTimerCtrlStatus = 0;  //0: stop  1: running
 #endif
@@ -1665,7 +1666,7 @@ int Gh3x2xDemoInit(void)
     /* Step 6: Soft ADT init */
     #if (__FUNC_TYPE_SOFT_ADT_ENABLE__)
     {
-        Gh3x2x_SetAdtConfirmPara(__GSENSOR_MOVE_THRESHOLD__, __GSENSOR_MOVE_CNT_THRESHOLD__, __GSENSOR_NOT_MOVE_CNT_THRESHOLD__);
+        Gh3x2x_SetAdtConfirmPara(__GSENSOR_MOVE_THRESHOLD__ * (1 << __GS_SENSITIVITY_CONFIG__), __GSENSOR_MOVE_CNT_THRESHOLD__, __GSENSOR_NOT_MOVE_CNT_THRESHOLD__);
     #if (__USE_POLLING_TIMER_AS_ADT_TIMER__)&&\
         (__POLLING_INT_PROCESS_MODE__ == __INTERRUPT_PROCESS_MODE__ || __MIX_INT_PROCESS_MODE__ == __INTERRUPT_PROCESS_MODE__)
     #else

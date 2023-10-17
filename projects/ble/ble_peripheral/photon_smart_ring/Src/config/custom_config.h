@@ -170,7 +170,7 @@
 // <o> Enable callstack backtrace function
 // <i> Default: 0
 #ifndef ENABLE_BACKTRACE_FEA     
-#define ENABLE_BACKTRACE_FEA    0
+#define ENABLE_BACKTRACE_FEA    1
 #endif
 
 // </h>
@@ -272,7 +272,7 @@
 
 // <o> Support 31 bytes adv data for legacy adv
 #ifndef CFG_MAX_ADV_DATA_LEN_SUPPORT
-#define CFG_MAX_ADV_DATA_LEN_SUPPORT            0
+#define CFG_MAX_ADV_DATA_LEN_SUPPORT            1
 #endif
 
 // <o> Support maximum number of BLE Periodic Advertisings <0-5>

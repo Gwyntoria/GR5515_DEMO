@@ -579,6 +579,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\components\libraries\fault_trace\fault_trace.c</FilePath>
             </File>
+            <File>
+              <FileName>dfu_port.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\components\libraries\dfu_port\dfu_port.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -588,6 +593,16 @@
               <FileName>ble_prf_utils.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\components\profiles\common\ble_prf_utils.c</FilePath>
+            </File>
+            <File>
+              <FileName>hrs.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\components\profiles\hrs\hrs.c</FilePath>
+            </File>
+            <File>
+              <FileName>otas.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\components\profiles\otas\otas.c</FilePath>
             </File>
           </Files>
         </Group>
@@ -681,6 +696,36 @@
         </Group>
         <Group>
           <GroupName>gh3x2x_drv_lib</GroupName>
+          <Files>
+            <File>
+              <FileName>gh3x2x_drv.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\gh3x2x_drv.h</FilePath>
+            </File>
+            <File>
+              <FileName>libgh3x2x_drv_cortexM4l_band_keil_agc.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_agc.lib</FilePath>
+            </File>
+            <File>
+              <FileName>libgh3x2x_drv_cortexM4l_band_keil_ecg.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_ecg.lib</FilePath>
+            </File>
+            <File>
+              <FileName>libgh3x2x_drv_cortexM4l_band_keil_kernel.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_kernel.lib</FilePath>
+            </File>
+            <File>
+              <FileName>libgh3x2x_drv_cortexM4l_band_keil_zip.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_zip.lib</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>gh3x2x_drv_lib_debug</GroupName>
           <GroupOption>
             <CommonProperty>
               <UseCPPCompiler>0</UseCPPCompiler>
@@ -750,36 +795,6 @@
               </Aads>
             </GroupArmAds>
           </GroupOption>
-          <Files>
-            <File>
-              <FileName>gh3x2x_drv.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\gh3x2x_drv.h</FilePath>
-            </File>
-            <File>
-              <FileName>libgh3x2x_drv_cortexM4l_band_keil_agc.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_agc.lib</FilePath>
-            </File>
-            <File>
-              <FileName>libgh3x2x_drv_cortexM4l_band_keil_ecg.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_ecg.lib</FilePath>
-            </File>
-            <File>
-              <FileName>libgh3x2x_drv_cortexM4l_band_keil_kernel.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_kernel.lib</FilePath>
-            </File>
-            <File>
-              <FileName>libgh3x2x_drv_cortexM4l_band_keil_zip.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_zip.lib</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>gh3x2x_drv_lib_debug</GroupName>
           <Files>
             <File>
               <FileName>gh3x2x_drv.h</FileName>
@@ -1052,9 +1067,9 @@
           <GroupName>ble_service</GroupName>
           <Files>
             <File>
-              <FileName>ghealth.c</FileName>
+              <FileName>health.c</FileName>
               <FileType>1</FileType>
-              <FilePath>..\Src\gh3x2x\ble_service\ghealth.c</FilePath>
+              <FilePath>..\Src\gh3x2x\ble_service\health.c</FilePath>
             </File>
           </Files>
         </Group>
