@@ -45,7 +45,7 @@
 #endif
 
 /* function algo enable config */
-#define __USE_GOODIX_ADT_ALGORITHM__           (0)
+#define __USE_GOODIX_ADT_ALGORITHM__           (1)
 #define __USE_GOODIX_HR_ALGORITHM__            (1)
 #define __USE_GOODIX_HRV_ALGORITHM__           (1)
 #define __USE_GOODIX_HSM_ALGORITHM__           (0)

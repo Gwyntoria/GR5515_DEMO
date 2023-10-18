@@ -323,7 +323,7 @@ void ble_init_cmp_callback(void)
     sdk_err_t     error_code;
 
     sys_sdk_verison_get(&version);
-    APP_LOG_INFO("Goodix GR551x SDK V%d.%d.%02d (commit %d)", version.major, version.minor, version.build,
+    APP_LOG_INFO("Goodix GR551x SDK V%d.%d.%02d (commit %u)", version.major, version.minor, version.build,
                  version.commit_id);
 
     error_code = ble_gap_addr_get(&bd_addr);

@@ -47,6 +47,7 @@
 #if (APP_LOG_PORT == 1)
 #include "SEGGER_RTT.h"
 #endif
+#include "GR5515_SK.h"
 
 
 

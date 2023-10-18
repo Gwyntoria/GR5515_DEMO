@@ -4,6 +4,8 @@
 
 #include "user_rtc.h"
 
+static FuncOption func_status = kFuncOptionNull;
+
 uint16_t func_ctrl_init() {}
 
 uint16_t func_ctrl_deinit() {}

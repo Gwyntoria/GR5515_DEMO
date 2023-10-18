@@ -54,6 +54,11 @@
 
 #include "gh3x2x_demo.h"
 #include "gh3x2x_demo_config.h"
+
+#include "user_rtc.h"
+#include "user_common.h"
+#include "user_func_ctrl.h"
+
 /*
  * GLOBAL VARIABLE DEFINITIONS
  *****************************************************************************************
@@ -69,6 +74,7 @@ extern GU8 g_uchGh3x2xIntCallBackIsCalled;
  * LOCAL VARIABLE DEFINITIONS
  *****************************************************************************************
  */
+
 /**@brief Stack global variables for Bluetooth protocol stack. */
 STACK_HEAP_INIT(heaps_table);
 
@@ -80,30 +86,34 @@ static app_callback_t s_app_ble_callback = {
     .app_sec_callback          = &app_sec_callback,
 };
 
+#define VER_MAJOR 0
+#define VER_MINOR 1
+#define VER_BUILD 1
+
+static char APP_VERSION[16];
+
 int main(void)
 {
     // Initialize user peripherals.
-    app_periph_init(); // app层外设初始化
+    app_periph_init();
 
     // Initialize ble stack.
     ble_stack_init(&s_app_ble_callback, &heaps_table); /*< init ble stack*/
 
-    Gh3x2xDemoInit();
+    sprintf(APP_VERSION, "%d.%d.%d", VER_MAJOR, VER_MINOR, VER_BUILD);
+    APP_LOG_INFO("App Version: %s\r\n", APP_VERSION);
 
-    // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
+    Gh3x2xDemoInit();
+    rtc_init();
+
+    // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN);
+    // rtc_set_tick_alarm(SEC_TO_MS * 10);
 
     while (1) {
-#if (__INTERRUPT_PROCESS_BY_POLLING__)
-        extern GU8 g_uchGh3x2xInt;
-        if (g_uchGh3x2xInt) {
-            g_uchGh3x2xInt = 0;
-            Gh3x2xDemoInterruptProcess();
-        }
-#else
         if (g_uchGh3x2xIntCallBackIsCalled) {
             Gh3x2xDemoInterruptProcess();
         }
-#endif
+
         app_log_flush();     // 刷新log缓存
         pwr_mgmt_schedule(); // 电源管理调度，负责管理查询是否可以进入睡眠
         dfu_schedule();

@@ -147,9 +147,14 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 {
 #if (__USE_GOODIX_HRV_ALGORITHM__)
     /* code implement by user */
-    //SLAVER_LOG("snHrvOut0=%d,snHrvOut1=%d,snHrvOut2=%d,snHrvOut3=%d,snHrvNum=%d,snHrvConfi=%d\r\n",
-    //          stHrvAlgoRes[0].snHrvOut0,stHrvAlgoRes[0].snHrvOut1,stHrvAlgoRes[0].snHrvOut2,stHrvAlgoRes[0].snHrvOut3,stHrvAlgoRes[0].snHrvNum,stHrvAlgoRes[0].snHrvNum);
-    //GOODIX_PLANFROM_HRV_RESULT_REPORT_ENTITY();
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:hrv_num = %d, RRI0 = %d, RRI1 = %d, RRI2 = %d, RRI3 = %d, RRI4 = %d\r\n",
+                                 __FUNCTION__, 
+                                 pstAlgoResult->snResult[5], 
+                                 pstAlgoResult->snResult[0],
+                                 pstAlgoResult->snResult[1], 
+                                 pstAlgoResult->snResult[2], 
+                                 pstAlgoResult->snResult[3],
+                                 pstAlgoResult->snResult[4]);
 #endif
 }
 

@@ -52,20 +52,10 @@
 #include "gr55xx_sys.h"
 #include "hal_flash.h"
 
-/*
- * DEFINES
- *****************************************************************************************
- */
-/*
- * LOCAL VARIABLE DEFINITIONS
- *****************************************************************************************
- */
-/**@brief Bluetooth device address. */
+#include "gh3x2x_demo.h"
+#include "gh3x2x_demo_config.h"
 
-/*
- * GLOBAL FUNCTION DEFINITIONS
- *****************************************************************************************
- */
+static const uint8_t  s_bd_addr[SYS_BD_ADDR_LEN] = {0x0f, 0x00, 0xcf, 0x3e, 0xcb, 0xea};
 
 static void app_log_assert_init(void)
 {
@@ -74,8 +64,6 @@ static void app_log_assert_init(void)
 }
 
 uint8_t r_data[50];
-#include "gh3x2x_demo.h"
-#include "gh3x2x_demo_config.h"
 void app_uart_evt_handler(app_uart_evt_t *p_evt)
 {
     switch(p_evt->type)
@@ -86,30 +74,28 @@ void app_uart_evt_handler(app_uart_evt_t *p_evt)
             break;
         case APP_UART_EVT_RX_DATA:
 
-            if(memcmp(r_data,"[SPO2]",6) == 0)
-            {
+            if (memcmp(r_data, "[SPO2]", 6) == 0) {
                 Gh3x2xDemoStopSampling(0xFFFFFFFF);
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SPO2);
                 APP_LOG_INFO("GH3X2X_FUNCTION_SPO2");
-            }
-            else if(memcmp(r_data,"[HR]",4) == 0)
-            {
+            } else if (memcmp(r_data, "[HR]", 4) == 0) {
                 Gh3x2xDemoStopSampling(0xFFFFFFFF);
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
                 APP_LOG_INFO("GH3X2X_FUNCTION_HR");
-            }
-            else if(memcmp(r_data,"[ECG]",5) == 0)
-            {
+            } else if (memcmp(r_data, "[ECG]", 5) == 0) {
                 Gh3x2xDemoStopSampling(0xFFFFFFFF);
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_LEAD_DET);
                 APP_LOG_INFO("GH3X2X_FUNCTION_ECG");
-            }
-            else if(memcmp(r_data,"[ADT]",5) == 0)
-            {
+            } else if (memcmp(r_data, "[ADT]", 5) == 0) {
                 Gh3x2xDemoStopSampling(0xFFFFFFFF);
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_ADT);
-                APP_LOG_INFO("GH3X2X_FUNCTION_HR");
+                APP_LOG_INFO("GH3X2X_FUNCTION_ADT");
+            } else if (memcmp(r_data, "[HRV]", 5) == 0) {
+                Gh3x2xDemoStopSampling(0xFFFFFFFF);
+                Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HRV);
+                APP_LOG_INFO("GH3X2X_FUNCTION_HRV");
             }
+
             app_uart_receive_async(APP_UART_ID, r_data, 50);    
             break;
         default:
@@ -117,9 +103,11 @@ void app_uart_evt_handler(app_uart_evt_t *p_evt)
     }
 }
 
-void app_periph_init(void)
+void app_periph_init()
 {
-    app_log_assert_init();          //log初始化
+    SYS_SET_BD_ADDR(s_bd_addr);
+
+    app_log_assert_init(); // log初始化
     app_uart_receive_async(APP_UART_ID, r_data, 50);
-    pwr_mgmt_mode_set(PMR_MGMT_ACTIVE_MODE);  //设置睡眠模式
+    pwr_mgmt_mode_set(PMR_MGMT_ACTIVE_MODE); // 设置睡眠模式
 }
