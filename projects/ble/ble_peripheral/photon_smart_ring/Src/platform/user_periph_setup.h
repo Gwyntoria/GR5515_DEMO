@@ -48,7 +48,7 @@
  * @brief Init User Periph (GPIO SPI IIC ...)
  *****************************************************************************************
  */
-void app_periph_init();
+void app_periph_init(void);
 
 
 #endif

@@ -16,10 +16,10 @@ typedef enum RtcStatus {
     kRtcDefault,
 } RtcStatus;
 
-uint16_t rtc_init();
-uint16_t rtc_deinit();
+uint16_t rtc_init(void);
+void rtc_deinit(void);
 
-RtcStatus rtc_get_rtc_status();
+RtcStatus rtc_get_rtc_status(void);
 
 /**
  * @brief Set the clock alarm at millisecond intervals
@@ -28,7 +28,7 @@ RtcStatus rtc_get_rtc_status();
  * @return uint16_t Result of operation
  */
 uint16_t rtc_set_tick_alarm(uint32_t tick_interval_ms);
-uint16_t rtc_disable_tick_alarm();
+uint16_t rtc_disable_tick_alarm(void);
 
 /**
  * @brief Set a clock alarm triggered by a date
@@ -37,17 +37,20 @@ uint16_t rtc_disable_tick_alarm();
  * @return uint16_t Result of operation
  */
 uint16_t rtc_set_date_alarm(app_rtc_alarm_t* alarm);
-uint16_t rtc_disable_date_alarm();
+uint16_t rtc_disable_date_alarm(void);
 
 /**
  * @brief Disable all clock alarms
  *
  * @return uint16_t Result of operation
  */
-uint16_t rtc_disable_all_alarm();
+uint16_t rtc_disable_all_alarm(void);
 
-uint16_t rtc_get_current_time(app_rtc_time_t* time);
-uint32_t rtc_get_current_time_ms();
+uint16_t rtc_get_current_local_time(app_rtc_time_t* time);
+
+uint16_t rtc_adjust_time(app_rtc_time_t* time);
+
+uint16_t rtc_time_diff_test(void);
 
 #ifdef __cplusplus
 #if __cplusplus

@@ -9,28 +9,29 @@
 #include "user_app.h"
 #include "user_common.h"
 
-static char* const week_str[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
+// static char* const week_str[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
 static RtcStatus rtc_status = kRtcDefault;
 
 void rtc_evt_tick_alarm_handler() {
-    // start_sampling(get_function_option());
-    // printf("rtc tick trigger\n");
+    APP_LOG_INFO("rtc tick alarm triggered\r\n");
+
+    rtc_time_diff_test();
+
 }
 
 void rtc_evt_date_alarm_handler() {
-    // printf("rtc data trigger\n");
+    APP_LOG_INFO("rtc date alarm triggered\r\n");
+
 }
 
 void rtc_alarm_evt_handler(app_rtc_evt_t* p_evt) {
     switch (p_evt->type) {
         case APP_RTC_EVT_TICK_ALARM:
-            // APP_LOG_INFO("[%s] APP_RTC_EVT_TICK_ALARM\n", __FUNCTION__);
             rtc_evt_tick_alarm_handler();
             break;
 
         case APP_RTC_EVT_DATE_ALARM:
-            // APP_LOG_INFO("[%s] APP_RTC_EVT_DATE_ALARM\n", __FUNCTION__);
             rtc_evt_date_alarm_handler();
             break;
 
@@ -58,14 +59,15 @@ uint16_t rtc_init() {
 
     time.year = 23;
     time.mon  = 10;
-    time.date = 7;
-    time.hour = 14;
-    time.min  = 0;
+    time.date = 19;
+    time.hour = 10;
+    time.min  = 45;
     time.sec  = 0;
-    time.week = 6;
+    time.ms   = 0;
+    time.week = 3;
 
-    APP_LOG_INFO("Set rtc time %02d.%02d.%02d %02d:%02d:%02d\n", time.mon, time.date, time.year, time.hour, time.min,
-                 time.sec);
+    APP_LOG_INFO("Set rtc time %04d%02d%02d%02d%02d%02d%03d\n", 
+                 time.year + 2000, time.mon, time.date, time.hour, time.min, time.sec, time.ms);
 
     ret = app_rtc_init_time(&time);
     if (ret != HAL_OK) {
@@ -80,7 +82,7 @@ uint16_t rtc_init() {
     return 0;
 }
 
-uint16_t rtc_deinit() {
+void rtc_deinit() {
     rtc_status = kRtcOff;
     app_rtc_deinit();
 }
@@ -116,6 +118,8 @@ uint16_t rtc_set_date_alarm(app_rtc_alarm_t* alarm) {
         APP_LOG_ERROR("app_rtc_setup_alarm failed with %#x!\n", ret);
         return ret;
     }
+
+    return ret;
 }
 
 uint16_t rtc_disable_date_alarm() {
@@ -140,31 +144,60 @@ uint16_t rtc_disable_all_alarm() {
     return ret;
 }
 
-uint16_t rtc_adjust_time(app_rtc_time_t* time) {}
 
-uint16_t rtc_get_current_time(app_rtc_time_t* time) {
+uint16_t rtc_get_current_local_time(app_rtc_time_t* time) {
     uint16_t ret = HAL_ERROR;
 
     ret = app_rtc_get_time(time);
     if (ret != HAL_OK) {
         APP_LOG_ERROR("app_rtc_get_time failed with %#x!\n", ret);
-        return (uint32_t)ret;
+        return ret;
     }
 
     return ret;
 }
 
-uint32_t rtc_get_current_time_ms() {
+uint16_t rtc_adjust_time(app_rtc_time_t* time)
+{
+    uint16_t ret;
+
+    ret = app_rtc_init_time(time);
+    if (ret != HAL_OK) {
+        APP_LOG_ERROR("app_rtc_init_time failed with %#x!\n", ret);
+        return ret;
+    }
+
+    APP_LOG_INFO("set rtc time: %04d%02d%02d%02d%02d%02d%03d", 
+                                time->year + 2000, 
+                                time->mon,
+                                time->date,
+                                time->hour,
+                                time->min,
+                                time->sec,
+                                time->ms);
+
+    return ret;
+}
+
+uint16_t rtc_time_diff_test()
+{
     uint16_t       ret  = HAL_ERROR;
     app_rtc_time_t time = {0};
 
-    ret = app_rtc_get_time(&time);
+    ret = rtc_get_current_local_time(&time);
     if (ret != HAL_OK) {
-        APP_LOG_ERROR("app_rtc_get_time failed with %#x!\n", ret);
-        return (uint32_t)ret;
+        APP_LOG_ERROR("rtc_time_diff_test failed!\n");
+        return ret;
     }
 
-    uint32_t current_time_ms = time.ms + time.sec * SEC_TO_MS + time.min * MIN_TO_MS + time.hour * HOR_TO_MS;
+    APP_LOG_INFO("current time: %04d%02d%02d%02d%02d%02d%03d", 
+                                time.year + 2000, 
+                                time.mon,
+                                time.date,
+                                time.hour,
+                                time.min,
+                                time.sec,
+                                time.ms);
 
-    return current_time_ms;
+    return ret;
 }

@@ -107,7 +107,7 @@ int main(void)
     rtc_init();
 
     // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN);
-    // rtc_set_tick_alarm(SEC_TO_MS * 10);
+    rtc_set_tick_alarm(MIN_TO_MS * 1 + 500);
 
     while (1) {
         if (g_uchGh3x2xIntCallBackIsCalled) {
