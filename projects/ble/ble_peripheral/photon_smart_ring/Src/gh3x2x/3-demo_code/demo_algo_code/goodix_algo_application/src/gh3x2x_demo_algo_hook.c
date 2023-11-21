@@ -147,7 +147,7 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 {
 #if (__USE_GOODIX_HRV_ALGORITHM__)
     /* code implement by user */
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:hrv_num = %d, RRI0 = %d, RRI1 = %d, RRI2 = %d, RRI3 = %d, RRI4 = %d\r\n",
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:hrv_num = %d, RRI0 = %d, RRI1 = %d, RRI2 = %d, RRI3 = %d, Confidence = %d\r\n",
                                  __FUNCTION__, 
                                  pstAlgoResult->snResult[5], 
                                  pstAlgoResult->snResult[0],

@@ -689,6 +689,11 @@
               <FileType>1</FileType>
               <FilePath>..\Src\user\user_common.c</FilePath>
             </File>
+            <File>
+              <FileName>user_func_ctrl.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\user\user_func_ctrl.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

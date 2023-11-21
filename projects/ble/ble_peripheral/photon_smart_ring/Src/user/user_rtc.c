@@ -8,6 +8,7 @@
 
 #include "user_app.h"
 #include "user_common.h"
+#include "user_func_ctrl.h"
 
 // static char* const week_str[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
@@ -16,8 +17,7 @@ static RtcStatus rtc_status = kRtcDefault;
 void rtc_evt_tick_alarm_handler() {
     APP_LOG_INFO("rtc tick alarm triggered\r\n");
 
-    rtc_time_diff_test();
-
+    func_ctrl_start_sampling(func_ctrl_get_option());
 }
 
 void rtc_evt_date_alarm_handler() {
@@ -66,7 +66,7 @@ uint16_t rtc_init() {
     time.ms   = 0;
     time.week = 3;
 
-    APP_LOG_INFO("Set rtc time %04d%02d%02d%02d%02d%02d%03d\n", 
+    APP_LOG_INFO("set rtc time: %04d%02d%02d%02d%02d%02d%03d\n", 
                  time.year + 2000, time.mon, time.date, time.hour, time.min, time.sec, time.ms);
 
     ret = app_rtc_init_time(&time);
