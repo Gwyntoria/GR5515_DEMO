@@ -39,7 +39,7 @@ extern "C" {
  * @param data Data that needs to be printed
  * @param len Length of the data that needs to be printed
  */
-void print_data_stream_hex(const uint8_t* data, unsigned long len);
+void data_stream_hex(const uint8_t* data, unsigned long len);
 
 #ifdef __cplusplus
 }

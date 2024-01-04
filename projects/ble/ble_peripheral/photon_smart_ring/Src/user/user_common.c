@@ -17,7 +17,7 @@
 #define BP_GRAPH  60
 #define BP_LEN    80
 
-void print_data_stream_hex(const uint8_t* data, unsigned long len)
+void data_stream_hex(const uint8_t* data, unsigned long len)
 {
     char              line[BP_LEN];
     unsigned long     i;
