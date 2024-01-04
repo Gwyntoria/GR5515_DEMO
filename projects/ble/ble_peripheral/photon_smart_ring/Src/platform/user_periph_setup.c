@@ -55,7 +55,7 @@
 #include "gh3x2x_demo.h"
 #include "gh3x2x_demo_config.h"
 
-static const uint8_t  s_bd_addr[SYS_BD_ADDR_LEN] = {0x0f, 0x00, 0xcf, 0x3e, 0xcb, 0xea};
+// static const uint8_t  s_bd_addr[SYS_BD_ADDR_LEN] = {0x0f, 0x00, 0xcf, 0x3e, 0xcb, 0xea};
 
 static void app_log_assert_init(void)
 {
@@ -105,7 +105,7 @@ void app_uart_evt_handler(app_uart_evt_t *p_evt)
 
 void app_periph_init()
 {
-    SYS_SET_BD_ADDR(s_bd_addr);
+    // SYS_SET_BD_ADDR(s_bd_addr);
 
     app_log_assert_init(); // log初始化
     app_uart_receive_async(APP_UART_ID, r_data, 50);
