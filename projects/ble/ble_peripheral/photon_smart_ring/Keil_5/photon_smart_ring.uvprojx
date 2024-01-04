@@ -604,6 +604,11 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\components\profiles\otas\otas.c</FilePath>
             </File>
+            <File>
+              <FileName>dis.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\components\profiles\dis\dis.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
