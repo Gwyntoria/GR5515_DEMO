@@ -55,9 +55,10 @@
 #include "gh3x2x_demo.h"
 #include "gh3x2x_demo_config.h"
 
-#include "user_rtc.h"
 #include "user_common.h"
 #include "user_func_ctrl.h"
+#include "user_rtc.h"
+
 
 /*
  * GLOBAL VARIABLE DEFINITIONS

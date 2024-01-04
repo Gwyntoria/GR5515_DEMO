@@ -50,13 +50,14 @@
 #include "hrs.h"
 #include "otas.h"
 #include "utility.h"
+#include "dis.h"
 
 /*
  * DEFINES
  *****************************************************************************************
  */
 /**@brief Gapm config data. */
-#define DEVICE_NAME               "Health-3220" /**< Device Name which will be set in GAP. */
+#define DEVICE_NAME               "SMART RING" /**< Device Name which will be set in GAP. */
 #define APP_ADV_FAST_MIN_INTERVAL 32            /**< The fast advertising min interval (in units of 0.625 ms). */
 #define APP_ADV_FAST_MAX_INTERVAL 48            /**< The fast advertising max interval (in units of 0.625 ms). */
 #define APP_ADV_SLOW_MIN_INTERVAL 160           /**< The slow advertising min interval (in units of 0.625 ms). */
@@ -74,53 +75,78 @@
 static gap_adv_param_t      s_gap_adv_param;      /**< Advertising parameters for legay advertising. */
 static gap_adv_time_param_t s_gap_adv_time_param; /**< Advertising time parameter. */
 
-static const uint8_t s_adv_data_set[] = /**< Advertising data. */
-    {
-        0x11, // Length of this data
-        BLE_GAP_AD_TYPE_COMPLETE_LIST_128_BIT_UUID,
-        HEALTH_SERVICE_UUID,
-        // Device appearance
-        0x03,
-        BLE_GAP_AD_TYPE_APPEARANCE,
-        LO_U16(BLE_APPEARANCE_GENERIC_HEART_RATE_SENSOR),
-        HI_U16(BLE_APPEARANCE_GENERIC_HEART_RATE_SENSOR),
+static char s_devinfo_model_number[]  = "hr-sensor-01";
+static char s_devinfo_serial_number[] = "0001";
+static char s_devinfo_firmware_rev[]  = "1.0";
+static char s_devinfo_hardware_rev[]  = "1.0";
+static char s_devinfo_software_rev[]  = "0.80";
+static char s_devinfo_mfr_name[]      = "Goodix";
 
-        // Device Services uuid
-        0x07,
-        BLE_GAP_AD_TYPE_COMPLETE_LIST_16_BIT_UUID,
-        LO_U16(BLE_ATT_SVC_HEART_RATE),
-        HI_U16(BLE_ATT_SVC_HEART_RATE),
-        LO_U16(BLE_ATT_SVC_DEVICE_INFO),
-        HI_U16(BLE_ATT_SVC_DEVICE_INFO),
-        LO_U16(BLE_ATT_SVC_BATTERY_SERVICE),
-        HI_U16(BLE_ATT_SVC_BATTERY_SERVICE),
+static dis_sys_id_t s_devinfo_system_id = {
+    .manufacturer_id = {0x12, 0x34, 0x56, 0x78, 0x9A}, /**< The manufacturer-defined identifier. */
+    .org_unique_id   = {0xBC, 0xDE, 0xF0}  /**< DUMMY Organisation Unique ID (OUI),
+                                                You shall use the OUI of your company. */
+};
+
+static  char s_devinfo_cert[] = {
+    // authoritative body type
+    DIS_11073_BODY_EXP,
+    // authoritative body structure type
+    0x00,
+    // authoritative body data follows below:
+    'e', 'x', 'p', 'e', 'r', 'i', 'm', 'e', 'n', 't', 'a', 'l'
+};
+
+static dis_pnp_id_t s_devinfo_pnp_id = {
+    .vendor_id_source = 1,      /* Vendor ID source (1=Bluetooth SIG) */
+    .vendor_id        = 0x04F7, /* Vendor ID */
+    .product_id       = 0x1234, /* Product ID (vendor-specific) */
+    .product_version  = 0x0110  /* Product version (JJ.M.N) */
+};
+
+static const uint8_t s_adv_data_set[] = /**< Advertising data. */
+{
+    0x0b,                         
+    BLE_GAP_AD_TYPE_COMPLETE_NAME,
+    'S','m','a','r','t',' ','R','i','n','g',
+
+    // 0x11, // Length of this data
+    // BLE_GAP_AD_TYPE_COMPLETE_LIST_128_BIT_UUID,
+    // HEALTH_SERVICE_UUID,
+
+    // Device appearance
+    0x03,
+    BLE_GAP_AD_TYPE_APPEARANCE,
+    LO_U16(BLE_APPEARANCE_GENERIC_HEART_RATE_SENSOR),
+    HI_U16(BLE_APPEARANCE_GENERIC_HEART_RATE_SENSOR),
+    
+    // Device Services uuid
+    0x07,
+    BLE_GAP_AD_TYPE_COMPLETE_LIST_16_BIT_UUID,
+    LO_U16(BLE_ATT_SVC_HEART_RATE),
+    HI_U16(BLE_ATT_SVC_HEART_RATE),
+    LO_U16(BLE_ATT_SVC_DEVICE_INFO),
+    HI_U16(BLE_ATT_SVC_DEVICE_INFO),
+    LO_U16(BLE_ATT_SVC_BATTERY_SERVICE),
+    HI_U16(BLE_ATT_SVC_BATTERY_SERVICE),
 
 };
 
 static const uint8_t s_adv_rsp_data_set[] = /**< Scan responce data. */
-    {
-        0x0c,                          // Length of this data
-        BLE_GAP_AD_TYPE_COMPLETE_NAME, // Health
-        'H',
-        'e',
-        'a',
-        'l',
-        't',
-        'h',
-        '_',
-        '3',
-        '2',
-        '2',
-        '0',
-        // Manufacturer specific adv data type
-        0x05,
-        BLE_GAP_AD_TYPE_MANU_SPECIFIC_DATA,
-        // Goodix SIG Company Identifier: 0x04F7
-        0xF7,
-        0x04,
-        // Goodix specific adv data
-        0x02,
-        0x03,
+{
+    // 0x0b,                         
+    // BLE_GAP_AD_TYPE_COMPLETE_NAME,
+    // 'S','m','a','r','t',' ','R','i','n','g',
+
+    // Manufacturer specific adv data type
+    0x05,
+    BLE_GAP_AD_TYPE_MANU_SPECIFIC_DATA,
+    // Goodix SIG Company Identifier: 0x04F7
+    0xF7,
+    0x04,
+    // Goodix specific adv data
+    0x02,
+    0x03,
 };
 
 /*
@@ -139,6 +165,27 @@ static void gap_params_init(void)
 {
     sdk_err_t error_code;
 
+    ble_gap_pair_enable(true);
+
+#ifndef PTS_AUTO_TEST
+    error_code = ble_gap_privacy_params_set(900, true);
+    APP_ERROR_CHECK(error_code);
+#endif
+
+    // Set the default security parameters.
+    sec_param_t sec_param = {
+        .level     = SEC_MODE1_LEVEL2,
+        .io_cap    = IO_NO_INPUT_NO_OUTPUT,
+        .oob       = false,
+        .auth      = AUTH_BOND | AUTH_SEC_CON,
+        .key_size  = 16,
+        .ikey_dist = KDIST_ALL,
+        .rkey_dist = KDIST_ALL,
+    };
+
+    error_code = ble_sec_params_set(&sec_param);
+    APP_ERROR_CHECK(error_code);
+
     error_code = ble_gap_device_name_set(BLE_GAP_WRITE_PERM_DISABLE, (uint8_t*)DEVICE_NAME, strlen(DEVICE_NAME));
 
     s_gap_adv_param.adv_intv_max = APP_ADV_SLOW_MAX_INTERVAL;
@@ -151,15 +198,19 @@ static void gap_params_init(void)
     error_code = ble_gap_adv_param_set(0, BLE_GAP_OWN_ADDR_STATIC, &s_gap_adv_param);
     APP_ERROR_CHECK(error_code);
 
-    error_code =
-        ble_gap_adv_data_set(0, BLE_GAP_ADV_DATA_TYPE_SCAN_RSP, s_adv_rsp_data_set, sizeof(s_adv_rsp_data_set));
+    error_code = ble_gap_adv_data_set(0, BLE_GAP_ADV_DATA_TYPE_DATA, s_adv_data_set, sizeof(s_adv_data_set));
     APP_ERROR_CHECK(error_code);
 
-    error_code = ble_gap_adv_data_set(0, BLE_GAP_ADV_DATA_TYPE_DATA, s_adv_data_set, sizeof(s_adv_data_set));
+    error_code = ble_gap_adv_data_set(0, BLE_GAP_ADV_DATA_TYPE_SCAN_RSP, s_adv_rsp_data_set, sizeof(s_adv_rsp_data_set));
     APP_ERROR_CHECK(error_code);
 
     s_gap_adv_time_param.duration    = 0;
     s_gap_adv_time_param.max_adv_evt = 0;
+
+    error_code = ble_gap_adv_start(0, &s_gap_adv_time_param);
+    APP_ERROR_CHECK(error_code);
+
+    APP_LOG_DEBUG("Permanent Advertising starting.");
 }
 
 /**
@@ -200,6 +251,7 @@ static void health_service_process_event(health_evt_t* p_evt)
             break;
     }
 }
+
 GU8         hrs_notify_flag = 0;
 static void heartrate_service_process_event(hrs_evt_t* p_hrs_evt)
 {
@@ -273,14 +325,38 @@ static void dfu_program_end_callback(uint8_t status)
 static void services_init(void)
 {
     sdk_err_t     error_code;
+    dis_init_t    dis_env_init;
     health_init_t health_init;
     hrs_init_t    hrs_init;
 
+    /* Device Info Service */
+    dis_env_init.char_mask                   = DIS_CHAR_FULL;
+    dis_env_init.manufact_name_str.p_str     = s_devinfo_mfr_name;
+    dis_env_init.manufact_name_str.length    = strlen(s_devinfo_mfr_name);
+    dis_env_init.model_num_str.p_str         = s_devinfo_model_number;
+    dis_env_init.model_num_str.length        = strlen(s_devinfo_model_number);
+    dis_env_init.serial_num_str.p_str        = s_devinfo_serial_number;
+    dis_env_init.serial_num_str.length       = strlen(s_devinfo_serial_number);
+    dis_env_init.hw_rev_str.p_str            = s_devinfo_hardware_rev;
+    dis_env_init.hw_rev_str.length           = strlen(s_devinfo_hardware_rev);
+    dis_env_init.fw_rev_str.p_str            = s_devinfo_firmware_rev;
+    dis_env_init.fw_rev_str.length           = strlen(s_devinfo_firmware_rev);
+    dis_env_init.sw_rev_str.p_str            = s_devinfo_software_rev;
+    dis_env_init.sw_rev_str.length           = strlen(s_devinfo_software_rev);
+    dis_env_init.p_sys_id                    = &s_devinfo_system_id;
+    dis_env_init.reg_cert_data_list.p_list   = s_devinfo_cert;
+    dis_env_init.reg_cert_data_list.list_len = strlen(s_devinfo_cert);
+    dis_env_init.p_pnp_id                    = &s_devinfo_pnp_id;
+    error_code = dis_service_init(&dis_env_init);
+    APP_ERROR_CHECK(error_code);
+
+    /* Health */
     health_init.evt_handler = health_service_process_event;
 
     error_code = health_service_init(&health_init);
     APP_ERROR_CHECK(error_code);
 
+    /* Heart Rate Service */
     hrs_init.sensor_loc                  = HRS_SENS_LOC_FINGER;
     hrs_init.char_mask                   = HRS_CHAR_MANDATORY | HRS_CHAR_BODY_SENSOR_LOC_SUP | HRS_CHAR_ENGY_EXP_SUP;
     hrs_init.evt_handler                 = heartrate_service_process_event;
@@ -289,6 +365,7 @@ static void services_init(void)
     error_code = hrs_service_init(&hrs_init);
     APP_ERROR_CHECK(error_code);
 
+    /* OTA Service */
     dfu_port_init(NULL, &dfu_pro_call);
     dfu_service_init(NULL);
 }
@@ -323,21 +400,26 @@ void ble_init_cmp_callback(void)
     sdk_err_t     error_code;
 
     sys_sdk_verison_get(&version);
-    APP_LOG_INFO("Goodix GR551x SDK V%d.%d.%02d (commit %u)", version.major, version.minor, version.build,
+    APP_LOG_INFO("Goodix GR551x SDK V%d.%d.%02d (commit %u)", 
+                 version.major, 
+                 version.minor, 
+                 version.build,
                  version.commit_id);
 
     error_code = ble_gap_addr_get(&bd_addr);
 
     APP_ERROR_CHECK(error_code);
-    APP_LOG_INFO("Local Board %02X:%02X:%02X:%02X:%02X:%02X.", bd_addr.gap_addr.addr[5], bd_addr.gap_addr.addr[4],
-                 bd_addr.gap_addr.addr[3], bd_addr.gap_addr.addr[2], bd_addr.gap_addr.addr[1],
+    APP_LOG_INFO("Local Board %02X:%02X:%02X:%02X:%02X:%02X.", 
+                 bd_addr.gap_addr.addr[5], 
+                 bd_addr.gap_addr.addr[4],
+                 bd_addr.gap_addr.addr[3], 
+                 bd_addr.gap_addr.addr[2], 
+                 bd_addr.gap_addr.addr[1],
                  bd_addr.gap_addr.addr[0]);
-    APP_LOG_INFO("Template application example started.");
+    // APP_LOG_INFO("Template application example started.");
 
     services_init();
     gap_params_init();
-
-    error_code = ble_gap_adv_start(0, &s_gap_adv_time_param);
-    APP_ERROR_CHECK(error_code);
+    
     APP_LOG_INFO("ble gap adv started.");
 }
