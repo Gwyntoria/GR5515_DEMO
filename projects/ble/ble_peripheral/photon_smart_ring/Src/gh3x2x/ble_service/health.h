@@ -57,14 +57,14 @@
  * @defgroup HEALTH_MACRO Defines
  * @{
  */
-#define HEALTH_CONNECTION_MAX      (10 < CFG_MAX_CONNECTIONS ?\
-                                10 : CFG_MAX_CONNECTIONS)                          /**< Maximum number of Goodix UART Service connections. */
+#define HEALTH_CONNECTION_MAX   (10 < CFG_MAX_CONNECTIONS ?\
+                                 10 : CFG_MAX_CONNECTIONS)                          /**< Maximum number of Goodix UART Service connections. */
 #define FLOW_ON                 0x01                                               /**< Indicate that HEALTH can receive data from peer. */
 #define FLOW_OFF                0x00                                               /**< Indicate that HEALTH can not receive data from peer. */
-#define HEALTH_MAX_DATA_LEN        247                                                /**< Maximum length of application data packet which is transmitted via HEALTH. */
-#define HEALTH_FLOW_CTRL_LEN       1                                                  /**< Maximum length of ble flow control data packet which is transmitted via HEALTH. */
-#define HEALTH_SERVICE_UUID        0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, \
-                                0x10, 0x00, 0x00, 0x0E, 0x19, 0x00, 0x00     /**< The UUID of Goodix UART Service for setting advertising data. */
+#define HEALTH_MAX_DATA_LEN     247                                                /**< Maximum length of application data packet which is transmitted via HEALTH. */
+#define HEALTH_FLOW_CTRL_LEN    1                                                  /**< Maximum length of ble flow control data packet which is transmitted via HEALTH. */
+#define HEALTH_SERVICE_UUID     0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, \
+                                0x00, 0x10, 0x00, 0x00, 0x0E, 0x19, 0x00, 0x00     /**< The UUID of Goodix UART Service for setting advertising data. */
 
 /** @} */
 
