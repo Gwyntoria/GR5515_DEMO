@@ -609,11 +609,6 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\components\profiles\dis\dis.c</FilePath>
             </File>
-            <File>
-              <FileName>user_sample_service.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\Src\user_ble_services\user_sample_service.c</FilePath>
-            </File>
           </Files>
         </Group>
         <Group>
