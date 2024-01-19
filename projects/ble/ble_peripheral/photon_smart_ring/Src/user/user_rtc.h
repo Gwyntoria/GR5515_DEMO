@@ -16,8 +16,8 @@ typedef enum RtcStatus {
     kRtcDefault,
 } RtcStatus;
 
-uint16_t rtc_init(void);
-void rtc_deinit(void);
+uint16_t user_rtc_init(void);
+uint16_t user_rtc_deinit(void);
 
 RtcStatus rtc_get_rtc_status(void);
 

@@ -7,6 +7,7 @@
 #include "gh3x2x_demo.h"
 
 #include "hrs.h"
+#include "health.h"
 #if (__GOODIX_ALGO_CALL_MODE__)
 
 /**
@@ -89,12 +90,14 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
                       __FUNCTION__, pstAlgoResult->snResult[0],
                                     pstAlgoResult->snResult[1],
                                     pstAlgoResult->snResult[2]);
-    
-    extern GU32 g_unDemoFuncMode;
-//    if((g_unDemoFuncMode & GH3X2X_FUNCTION_SOFT_ADT_GREEN) != GH3X2X_FUNCTION_SOFT_ADT_GREEN)
-    {
-        hrs_heart_rate_measurement_send(0, pstAlgoResult->snResult[0], 1);
-    }
+
+    uint8_t data = pstAlgoResult->snResult[0];
+    health_hr_data_send(0, &data, 1);
+
+    // extern GU32 g_unDemoFuncMode;
+    // if ((g_unDemoFuncMode & GH3X2X_FUNCTION_SOFT_ADT_GREEN) != GH3X2X_FUNCTION_SOFT_ADT_GREEN) {
+    //     hrs_heart_rate_measurement_send(0, pstAlgoResult->snResult[0], 1);
+    // }
 
 #endif
 }
@@ -125,7 +128,8 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
                                     pstAlgoResult->snResult[4],
                                     pstAlgoResult->snResult[5]);
             
-
+    uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
+    health_spo2_data_send(0, &data, 1);
 #endif
 }
 
@@ -156,6 +160,9 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
                                  pstAlgoResult->snResult[3],
                                  pstAlgoResult->snResult[4]);
 #endif
+
+    uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
+    health_hrv_data_send(0, &data, 1);
 }
 
 /**

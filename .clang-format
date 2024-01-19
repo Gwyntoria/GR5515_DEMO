@@ -8,30 +8,27 @@ IndentWidth: 4
 UseTab: Never
 TabWidth: 4
 UseCRLF: false
-ColumnLimit: 120
+ColumnLimit: 0
 MaxEmptyLinesToKeep: 1
 PointerAlignment: Left # Right, Left
 
 # 对齐方式
 AlignAfterOpenBracket: Align
-AlignArrayOfStructures: Right
-# AlignConsecutiveAssignments: true
+AlignArrayOfStructures: Left
 AlignConsecutiveAssignments:
   Enabled: true
   AcrossEmptyLines: false
-  AcrossComments: false
+  AcrossComments: true
   AlignCompound: false
   PadOperators: true
-# AlignConsecutiveDeclarations: true
 AlignConsecutiveDeclarations:
   Enabled: true
   AcrossEmptyLines: false
-  AcrossComments: false
-# AlignConsecutiveMacros: true
+  AcrossComments: true
 AlignConsecutiveMacros:
   Enabled: true
   AcrossEmptyLines: false
-  AcrossComments: false
+  AcrossComments: true
 AlignEscapedNewlines: Left
 AlignOperands: true
 AlignTrailingComments: true

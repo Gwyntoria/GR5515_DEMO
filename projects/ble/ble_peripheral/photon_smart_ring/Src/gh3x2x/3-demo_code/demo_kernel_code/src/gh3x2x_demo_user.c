@@ -797,8 +797,8 @@ void Gh3x2x_UserHandleCurrentInfo(void)
 void Gh3x2x_HalSerialSendData(GU8* uchTxDataBuf, GU16 usBufLen)
 {
 //    sdk_err_t error_code;
-    extern sdk_err_t health_tx_data_send(uint8_t conn_idx, uint8_t *p_data, uint16_t length);
-    health_tx_data_send(0, uchTxDataBuf, usBufLen);
+    // extern sdk_err_t health_tx_data_send(uint8_t conn_idx, uint8_t *p_data, uint16_t length);
+    // health_tx_data_send(0, uchTxDataBuf, usBufLen);
 //    APP_ERROR_CHECK(error_code);
 //    printf("send: ");
 //    for(uint16_t i = 0;i < usBufLen; i ++)

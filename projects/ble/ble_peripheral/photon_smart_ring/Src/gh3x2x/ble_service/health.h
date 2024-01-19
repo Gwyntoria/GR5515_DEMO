@@ -50,21 +50,21 @@
 #ifndef __HEALTH_H__
 #define __HEALTH_H__
 
-#include "gr55xx_sys.h"
 #include "custom_config.h"
+#include "gr55xx_sys.h"
 
 /**
  * @defgroup HEALTH_MACRO Defines
  * @{
  */
-#define HEALTH_CONNECTION_MAX   (10 < CFG_MAX_CONNECTIONS ?\
-                                 10 : CFG_MAX_CONNECTIONS)                          /**< Maximum number of Goodix UART Service connections. */
-#define FLOW_ON                 0x01                                               /**< Indicate that HEALTH can receive data from peer. */
-#define FLOW_OFF                0x00                                               /**< Indicate that HEALTH can not receive data from peer. */
-#define HEALTH_MAX_DATA_LEN     247                                                /**< Maximum length of application data packet which is transmitted via HEALTH. */
-#define HEALTH_FLOW_CTRL_LEN    1                                                  /**< Maximum length of ble flow control data packet which is transmitted via HEALTH. */
-#define HEALTH_SERVICE_UUID     0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, \
-                                0x00, 0x10, 0x00, 0x00, 0x0E, 0x19, 0x00, 0x00     /**< The UUID of Goodix UART Service for setting advertising data. */
+#define HEALTH_CONNECTION_MAX \
+    (10 < CFG_MAX_CONNECTIONS ? 10 : CFG_MAX_CONNECTIONS) /**< Maximum number of Goodix UART Service connections. */
+#define FLOW_ON              0x01                         /**< Indicate that HEALTH can receive data from peer. */
+#define FLOW_OFF             0x00                         /**< Indicate that HEALTH can not receive data from peer. */
+#define HEALTH_MAX_DATA_LEN  247                          /**< Maximum length of application data packet which is transmitted via HEALTH. */
+#define HEALTH_FLOW_CTRL_LEN 1                            /**< Maximum length of ble flow control data packet which is transmitted via HEALTH. */
+#define HEALTH_SERVICE_UUID  0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, \
+                             0x00, 0x10, 0x00, 0x00, 0x0E, 0x19, 0x00, 0x01 /**< The UUID of Goodix UART Service for setting advertising data. */
 
 /** @} */
 
@@ -73,13 +73,31 @@
  * @{
  */
 /**@brief Goodix UART Service event types. */
-typedef enum
-{
-    HEALTH_EVT_INVALID,                /**< Invalid HEALTH event. */
-    HEALTH_EVT_RX_DATA_RECEIVED,       /**< The data from the peer has been received. */
-    HEALTH_EVT_TX_DATA_SENT,           /**< The data from the application has been sent, and the service is ready to accept new data from the application. */
-    HEALTH_EVT_TX_PORT_OPENED,         /**< Tx port has been opened. */
-    HEALTH_EVT_TX_PORT_CLOSED,         /**< Tx port has been closed. */
+typedef enum {
+    HEALTH_EVT_INVALID, /**< Invalid HEALTH event. */
+
+    // HEALTH_EVT_TX_PORT_OPENED,   /**< Tx port has been opened. */
+    // HEALTH_EVT_TX_PORT_CLOSED,   /**< Tx port has been closed. */
+    // HEALTH_EVT_TX_DATA_SENT,     /**< The data from the application has been sent, and the service is ready to accept new
+    //                                 data from the application. */
+
+    HEALTH_EVT_HR_PORT_OPENED,
+    HEALTH_EVT_HR_PORT_CLOSED,
+    HEALTH_EVT_HR_DATA_SENT,
+
+    HEALTH_EVT_HRV_PORT_OPENED,
+    HEALTH_EVT_HRV_PORT_CLOSED,
+    HEALTH_EVT_HRV_DATA_SENT,
+
+    HEALTH_EVT_SPO2_PORT_OPENED,
+    HEALTH_EVT_SPO2_PORT_CLOSED,
+    HEALTH_EVT_SPO2_DATA_SENT,
+
+    HEALTH_EVT_RR_PORT_OPENED,
+    HEALTH_EVT_RR_PORT_CLOSED,
+    HEALTH_EVT_RR_DATA_SENT,
+
+    HEALTH_EVT_RX_DATA_RECEIVED, /**< The data from the peer has been received. */
 } health_evt_type_t;
 /** @} */
 
@@ -88,12 +106,11 @@ typedef enum
  * @{
  */
 /**@brief Goodix UART Service event. */
-typedef struct
-{
-    health_evt_type_t  evt_type;   /**< The HEALTH event. */
-    uint8_t         conn_idx;   /**< The index of the connection for the data transmission. */
-    uint8_t        *p_data;     /**< Pointer to the buffer within received data. */
-    uint16_t        length;     /**< Length of received data. */
+typedef struct {
+    health_evt_type_t evt_type; /**< The HEALTH event. */
+    uint8_t           conn_idx; /**< The index of the connection for the data transmission. */
+    uint8_t*          p_data;   /**< Pointer to the buffer within received data. */
+    uint16_t          length;   /**< Length of received data. */
 } health_evt_t;
 /** @} */
 
@@ -102,17 +119,18 @@ typedef struct
  * @{
  */
 /**@brief Goodix UART Service event handler type. */
-typedef void (*health_evt_handler_t)(health_evt_t *p_evt);
+typedef void (*health_evt_handler_t)(health_evt_t* p_evt);
 /** @} */
 
 /**
  * @addtogroup HEALTH_STRUCT Structures
  * @{
  */
-/**@brief Goodix UART Service init stucture. This contains all option and data needed for initialization of the service. */
-typedef struct
-{
-    health_evt_handler_t evt_handler;                     /**< Goodix UART Service event handler which must be provided by the application to send and receive the data. */
+/**@brief Goodix UART Service init stucture. This contains all option and data needed for initialization of the service.
+ */
+typedef struct {
+    health_evt_handler_t evt_handler; /**< Goodix UART Service event handler which must be provided by the application
+                                         to send and receive the data. */
 } health_init_t;
 /** @} */
 
@@ -129,11 +147,11 @@ typedef struct
  * @return Result of service initialization.
  *****************************************************************************************
  */
-sdk_err_t health_service_init(health_init_t *p_health_init);
+sdk_err_t health_service_init(health_init_t* p_health_init);
 
 /**
  *****************************************************************************************
- * @brief Send data to peer device.
+ * @brief Send heart rate data to peer device.
  *
  * @param[in] conn_idx: Index of the connection.
  * @param[in] p_data:   Pointer to sent data.
@@ -142,7 +160,46 @@ sdk_err_t health_service_init(health_init_t *p_health_init);
  * @return Result of sending data.
  *****************************************************************************************
  */
-sdk_err_t health_tx_data_send(uint8_t conn_idx, uint8_t *p_data, uint16_t length);
+sdk_err_t health_hr_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+
+/**
+ *****************************************************************************************
+ * @brief Send heart rate data to peer device.
+ *
+ * @param[in] conn_idx: Index of the connection.
+ * @param[in] p_data:   Pointer to sent data.
+ * @param[in] length:   Length of sent data.
+ *
+ * @return Result of sending data.
+ *****************************************************************************************
+ */
+sdk_err_t health_hrv_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+
+/**
+ *****************************************************************************************
+ * @brief Send spo2 data to peer device.
+ *
+ * @param[in] conn_idx: Index of the connection.
+ * @param[in] p_data:   Pointer to sent data.
+ * @param[in] length:   Length of sent data.
+ *
+ * @return Result of sending data.
+ *****************************************************************************************
+ */
+sdk_err_t health_spo2_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+
+/**
+ *****************************************************************************************
+ * @brief Send rr data to peer device.
+ *
+ * @param[in] conn_idx: Index of the connection.
+ * @param[in] p_data:   Pointer to sent data.
+ * @param[in] length:   Length of sent data.
+ *
+ * @return Result of sending data.
+ *****************************************************************************************
+ */
+sdk_err_t health_rr_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 
 /** @} */
 

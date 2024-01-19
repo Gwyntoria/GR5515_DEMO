@@ -213,7 +213,7 @@ void bsp_log_init(void)
 #if (APP_LOG_PORT == 0)
     bsp_uart_init();
 #elif (APP_LOG_PORT == 1)
-    SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0, SEGGER_RTT_MODE_BLOCK_IF_FIFO_FULL);
+    SEGGER_RTT_ConfigUpBuffer(0, NULL, NULL, 0, SEGGER_RTT_MODE_NO_BLOCK_SKIP);
 #endif
 
 #if (APP_LOG_PORT <= 2)

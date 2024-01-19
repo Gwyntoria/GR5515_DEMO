@@ -45,7 +45,7 @@
 #endif
 
 /* function algo enable config */
-#define __USE_GOODIX_ADT_ALGORITHM__           (1)
+#define __USE_GOODIX_ADT_ALGORITHM__           (0)
 #define __USE_GOODIX_HR_ALGORITHM__            (1)
 #define __USE_GOODIX_HRV_ALGORITHM__           (1)
 #define __USE_GOODIX_HSM_ALGORITHM__           (0)
@@ -58,7 +58,7 @@
 #define __USE_GOODIX_SOFT_ADT_ALGORITHM__      (1)
 
 /* algorithm log */
-#define __ALGO_LOG_CONFIG__                    (0)
+#define __ALGO_LOG_CONFIG__                    (1)
 
 /* algorithm config max number */
 #define __GOODIX_ALGO_CFG_LIST_MAX_NUM__       (2)

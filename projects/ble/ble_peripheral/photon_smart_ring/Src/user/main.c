@@ -58,7 +58,7 @@
 #include "user_common.h"
 #include "user_func_ctrl.h"
 #include "user_rtc.h"
-
+#include "user_timer.h"
 
 /*
  * GLOBAL VARIABLE DEFINITIONS
@@ -87,10 +87,6 @@ static app_callback_t s_app_ble_callback = {
     .app_sec_callback          = &app_sec_callback,
 };
 
-#define VER_MAJOR 0
-#define VER_MINOR 1
-#define VER_BUILD 1
-
 static char APP_VERSION[16];
 
 int main(void)
@@ -105,21 +101,23 @@ int main(void)
     APP_LOG_INFO("App Version: %s\r\n", APP_VERSION);
 
     Gh3x2xDemoInit();
-    rtc_init();
-    // func_ctrl_init();
+    
+    user_rtc_init();
+    rtc_set_tick_alarm(DETECTION_INTERVAL);
 
-    // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN);
-    // Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
-
-    // rtc_set_tick_alarm(MIN_TO_MS * 1 + 500);
+    func_ctrl_init();
 
     while (1) {
         if (g_uchGh3x2xIntCallBackIsCalled) {
             Gh3x2xDemoInterruptProcess();
         }
 
+        func_ctrl_run();
+
         app_log_flush();     // 刷新log缓存
         pwr_mgmt_schedule(); // 电源管理调度，负责管理查询是否可以进入睡眠
         dfu_schedule();
+
+        delay_ms(100);
     }
 }

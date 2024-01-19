@@ -3,14 +3,18 @@
 
 #include "user_common.h"
 
+#define DETECTION_INTERVAL      (SEC_TO_MS * 60)
+#define DETECTION_CONTIOUS_TIME (SEC_TO_MS * 30)
+
 #define BASE_OPTION (0x01)
 
 typedef enum FuncOption {
-    kFuncOptAdt  = BASE_OPTION << 0,
-    kFuncOptHr   = BASE_OPTION << 1,
-    kFuncOptSpo2 = BASE_OPTION << 2,
-    kFuncOptHrv  = BASE_OPTION << 3,
-    kFuncOptRr   = BASE_OPTION << 4,
+    kFuncOptInitDev = BASE_OPTION << 0,
+    kFuncOptAdt     = BASE_OPTION << 1,
+    kFuncOptHr      = BASE_OPTION << 2,
+    kFuncOptHrv     = BASE_OPTION << 3,
+    kFuncOptSpo2    = BASE_OPTION << 4,
+    kFuncOptRr      = BASE_OPTION << 5,
     kFuncOptNull
 } FuncOption;
 
@@ -20,20 +24,33 @@ typedef enum FuncSwitch {
     kFuncSwitchNull
 } FuncSwitch;
 
+typedef enum WearingStatus {
+    kWearingStatusOff = 0,
+    kWearingStatusOn  = 1,
+    kWearingStatusNull
+} WearingStatus;
+
+typedef enum FuncStatus {
+    kFuncStatusOff = 0,
+    kFuncStatusOn  = 1,
+    kFuncStatusNull
+} FuncStatus;
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-FuncOption func_ctrl_get_option();
-void       func_ctrl_set_option(FuncOption func_option);
-
 uint16_t func_ctrl_init();
 uint16_t func_ctrl_deinit();
 
-void func_ctrl_start_sampling(FuncOption func_option);
-void func_ctrl_stop_sampling(FuncOption func_option);
+uint16_t func_ctrl_get_func_switch();
+uint16_t func_ctrl_set_func_switch(FuncSwitch func_switch);
 
-uint16_t func_ctrl_change_option();
+void func_ctrl_start(FuncOption func_option);
+void func_ctrl_stop(FuncOption func_option);
+
+void func_ctrl_run();
+
 
 #ifdef __cplusplus
 }

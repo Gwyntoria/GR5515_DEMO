@@ -20,8 +20,8 @@
 extern "C" {
 #endif
 
-#define PHOTON_SUCCESS (0)
-#define PHOTON_FAILURE (1)
+#define GUNTER_SUCCESS (0)
+#define GUNTER_FAILURE (1)
 
 // TIME
 #define SEC_TO_MS (1000)
