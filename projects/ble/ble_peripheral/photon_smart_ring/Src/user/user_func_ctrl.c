@@ -9,7 +9,7 @@
 
 static FuncSwitch s_func_switch = kFuncSwitchNull;
 
-static WearingStatus s_wearing_status = kWearingStatusOff;
+static WearingStatus s_wearing_status = kWearingStatusNull;
 
 static FuncStatus s_status_init = kFuncStatusOff;
 static FuncStatus s_status_adt  = kFuncStatusOff;
@@ -20,6 +20,7 @@ static FuncStatus s_status_rr   = kFuncStatusOff;
 
 uint16_t func_ctrl_init() {
     s_func_switch = kFuncSwitchOff;
+    s_wearing_status = kWearingStatusOn;
     user_timer_init();
 
     APP_LOG_INFO("func_ctrl_init success!\n");
@@ -29,7 +30,6 @@ uint16_t func_ctrl_init() {
 
 uint16_t func_ctrl_deinit() {
     s_func_switch = kFuncSwitchNull;
-
     return GUNTER_SUCCESS;
 }
 
@@ -39,17 +39,25 @@ uint16_t func_ctrl_get_func_switch() {
 
 uint16_t func_ctrl_set_func_switch(FuncSwitch func_switch) {
     s_func_switch = func_switch;
+    return GUNTER_SUCCESS;
+}
 
+uint16_t func_ctrl_get_wearing_status() {
+    return s_wearing_status;
+}
+
+uint16_t func_ctrl_set_wearing_status(WearingStatus wearing_status) {
+    s_wearing_status = wearing_status;
     return GUNTER_SUCCESS;
 }
 
 void func_ctrl_start(FuncOption func_option) {
-
-    user_timer_start(func_option);
+    // user_timer_start(func_option);
 
     switch (func_option) {
         case kFuncOptInitDev: {
             if (s_status_init == kFuncStatusOff) {
+                user_timer_start(func_option);
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
                 s_status_init = kFuncStatusOn;
             }
@@ -58,6 +66,7 @@ void func_ctrl_start(FuncOption func_option) {
 
         case kFuncOptAdt: {
             if (s_status_adt == kFuncStatusOff) {
+                user_timer_start(func_option);
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN);
                 s_status_adt = kFuncStatusOn;
             }
@@ -66,6 +75,7 @@ void func_ctrl_start(FuncOption func_option) {
 
         case kFuncOptHr: {
             if (s_status_hr == kFuncStatusOff) {
+                user_timer_start(func_option);
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
                 s_status_hr = kFuncStatusOn;
             }
@@ -74,6 +84,7 @@ void func_ctrl_start(FuncOption func_option) {
 
         case kFuncOptHrv: {
             if (s_status_hrv == kFuncStatusOff) {
+                user_timer_start(func_option);
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HRV);
                 s_status_hrv = kFuncStatusOn;
             }
@@ -82,6 +93,7 @@ void func_ctrl_start(FuncOption func_option) {
 
         case kFuncOptSpo2: {
             if (s_status_spo2 == kFuncStatusOff) {
+                user_timer_start(func_option);
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SPO2);
                 s_status_spo2 = kFuncStatusOn;
             }
@@ -90,6 +102,7 @@ void func_ctrl_start(FuncOption func_option) {
 
         case kFuncOptRr: {
             if (s_status_rr == kFuncStatusOff) {
+                user_timer_start(func_option);
                 // TODO: Respiratory rate
 
                 s_status_rr = kFuncStatusOn;
@@ -104,11 +117,12 @@ void func_ctrl_start(FuncOption func_option) {
 }
 
 void func_ctrl_stop(FuncOption func_option) {
-    user_timer_stop(func_option);
+    // user_timer_stop(func_option);
 
     switch (func_option) {
         case kFuncOptAdt: {
             if (s_status_adt == kFuncStatusOn) {
+                user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN);
                 s_status_adt = kFuncStatusOff;
             }
@@ -117,6 +131,7 @@ void func_ctrl_stop(FuncOption func_option) {
 
         case kFuncOptHr: {
             if (s_status_hr == kFuncStatusOn) {
+                user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_HR);
                 s_status_hr = kFuncStatusOff;
             }
@@ -125,6 +140,7 @@ void func_ctrl_stop(FuncOption func_option) {
 
         case kFuncOptHrv: {
             if (s_status_hrv == kFuncStatusOn) {
+                user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_HRV);
                 s_status_hrv = kFuncStatusOff;
             }
@@ -133,6 +149,7 @@ void func_ctrl_stop(FuncOption func_option) {
 
         case kFuncOptSpo2: {
             if (s_status_spo2 == kFuncStatusOn) {
+                user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_SPO2);
                 s_status_spo2 = kFuncStatusOff;
             }
@@ -141,6 +158,7 @@ void func_ctrl_stop(FuncOption func_option) {
 
         case kFuncOptRr: {
             if (s_status_rr == kFuncStatusOn) {
+                user_timer_stop(func_option);
 
                 // TODO: Respiratory rate
                 s_status_rr = kFuncStatusOff;
@@ -155,10 +173,18 @@ void func_ctrl_stop(FuncOption func_option) {
 }
 
 void func_ctrl_run() {
-    if (s_func_switch) {
+    if (s_func_switch == kFuncSwitchOn) {
+        func_ctrl_start(kFuncOptAdt);
         func_ctrl_start(kFuncOptHr);
         func_ctrl_start(kFuncOptHrv);
         func_ctrl_start(kFuncOptSpo2);
+
+        if (!s_wearing_status) {
+            func_ctrl_stop(kFuncOptAdt);
+            func_ctrl_stop(kFuncOptHr);
+            func_ctrl_stop(kFuncOptHrv);
+            func_ctrl_stop(kFuncOptSpo2);
+        }
 
         // printf("turn off\n");
         s_func_switch = kFuncSwitchOff;

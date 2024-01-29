@@ -107,12 +107,13 @@ int main(void)
 
     func_ctrl_init();
 
+    
     while (1) {
         if (g_uchGh3x2xIntCallBackIsCalled) {
             Gh3x2xDemoInterruptProcess();
         }
 
-        func_ctrl_run();
+        // func_ctrl_run();
 
         app_log_flush();     // 刷新log缓存
         pwr_mgmt_schedule(); // 电源管理调度，负责管理查询是否可以进入睡眠

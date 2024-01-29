@@ -1737,6 +1737,8 @@ void Gh3x2xDemoInterruptProcess(void)
         return;
     }
 
+    printf("Gh3x2xDemoInterruptProcess\n");
+
     GU8 uchRet = 0;
     GU16 usGotEvent = 0;
     GU8 uchIntRepeatNum = 0;

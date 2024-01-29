@@ -55,7 +55,6 @@
 
 #include "health.h"
 #include "user_func_ctrl.h"
-#include "user_sample_service.h"
 #include "user_timer.h"
 
 /*
@@ -355,58 +354,6 @@ static void health_service_process_event(health_evt_t* p_evt) {
     }
 }
 
-static void sample_envt_process(samples_evt_t* p_evt) {
-    switch (p_evt->evt_type) {
-        case SAMPLES_EVT_TX_NOTIFICATION_ENABLED:
-            APP_LOG_INFO("SAMPLES_EVT_TX_NOTIFICATION_ENABLED\n");
-            break;
-
-        case SAMPLES_EVT_TX_NOTIFICATION_DISABLED:
-            APP_LOG_INFO("SAMPLES_EVT_TX_NOTIFICATION_DISABLED\n");
-            break;
-
-        case SAMPLES_EVT_RX_RECEIVE_DATA:
-            APP_LOG_INFO("SAMPLES_EVT_RX_RECEIVE_DATA\n");
-
-            for (uint16_t i = 0; i < p_evt->length; i++) {
-                printf("%02x", p_evt->p_data[i]);
-            }
-            printf("\r\n");
-            delay_ms(10);
-            break;
-
-        case SAMPLES_EVT_TX_NOTIFY_COMPLETE:
-            APP_LOG_INFO("SAMPLES_EVT_TX_NOTIFY_COMPLETE\n");
-            break;
-
-        case SAMPLES_EVT_ADD_NOTIFICATION_ENABLED:
-            APP_LOG_INFO("SAMPLES_EVT_ADD_NOTIFICATION_ENABLED\n");
-            app_timer_start(s_add_timer_id, 1000, NULL);
-            break;
-
-        case SAMPLES_EVT_ADD_NOTIFICATION_DISABLED:
-            APP_LOG_INFO("SAMPLES_EVT_ADD_NOTIFICATION_DISABLED\n");
-            app_timer_stop(s_add_timer_id);
-            break;
-
-        case SAMPLES_EVT_ADD_RECEIVE_DATA:
-            APP_LOG_INFO("SAMPLES_EVT_ADD_RECEIVE_DATA\n");
-
-            for (uint16_t i = 0; i < p_evt->length; i++) {
-                printf("%02x", p_evt->p_data[i]);
-            }
-            printf("\r\n");
-            delay_ms(10);
-            break;
-
-        case SAMPLES_EVT_ADD_NOTIFY_COMPLETE:
-            APP_LOG_INFO("SAMPLES_EVT_ADD_NOTIFY_COMPLETE\n");
-            break;
-        default:
-            break;
-    }
-}
-
 static void dfu_program_start_callback(void);
 static void dfu_programing_callback(uint8_t pro);
 static void dfu_program_end_callback(uint8_t status);
@@ -427,11 +374,6 @@ static void dfu_programing_callback(uint8_t pro) {
 
 static void dfu_program_end_callback(uint8_t status) {
     APP_LOG_DEBUG("DFU OTA complete.");
-}
-
-static void add_time_out_handler(void* p_arg) {
-    s_add_count++;
-    samples_notify_add_data(0, 0, (uint8_t*)&s_add_count, 2);
 }
 
 /**
@@ -510,9 +452,13 @@ void ble_init_cmp_callback(void) {
     error_code = ble_gap_addr_get(&bd_addr);
 
     APP_ERROR_CHECK(error_code);
-    APP_LOG_DEBUG("Local Board %02X:%02X:%02X:%02X:%02X:%02X.", bd_addr.gap_addr.addr[5], bd_addr.gap_addr.addr[4],
-                  bd_addr.gap_addr.addr[3], bd_addr.gap_addr.addr[2], bd_addr.gap_addr.addr[1],
-                  bd_addr.gap_addr.addr[0]);
+    APP_LOG_DEBUG("Local Board %02X:%02X:%02X:%02X:%02X:%02X.",
+                               bd_addr.gap_addr.addr[5],
+                               bd_addr.gap_addr.addr[4],
+                               bd_addr.gap_addr.addr[3],
+                               bd_addr.gap_addr.addr[2],
+                               bd_addr.gap_addr.addr[1],
+                               bd_addr.gap_addr.addr[0]);
     // printf("Template application example started.");
 
     /* BLE profile service init */
@@ -523,5 +469,4 @@ void ble_init_cmp_callback(void) {
 
     APP_LOG_DEBUG("ble gap adv started.");
 
-    app_timer_create(&s_add_timer_id, ATIMER_REPEAT, add_time_out_handler);
 }
