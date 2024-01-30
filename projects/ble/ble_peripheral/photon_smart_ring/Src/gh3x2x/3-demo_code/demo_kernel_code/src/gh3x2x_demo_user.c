@@ -157,7 +157,7 @@ volatile uint8_t spi_master_tdone = 0;
 volatile uint8_t spi_master_rdone = 0;
 
     
-void app_spi_callback(app_spi_evt_t *p_evt)
+static void app_spi_callback(app_spi_evt_t *p_evt)
 {
     if (p_evt->type == APP_SPI_EVT_TX_CPLT)
     {
