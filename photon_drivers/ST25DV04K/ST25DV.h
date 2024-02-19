@@ -1,14 +1,13 @@
 /**
  * @file ST25DV.h
- * @author chen (you@domain.com)
- * @brief 
+ * @author Gwyntoria (karlmfloating@gmail.com)
+ * @brief NFC 初始化和tag写入
  * @version 0.1
- * @date 2023-09-28
+ * @date 2024-01-30
  * 
- * @copyright Copyright (c) 2023
+ * @copyright Copyright (c) 2024
  * 
  */
-
 #ifndef _ST25DV_H_
 #define _ST25DV_H_
 

@@ -96,6 +96,22 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
     uint8_t data = pstAlgoResult->snResult[0];
     health_hr_data_send(0, &data, 1);
 
+    static GU16 low_confidence_cnt_hr = 0;
+
+    if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD) {
+        low_confidence_cnt_hr++;
+    } else {
+        low_confidence_cnt_hr = 0;
+    }
+
+    printf("low_confidence_cnt_hr: %d\n", low_confidence_cnt_hr);
+
+
+    if (low_confidence_cnt_hr > (5)) {
+        func_ctrl_set_wearing_status(kWearingStatusOff);
+        low_confidence_cnt_hr = 0;
+    }
+
     // extern GU32 g_unDemoFuncMode;
     // if ((g_unDemoFuncMode & GH3X2X_FUNCTION_SOFT_ADT_GREEN) != GH3X2X_FUNCTION_SOFT_ADT_GREEN) {
     //     hrs_heart_rate_measurement_send(0, pstAlgoResult->snResult[0], 1);
@@ -132,6 +148,22 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
             
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     health_spo2_data_send(0, &data, 1);
+
+    static GU16 low_confidence_cnt_spo2 = 0;
+
+    if (pstAlgoResult->snResult[2] < CONFIDENCE_THRESHOLD) {
+        low_confidence_cnt_spo2++;
+    } else {
+        low_confidence_cnt_spo2 = 0;
+    }
+
+    printf("low_confidence_cnt_spo2: %d\n", low_confidence_cnt_spo2);
+
+
+    if (low_confidence_cnt_spo2 > (5)) {
+        func_ctrl_set_wearing_status(kWearingStatusOff);
+        low_confidence_cnt_spo2 = 0;
+    }
 #endif
 }
 
@@ -165,6 +197,22 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     health_hrv_data_send(0, &data, 1);
+
+    static GU16 low_confidence_cnt_hrv = 0;
+
+    if (pstAlgoResult->snResult[4] < CONFIDENCE_THRESHOLD) {
+        low_confidence_cnt_hrv++;
+    } else {
+        low_confidence_cnt_hrv = 0;
+    }
+
+    printf("low_confidence_cnt_hrv: %d\n", low_confidence_cnt_hrv);
+
+
+    if (low_confidence_cnt_hrv > (5)) {
+        func_ctrl_set_wearing_status(kWearingStatusOff);
+        low_confidence_cnt_hrv = 0;
+    }
 }
 
 /**
@@ -211,17 +259,22 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
                                  pstAlgoResult->snResult[1]);
 
     static GU16 lower_lvl_cnt = 0;
+    static GU16 higher_lvl_cnt = 0;
 
-    if (pstAlgoResult->snResult[1] < 60) {
+    if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_NADT_GREEN) {
         lower_lvl_cnt++;
+        higher_lvl_cnt = 0;
     } else {
         lower_lvl_cnt = 0;
+        higher_lvl_cnt++;
     }
 
     printf("lower_lvl_cnt: %d\n", lower_lvl_cnt);
+    printf("higher_lvl_cnt: %d\n", higher_lvl_cnt);
 
     // live object
-    if (pstAlgoResult->snResult[0] == 0x1) {
+    if (pstAlgoResult->snResult[0] == 0x1 ||
+        ((pstAlgoResult->snResult[1] >= CONFIDENCE_THRESHOLD_NADT_GREEN) && higher_lvl_cnt > (20 * 2))) {
         // extern GU32 g_unDemoFuncMode;
         // if((g_unDemoFuncMode & GH3X2X_FUNCTION_HR) != GH3X2X_FUNCTION_HR)
         // {
@@ -229,10 +282,13 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
         // }
 
         func_ctrl_set_wearing_status(kWearingStatusOn);
+        func_ctrl_set_adt_switch(kFuncSwitchOff);
+        lower_lvl_cnt = 0;
+        higher_lvl_cnt = 0;
     }
     // non live object
     // TODO: Further improvement is needed
-    else if ((pstAlgoResult->snResult[0] & 0x2) || (lower_lvl_cnt > (40 * 5))) {
+    else if ((pstAlgoResult->snResult[0] & 0x2) || (lower_lvl_cnt > (20 * 15))) {
 #if __GH_MSG_WTIH_DRV_LAYER_EN__
         GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
 #else
@@ -241,6 +297,9 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
         /* code implement by user */
 
         func_ctrl_set_wearing_status(kWearingStatusOff);
+        func_ctrl_set_adt_switch(kFuncSwitchOff);
+        lower_lvl_cnt = 0;
+        higher_lvl_cnt = 0;
     }
     GOODIX_PLANFROM_NADT_RESULT_HANDLE_ENTITY();
 #endif

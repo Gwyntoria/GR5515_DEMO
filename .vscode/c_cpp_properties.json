@@ -5,7 +5,10 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/projects/ble/ble_peripheral/photon_smart_ring/Src/config/",
-                "${workspaceFolder}/components/boards/"
+                "${workspaceFolder}/components/app_drivers/inc/",
+                "${workspaceFolder}/components/boards/",
+                "${workspaceFolder}/components/libraries/",
+                "${workspaceFolder}/photon_drivers/"
             ],
             "defines": [
                 "_DEBUG",

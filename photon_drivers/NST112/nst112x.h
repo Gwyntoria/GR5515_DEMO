@@ -1,9 +1,13 @@
-/*
- * nst112x.h
- *
- * Created: 2020/12/16 16:41:08
- *  Author: pafy0
- */ 
+/**
+ * @file nst112x.h
+ * @author Gwyntoria (karlmfloating@gmail.com)
+ * @brief Temperature sensor
+ * @version 0.1
+ * @date 2024-01-30
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 
 
 #ifndef __nst112x_H

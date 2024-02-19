@@ -119,86 +119,86 @@ int main(void) {
     // Initialize ble stack.
     ble_stack_init(&s_app_ble_callback, &heaps_table); /*< init ble stack*/
 
-    // Gh3x2x init
-    // Gh3x2xDemoInit();
-    // RTC init
-    user_rtc_init();
-    // RTC中断间隔初始化
-    rtc_set_tick_alarm(DETECTION_INTERVAL);
-    // 功能控制模块初始化
-    func_ctrl_init();
-    // I2C init
-    GT_I2C_Init();
-    // 测温芯片初始化
-    Nst112_four_Init();
-    // 六轴初始化
-    LSM6DSOWTR_Init();
-    // 电池测量初始化
-    ADC_Config_Init();
-    // FLASH Init
-    Flash_Config();
-    // NFC 读取 Uid
-    ST25DV_ReadUid();
+    GT_I2C_Init();      // I2C init （必须最早初始化）
+    Nst112_four_Init(); // 测温芯片初始化
+    LSM6DSOWTR_Init();  // 六轴初始化
+    ADC_Config_Init();  // 电池测量初始化
+    Flash_Config();     // FLASH Init
+    ST25DV_ReadUid();   // NFC 读取 Uid
+    
+    Gh3x2xDemoInit();   // Gh3x2x init
+    user_rtc_init();    // RTC init
+    func_ctrl_init();   // 功能控制模块初始化
 
-    // flash sample
-    Flash_Read_Data(Flash_Address, Flash_Read_Data_Arry, 8);
-    printf("Flash init Read Data is:\r\n");
-    for (i = 0; i < 8; i++) {
-        printf("Flash_Read_Data_Arry[%d] = %d\r\n", i, Flash_Read_Data_Arry[i]);
-    }
+    // // flash sample
+    // Flash_Read_Data(Flash_Address, Flash_Read_Data_Arry, 8);
+    // printf("Flash init Read Data is:\r\n");
+    // for (i = 0; i < 8; i++) {
+    //     printf("Flash_Read_Data_Arry[%d] = %d\r\n", i, Flash_Read_Data_Arry[i]);
+    // }
 
-    Flash_Write_Data(Flash_Address, Flash_Write_Data_Arry, 8);
-    Flash_Read_Data(Flash_Address, Flash_Read_Data_Arry, 8);
-    printf("Flash Write after Read Data is:\r\n");
-    for (i = 0; i < 8; i++) {
-        printf("Flash_Read_Data_Arry[%d] = %d\r\n", i, Flash_Read_Data_Arry[i]);
-    }
+    // Flash_Write_Data(Flash_Address, Flash_Write_Data_Arry, 8);
+    // Flash_Read_Data(Flash_Address, Flash_Read_Data_Arry, 8);
+    // printf("Flash Write after Read Data is:\r\n");
+    // for (i = 0; i < 8; i++) {
+    //     printf("Flash_Read_Data_Arry[%d] = %d\r\n", i, Flash_Read_Data_Arry[i]);
+    // }
 
-    Flash_Sector_Erase(0);
-    Flash_Read_Data(Flash_Address, Flash_Read_Data_Arry, 8);
-    printf("Flash Erase after Read Data is:\r\n");
-    for (i = 0; i < 8; i++) {
-        printf("Flash_Read_Data_Arry[%d] = %d\r\n", i, Flash_Read_Data_Arry[i]);
-    }
+    // Flash_Sector_Erase(0);
+    // Flash_Read_Data(Flash_Address, Flash_Read_Data_Arry, 8);
+    // printf("Flash Erase after Read Data is:\r\n");
+    // for (i = 0; i < 8; i++) {
+    //     printf("Flash_Read_Data_Arry[%d] = %d\r\n", i, Flash_Read_Data_Arry[i]);
+    // }
 
-    //	ST25DV_ReadUid();
-    ST25DV_WriteData(0, text_arry, sizeof(text_arry)); // NFC write data
-    delay_ms(250);
+    // //	ST25DV_ReadUid();
+    // ST25DV_WriteData(0, text_arry, sizeof(text_arry)); // NFC write data
+    // delay_ms(250);
+
+    // func_ctrl_start(kFuncOptAdt);
+
 
     while (1) {
+
         if (g_uchGh3x2xIntCallBackIsCalled) {
             Gh3x2xDemoInterruptProcess();
         }
 
-        // func_ctrl_run();
+        func_ctrl_handler();
 
-        Temperature[0] = Get_nst112x_temperature(Nst112A_I2C_Addr);
-        Temperature[1] = Get_nst112x_temperature(Nst112B_I2C_Addr);
-        Temperature[2] = Get_nst112x_temperature(Nst112C_I2C_Addr);
-        Temperature[3] = Get_nst112x_temperature(Nst112D_I2C_Addr);
-        printf("Temperature0 = %.2f  Temperature1 = %.2f  Temperature2 = %.2f  Temperature3 = %.2f\r\n", Temperature[0], Temperature[1], Temperature[2], Temperature[3]);
+        // Temperature[0] = Get_nst112x_temperature(Nst112A_I2C_Addr);
+        // Temperature[1] = Get_nst112x_temperature(Nst112B_I2C_Addr);
+        // Temperature[2] = Get_nst112x_temperature(Nst112C_I2C_Addr);
+        // Temperature[3] = Get_nst112x_temperature(Nst112D_I2C_Addr);
+        // printf("Temperature0 = %.2f  Temperature1 = %.2f  Temperature2 = %.2f  Temperature3 = %.2f\r\n",
+        //        Temperature[0],
+        //        Temperature[1],
+        //        Temperature[2],
+        //        Temperature[3]);
 
-        // 电池 ADC
-        Power1 = Get_adc_Voltage(0); // 获取电池电压
-        printf("Now VABAT Power is %.2f\r\n", Power1);
-        Power2 = Get_adc_Voltage(1); // 获取充电时的电压
-        printf("Now BATMS Power is %.2f\r\n", Power2);
+        // // 电池 ADC
+        // Power1 = Get_adc_Voltage(0); // 获取电池电压
+        // printf("Now VABAT Power is %.2f\r\n", Power1);
+        // Power2 = Get_adc_Voltage(1); // 获取充电时的电压
+        // printf("Now BATMS Power is %.2f\r\n", Power2);
 
-        // 六轴
-        LSM6D_Temp = LSM6DSOWTR_Read_Data(LSM6DSO_OUT_TEMP_L); // 获取温度
-        printf("Now LSM6D_Temp is %d\r\n", LSM6D_Temp);
-        LSM6D_Data[0] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTX_L_G);
-        printf("Now LSM6DSO_OUTX_L_G is %d\r\n", LSM6D_Data[0]);
-        LSM6D_Data[1] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTY_L_G);
-        printf("Now LSM6DSO_OUTY_L_G is %d\r\n", LSM6D_Data[1]);
-        LSM6D_Data[2] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTZ_L_G);
-        printf("Now LSM6DSO_OUTZ_L_G is %d\r\n", LSM6D_Data[2]);
-        LSM6D_Data[3] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTX_L_A);
-        printf("Now LSM6DSO_OUTX_L_A is %d\r\n", LSM6D_Data[3]);
-        LSM6D_Data[4] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTY_L_A);
-        printf("Now LSM6DSO_OUTY_L_A is %d\r\n", LSM6D_Data[4]);
-        LSM6D_Data[5] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTZ_L_A);
-        printf("Now LSM6DSO_OUTZ_L_A is %d\r\n", LSM6D_Data[5]);
+        // // 六轴
+        // LSM6D_Temp = LSM6DSOWTR_Read_Data(LSM6DSO_OUT_TEMP_L); // 获取温度
+        // printf("Now LSM6D_Temp is %d\r\n", LSM6D_Temp);
+        // LSM6D_Data[0] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTX_L_G);
+        // printf("Now LSM6DSO_OUTX_L_G is %d\r\n", LSM6D_Data[0]);
+        // LSM6D_Data[1] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTY_L_G);
+        // printf("Now LSM6DSO_OUTY_L_G is %d\r\n", LSM6D_Data[1]);
+        // LSM6D_Data[2] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTZ_L_G);
+        // printf("Now LSM6DSO_OUTZ_L_G is %d\r\n", LSM6D_Data[2]);
+        // LSM6D_Data[3] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTX_L_A);
+        // printf("Now LSM6DSO_OUTX_L_A is %d\r\n", LSM6D_Data[3]);
+        // LSM6D_Data[4] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTY_L_A);
+        // printf("Now LSM6DSO_OUTY_L_A is %d\r\n", LSM6D_Data[4]);
+        // LSM6D_Data[5] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTZ_L_A);
+        // printf("Now LSM6DSO_OUTZ_L_A is %d\r\n", LSM6D_Data[5]);
+
+
 
         app_log_flush();     // 刷新log缓存
         pwr_mgmt_schedule(); // 电源管理调度，负责管理查询是否可以进入睡眠

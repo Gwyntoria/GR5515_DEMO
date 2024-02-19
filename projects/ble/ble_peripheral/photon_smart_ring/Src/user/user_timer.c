@@ -38,6 +38,7 @@ static void battery_level_update(void* args) {
 
 static void adt_meas_timeout_handler(void* args) {
     func_ctrl_stop(kFuncOptAdt);
+    func_ctrl_set_adt_switch(kFuncSwitchNull);
 }
 
 static void hr_meas_timeout_handler(void* args) {
@@ -91,7 +92,7 @@ void user_timer_start(FuncOption func_option) {
             break;
 
         case kFuncOptAdt:
-            error_code = app_timer_start(s_adt_timer_id, DETECTION_CONTIOUS_TIME, NULL);
+            error_code = app_timer_start(s_adt_timer_id, DETECTION_CONTIOUS_TIME_ADT, NULL);
             APP_ERROR_CHECK(error_code);
             break;
 

@@ -1,3 +1,13 @@
+/**
+ * @file LSM6DSOWTR.h
+ * @author Gwyntoria (karlmfloating@gmail.com)
+ * @brief 六轴初始化，和获取基础数据
+ * @version 0.1
+ * @date 2024-01-30
+ * 
+ * @copyright Copyright (c) 2024
+ * 
+ */
 #ifndef _LSM6DSOWTR_H_
 #define _LSM6DSOWTR_H_
 
