@@ -58,7 +58,7 @@
 #define __USE_GOODIX_SOFT_ADT_ALGORITHM__      (1)
 
 /* algorithm log */
-#define __ALGO_LOG_CONFIG__                    (1)
+#define __ALGO_LOG_CONFIG__                    (0)
 
 /* algorithm config max number */
 #define __GOODIX_ALGO_CFG_LIST_MAX_NUM__       (2)
