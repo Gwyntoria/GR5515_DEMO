@@ -11,7 +11,7 @@
 #include "Flash_Spi.h"
 #include "app_spi.h"
 
-static void app_spi_callback(app_spi_evt_t *p_evt)
+static void flash_spi_callback(app_spi_evt_t *p_evt)
 {
     if (p_evt->type == APP_SPI_EVT_TX_CPLT)
     {
@@ -31,7 +31,7 @@ static void app_spi_callback(app_spi_evt_t *p_evt)
     }
 }
 
-int8_t Flash_Config(void)
+int8_t flash_config(void)
 {
     uint8_t  Flash_id[3] = {0};
     uint32_t Flashid     = 0;
@@ -73,24 +73,24 @@ int8_t Flash_Config(void)
     flash_struct.init.ti_mode            = SPI_TIMODE_DISABLE;          // DISABLE ti mode
     flash_struct.init.slave_select       = SPI_SLAVE_SELECT_0;          // set up cs0
 
-    ret = app_spi_init(&flash_struct, app_spi_callback);
+    ret = app_spi_init(&flash_struct, flash_spi_callback);
     if (ret != 0)
 	{
-		printf("Flash_InitError!\r\n");
-        return Flash_InitError;
+		printf("FLASH_INIT_ERROR!\r\n");
+        return FLASH_INIT_ERROR;
 	}
-    Read_RDID(Flash_id);
+    flash_read_rfid(Flash_id);
     Flashid = Flash_id[0];
     Flashid = Flashid << 8 | Flash_id[1];
     Flashid = Flashid << 8 | Flash_id[2];
     if (Flashid == GD25LE128E_ID)
     {
-		printf("Flash_Success!\r\n");
-        return Flash_Success;
+		printf("FLASH_SUCCESS!\r\n");
+        return FLASH_SUCCESS;
         
     }
-	printf("Flash_IdError!\r\n");
-    return Flash_IdError;
+	printf("FLASH_ID_ERROR!\r\n");
+    return FLASH_ID_ERROR;
 }
 
 /**
@@ -99,13 +99,13 @@ int8_t Flash_Config(void)
  * @param flash_id 
  * @return int8_t 
  */
-int8_t Read_RDID(uint8_t *flash_id) // flash_id must > 3byte
+int8_t flash_read_rfid(uint8_t *flash_id) // flash_id must > 3byte
 {
     uint8_t Send_Data   = GD25LE128E_RDID; // 0x9F
     uint8_t Get_Data[4] = {0};
 
     app_spi_transmit_receive_async(APP_SPI_ID_MASTER, &Send_Data, Get_Data, 4);
-    // printf("Read_RDID: Get_Data[0] = 0x%x , Get_Data[1] = 0x%x , Get_Data[2] = 0x%x , Get_Data[3] =
+    // printf("flash_read_rfid: Get_Data[0] = 0x%x , Get_Data[1] = 0x%x , Get_Data[2] = 0x%x , Get_Data[3] =
     // 0x%x\r\n",Get_Data[0],Get_Data[1],Get_Data[2],Get_Data[3]);
     if (flash_id != NULL)
     {
@@ -113,13 +113,13 @@ int8_t Read_RDID(uint8_t *flash_id) // flash_id must > 3byte
         {
             flash_id[i] = Get_Data[i + 1];
         }
-        return Flash_Success;
+        return FLASH_SUCCESS;
     }
 
-    return Flash_InputError;
+    return FLASH_INPUT_ERROR;
 }
 
-int8_t Flash_Statu_W(void)
+int8_t flash_read_status(void)
 {
     uint8_t Send_Reg    = GD25LE128E_RDSR_L;
     uint8_t Get_Arry[2] = {0};
@@ -128,13 +128,13 @@ int8_t Flash_Statu_W(void)
     // printf("GD25LE128E_RDSR_L = 0x%x \r\n",Get_Arry[1]);
     if ((Get_Arry[1] & 0xFC) == 0xFF)
     {
-        return Flash_StatuBusy;
+        return FLASH_STATUS_BUSY;
     }
     else
-        return Flash_StatuFree;
+        return FLASH_STATUS_FREE;
 }
 
-int8_t Flash_Chip_Erase(void)
+int8_t flash_chip_erase(void)
 {
     uint8_t Send_Cmd = GD25LE128E_WREN;
     uint8_t ret      = 0;
@@ -144,17 +144,17 @@ int8_t Flash_Chip_Erase(void)
     Send_Cmd = GD25LE128E_CE;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, &Send_Cmd, 1, 0x1000);
 
-    ret = Flash_Statu_W();
+    ret = flash_read_status();
     while (ret)
     {
         delay_ms(1000);
-        ret = Flash_Statu_W();
+        ret = flash_read_status();
     }
 
-    return Flash_Success;
+    return FLASH_SUCCESS;
 }
 
-int8_t Flash_Sector_Erase(uint16_t Sector)
+int8_t flash_sector_erase(uint16_t Sector)
 {
     uint8_t Send_Cmd[4] = {0};
     int     ret         = 0;
@@ -168,17 +168,17 @@ int8_t Flash_Sector_Erase(uint16_t Sector)
     Send_Cmd[3] = 0;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, Send_Cmd, 4, 0x1000);
 
-    ret = Flash_Statu_W();
+    ret = flash_read_status();
     while (ret)
     {
         delay_ms(30);
-        ret = Flash_Statu_W();
+        ret = flash_read_status();
     }
 
-    return Flash_Success;
+    return FLASH_SUCCESS;
 }
 
-int8_t Flash_Block_Erase(uint8_t Block)
+int8_t flash_block_erase(uint8_t Block)
 {
     uint8_t Send_Cmd[4] = {0};
     int     ret         = 0;
@@ -192,20 +192,20 @@ int8_t Flash_Block_Erase(uint8_t Block)
     Send_Cmd[3] = 0;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, Send_Cmd, 4, 0x1000);
 
-    ret = Flash_Statu_W();
+    ret = flash_read_status();
     while (ret)
     {
         delay_ms(100);
-        ret = Flash_Statu_W();
+        ret = flash_read_status();
     }
 
-    return Flash_Success;
+    return FLASH_SUCCESS;
 }
 
-int8_t Flash_Write_Data(uint32_t address, uint8_t *data, uint16_t datasize)
+int8_t flash_write_data(uint32_t address, uint8_t *data, uint16_t datasize)
 {
     if (data == NULL)
-        return Flash_DataEmpty;
+        return FLASH_DATA_EMPTY;
 
     uint8_t  Send_Reg[260];
     uint16_t i = 0;
@@ -223,26 +223,26 @@ int8_t Flash_Write_Data(uint32_t address, uint8_t *data, uint16_t datasize)
     }
     app_spi_transmit_sync(APP_SPI_ID_MASTER, Send_Reg, datasize + 4, 0x1000);
 
-    i = Flash_Statu_W();
+    i = flash_read_status();
     while (i)
     {
         delay_ms(30);
-        i = Flash_Statu_W();
+        i = flash_read_status();
     }
-    return Flash_Success;
+    return FLASH_SUCCESS;
 }
 
-int8_t Flash_Read_Data(uint32_t address, uint8_t *data, uint16_t datasize)
+int8_t flash_read_data(uint32_t address, uint8_t *data, uint16_t datasize)
 {
     if (data == NULL)
-        return Flash_DataEmpty;
+        return FLASH_DATA_EMPTY;
 
     uint8_t  Send_Reg[4] = {0};
     uint8_t  Get_Data[260];
     uint16_t i = 0;
 
     if (datasize > 256)
-        return Flash_SizeError;
+        return FLASH_SIZE_ERROR;
 
     address     = address & 0xFFFFFF;
     Send_Reg[0] = GD25LE128E_READ;
@@ -258,7 +258,7 @@ int8_t Flash_Read_Data(uint32_t address, uint8_t *data, uint16_t datasize)
         printf("data[%d] = 0x%02x  ", i, Get_Data[4 + i]);
     }
     printf("\r\n");
-    return Flash_Success;
+    return FLASH_SUCCESS;
 }
 
 // void FlashReadWrite_Test(void) // Flash Write and Read operation
@@ -282,11 +282,11 @@ int8_t Flash_Read_Data(uint32_t address, uint8_t *data, uint16_t datasize)
 // 	}
 // 	app_spi_transmit_sync(APP_SPI_ID_MASTER, Send_Arry, 16, 0x1000);
 
-// 	i = Flash_Statu_W();
+// 	i = flash_read_status();
 // 	while (i)
 // 	{
 // 		delay_ms(30);
-// 		i = Flash_Statu_W();
+// 		i = flash_read_status();
 // 	}
 
 // 	Read_cmd[0] = GD25LE128E_READ;
@@ -313,7 +313,7 @@ int8_t Flash_Read_Data(uint32_t address, uint8_t *data, uint16_t datasize)
 // 	}
 // 	printf("\r\n");
 
-// 	Flash_Sector_Erase(0);
+// 	flash_sector_erase(0);
 
 // 	Read_cmd[0] = GD25LE128E_READ;
 // 	Read_cmd[1] = (uint8_t)flash_add >> 16;
