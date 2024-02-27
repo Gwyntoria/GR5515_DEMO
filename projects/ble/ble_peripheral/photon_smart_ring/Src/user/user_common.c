@@ -63,3 +63,21 @@ void data_stream_hex(const uint8_t* data, unsigned long len)
 
     printf("%s\n", line);
 }
+
+uint16_t get_checksum_crc16(uint8_t* data, size_t length) {
+    const uint16_t kPoly = 0x1021;
+    uint16_t       crc16 = 0;
+
+    for (size_t i = 0; i < length; ++i) {
+        crc16 ^= ((uint16_t)data[i] << 8);
+        for (size_t j = 0; j < 8; ++j) {
+            if (crc16 & 0x8000) {
+                crc16 = (crc16 << 1) ^ kPoly;
+            } else {
+                crc16 <<= 1;
+            }
+        }
+    }
+
+    return crc16;
+}

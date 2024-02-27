@@ -41,6 +41,15 @@ extern "C" {
  */
 void data_stream_hex(const uint8_t* data, unsigned long len);
 
+/**
+ * @brief Use CRC-16-CCITT(POLY = 0x1021) to calculate the checksum
+ * 
+ * @param data Data that requires checksum calculation
+ * @param length Datalength
+ * @return checksum 
+ */
+uint16_t get_checksum_crc16(uint8_t* data, size_t length);
+
 #ifdef __cplusplus
 }
 #endif
