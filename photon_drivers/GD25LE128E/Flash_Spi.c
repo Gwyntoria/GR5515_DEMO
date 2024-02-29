@@ -324,9 +324,15 @@ int flash_func_test() {
 
     flash_erase_chip();
 
-    uint8_t rd_buf[128];
+    uint8_t rd_buf[256];
     memset(rd_buf, 0x23, sizeof(rd_buf));
-    flash_write_data(GD25LE128E_SECTOR_SIZE * 0 + 64, rd_buf, 64);
+    flash_write_data(GD25LE128E_SECTOR_SIZE * 0 + 192, rd_buf, 256); // 依然会写满第一页，页地址到0xFF后再写入的地址是0x00
+
     flash_read_data(GD25LE128E_SECTOR_SIZE * 0, rd_buf, sizeof(rd_buf));
     data_stream_hex(rd_buf, sizeof(rd_buf));
+
+    delay_ms(10);
+    flash_read_data(GD25LE128E_SECTOR_SIZE * 1, rd_buf, sizeof(rd_buf));
+    data_stream_hex(rd_buf, sizeof(rd_buf));
+
 }
