@@ -113,7 +113,8 @@ int8_t flash_erase_block_64k(uint32_t address);
  * @param[in] address The starting address of the data that needs to be written (24 bits)
  * @param[in] data The buffer that holds the data to be written (<= 256 Bytes)
  * @param[in] data_size The data size (<= 256 Bytes)
- * @return if input pointer is null, return FLASH_DATA_EMPTY
+ * @return if input pointer is null, return FLASH_DATA_EMPTY;
+ *         if data_size > 256 ,return FLASH_SIZE_ERROR
  */
 int8_t flash_write_data(uint32_t address, uint8_t* data, uint16_t data_size);
 
@@ -123,7 +124,7 @@ int8_t flash_write_data(uint32_t address, uint8_t* data, uint16_t data_size);
  * @param[in] address The starting address of the data that needs to be read (24 bits)
  * @param[out] data The buffer that stores the data to be read (<= 256 Bytes)
  * @param[in] data_size The data size (<= 256 Bytes)
- * @return if input pointer is null, return FLASH_DATA_EMPTY
+ * @return if input pointer is null, return FLASH_DATA_EMPTY;
  *         if data_size > 256 ,return FLASH_SIZE_ERROR
  */
 int8_t flash_read_data(uint32_t address, uint8_t* data, uint16_t data_size);

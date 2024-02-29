@@ -9,7 +9,10 @@
  *
  */
 #include "Flash_Spi.h"
+#include "gr55xx_sys.h"
+
 #include "app_spi.h"
+#include "user_common.h"
 
 static void flash_spi_callback(app_spi_evt_t* p_evt) {
     switch (p_evt->type) {
@@ -118,12 +121,12 @@ int8_t flash_init(void) {
 }
 
 int8_t flash_read_status(void) {
-    uint8_t send_cmd     = GD25LE128E_RDSR_L;
-    uint8_t get_array[2] = {0};
+    uint8_t rd_buf[2] = {0};
+    uint8_t send_cmd  = GD25LE128E_RDSR_L;
 
-    app_spi_transmit_receive_sync(APP_SPI_ID_MASTER, &send_cmd, get_array, 2, 0x1000);
-    // printf("GD25LE128E_RDSR_L = 0x%x \r\n",get_array[1]);
-    if ((get_array[1] & 0x01) == 1) {
+    app_spi_transmit_receive_sync(APP_SPI_ID_MASTER, &send_cmd, rd_buf, 2, 0x1000);
+    // printf("GD25LE128E_RDSR_L = 0x%x \r\n",rd_buf[1]);
+    if ((rd_buf[1] & 0x01) == 1) {
         return FLASH_STATUS_BUSY;
     } else {
         return FLASH_STATUS_FREE;
@@ -131,7 +134,7 @@ int8_t flash_read_status(void) {
 }
 
 int8_t flash_erase_chip(void) {
-    uint8_t ret = 0;
+    int     ret = 0;
     uint8_t send_cmd;
 
     send_cmd = GD25LE128E_WREN;
@@ -172,8 +175,8 @@ int8_t flash_erase_sector(uint32_t address) {
 }
 
 int8_t flash_erase_block_64k(uint32_t address) {
-    uint8_t send_cmd[4] = {0};
     int     ret         = 0;
+    uint8_t send_cmd[4] = {0};
 
     send_cmd[0] = GD25LE128E_WREN;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, send_cmd, 1, 0x1000);
@@ -197,8 +200,11 @@ int8_t flash_write_data(uint32_t address, uint8_t* data, uint16_t data_size) {
     if (data == NULL)
         return FLASH_DATA_EMPTY;
 
-    uint8_t  send_cmd[260];
-    uint16_t i = 0;
+    if (data_size > 256)
+        return FLASH_SIZE_ERROR;
+
+    int8_t  ret = 0;
+    uint8_t send_cmd[4];
 
     send_cmd[0] = GD25LE128E_WREN;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, send_cmd, 1, 0x1000);
@@ -207,15 +213,20 @@ int8_t flash_write_data(uint32_t address, uint8_t* data, uint16_t data_size) {
     send_cmd[1] = (uint8_t)(address >> 16);
     send_cmd[2] = (uint8_t)(address >> 8);
     send_cmd[3] = (uint8_t)address;
-    for (i = 0; i < data_size; i++) {
-        send_cmd[i + 4] = data[i];
-    }
-    app_spi_transmit_sync(APP_SPI_ID_MASTER, send_cmd, data_size + 4, 0x1000);
 
-    i = flash_read_status();
-    while (i) {
+    uint8_t* wt_buf = sys_malloc(data_size + 4);
+    memset(wt_buf, 0, data_size + 4);
+
+    memcpy(wt_buf, send_cmd, 4);
+    memcpy(wt_buf + 4, data, data_size);
+
+    app_spi_transmit_sync(APP_SPI_ID_MASTER, wt_buf, data_size + 4, 0x1000);
+    sys_free(wt_buf);
+
+    ret = flash_read_status();
+    while (ret) {
         delay_ms(30);
-        i = flash_read_status();
+        ret = flash_read_status();
     }
     return FLASH_SUCCESS;
 }
@@ -224,12 +235,10 @@ int8_t flash_read_data(uint32_t address, uint8_t* data, uint16_t data_size) {
     if (data == NULL)
         return FLASH_DATA_EMPTY;
 
-    uint8_t  send_cmd[4] = {0};
-    uint8_t  Get_Data[260];
-    uint16_t i = 0;
-
     if (data_size > 256)
         return FLASH_SIZE_ERROR;
+
+    uint8_t send_cmd[4] = {0};
 
     address     = address & 0xFFFFFF;
     send_cmd[0] = GD25LE128E_READ;
@@ -237,13 +246,17 @@ int8_t flash_read_data(uint32_t address, uint8_t* data, uint16_t data_size) {
     send_cmd[2] = (uint8_t)(address >> 8);
     send_cmd[3] = (uint8_t)address;
 
-    app_spi_transmit_receive_sync(APP_SPI_ID_MASTER, send_cmd, Get_Data, data_size + 4, 0x1000);
+    uint8_t* rd_buf = sys_malloc(data_size + 4);
+    memset(rd_buf, 0, data_size + 4);
 
-    // printf("Flash_Read_Address:\n");
-    for (i = 0; i < data_size; i++) {
-        data[i] = Get_Data[4 + i];
-        // printf("%02x ", data[i]);
-    }
+    app_spi_transmit_receive_sync(APP_SPI_ID_MASTER, send_cmd, rd_buf, data_size + 4, 0x1000);
+    memcpy(data, rd_buf + 4, data_size);
+    sys_free(rd_buf);
+
+    // printf("flash_read_data:");
+    // for (uint16_t i = 0; i < data_size; i++) {
+    //     printf("%02x ", data[i]);
+    // }
     // printf("\r\n");
 
     return FLASH_SUCCESS;
@@ -270,7 +283,7 @@ int8_t flash_update_sector_data(uint32_t address, uint8_t* data, uint16_t data_s
 int flash_func_test() {
     uint8_t  buf_w[5];
     uint8_t  buf_r[5];
-    uint32_t addr = GD25LE128E_SECTOR_SIZE * 0;
+    uint32_t addr = GD25LE128E_SECTOR_SIZE * 1;
 
     memset(buf_w, 0, sizeof(buf_w));
     memset(buf_r, 0, sizeof(buf_r));
@@ -281,6 +294,7 @@ int flash_func_test() {
     // flash_erase_sector(addr);
 
     flash_read_data(addr, buf_r, sizeof(buf_r));
+    data_stream_hex(buf_r, sizeof(buf_r));
 
     buf_w[0] = 0x02;
     buf_w[1] = 0x12;
@@ -291,6 +305,7 @@ int flash_func_test() {
     flash_write_data(addr, buf_w, sizeof(buf_w));
 
     flash_read_data(addr, buf_r, sizeof(buf_r));
+    data_stream_hex(buf_r, sizeof(buf_r));
 
     flash_erase_sector(addr);
 
@@ -305,4 +320,13 @@ int flash_func_test() {
     flash_write_data(addr, buf_w, sizeof(buf_w));
 
     flash_read_data(addr, buf_r, sizeof(buf_r));
+    data_stream_hex(buf_r, sizeof(buf_r));
+
+    flash_erase_chip();
+
+    uint8_t rd_buf[128];
+    memset(rd_buf, 0x23, sizeof(rd_buf));
+    flash_write_data(GD25LE128E_SECTOR_SIZE * 0 + 64, rd_buf, 64);
+    flash_read_data(GD25LE128E_SECTOR_SIZE * 0, rd_buf, sizeof(rd_buf));
+    data_stream_hex(rd_buf, sizeof(rd_buf));
 }
