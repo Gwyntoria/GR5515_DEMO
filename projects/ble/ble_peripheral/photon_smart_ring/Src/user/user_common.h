@@ -50,6 +50,24 @@ void data_stream_hex(const uint8_t* data, unsigned long len);
  */
 uint16_t get_checksum_crc16(uint8_t* data, size_t length);
 
+void     write_big_endian_2(uint8_t* buffer, uint16_t data);
+uint16_t read_big_endian_2(const uint8_t* buffer);
+
+void     write_big_endian_4(uint8_t* buffer, uint32_t data);
+uint32_t read_big_endian_4(const uint8_t* buffer);
+
+void     write_big_endian_8(uint8_t* buffer, uint64_t data);
+uint64_t read_big_endian_8(const uint8_t* buffer);
+
+void     write_little_endian_2(uint8_t* buffer, uint16_t data);
+uint16_t read_little_endian_2(const uint8_t* buffer);
+
+void     write_little_endian_4(uint8_t* buffer, uint32_t data);
+uint32_t read_little_endian_4(const uint8_t* buffer);
+
+void     write_little_endian_8(uint8_t* buffer, uint64_t data);
+uint64_t read_little_endian_8(const uint8_t* buffer);
+
 #ifdef __cplusplus
 }
 #endif

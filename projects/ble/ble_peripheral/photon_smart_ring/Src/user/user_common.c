@@ -81,3 +81,87 @@ uint16_t get_checksum_crc16(uint8_t* data, size_t length) {
 
     return crc16;
 }
+
+// 写入2字节数据到缓冲区
+void write_big_endian_2(uint8_t *buffer, uint16_t data) {
+    buffer[0] = (data >> 8) & 0xFF; // 高字节
+    buffer[1] = data & 0xFF;        // 低字节
+}
+
+// 从缓冲区读取2字节数据
+uint16_t read_big_endian_2(const uint8_t *buffer) {
+    return (buffer[0] << 8) | buffer[1];
+}
+
+// 写入4字节数据到缓冲区
+void write_big_endian_4(uint8_t *buffer, uint32_t data) {
+    buffer[0] = (data >> 24) & 0xFF; // 最高字节
+    buffer[1] = (data >> 16) & 0xFF; // 次高字节
+    buffer[2] = (data >> 8) & 0xFF;  // 次低字节
+    buffer[3] = data & 0xFF;         // 最低字节
+}
+
+// 从缓冲区读取4字节数据
+uint32_t read_big_endian_4(const uint8_t *buffer) {
+    return (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
+}
+
+// 写入8字节数据到缓冲区
+void write_big_endian_8(uint8_t *buffer, uint64_t data) {
+    buffer[0] = (data >> 56) & 0xFF; // 最高字节
+    buffer[1] = (data >> 48) & 0xFF; // 次高字节
+    buffer[2] = (data >> 40) & 0xFF; // ...
+    buffer[3] = (data >> 32) & 0xFF;
+    buffer[4] = (data >> 24) & 0xFF;
+    buffer[5] = (data >> 16) & 0xFF;
+    buffer[6] = (data >> 8) & 0xFF;
+    buffer[7] = data & 0xFF;         // 最低字节
+}
+
+// 从缓冲区读取8字节数据
+uint64_t read_big_endian_8(const uint8_t *buffer) {
+    return ((uint64_t)buffer[0] << 56) | ((uint64_t)buffer[1] << 48) | ((uint64_t)buffer[2] << 40) | ((uint64_t)buffer[3] << 32) | ((uint64_t)buffer[4] << 24) | ((uint64_t)buffer[5] << 16) | ((uint64_t)buffer[6] << 8) | (uint64_t)buffer[7];
+}
+
+
+// 写入2字节数据到缓冲区
+void write_little_endian_2(uint8_t *buffer, uint16_t data) {
+    buffer[0] = data & 0xFF;        // 低字节
+    buffer[1] = (data >> 8) & 0xFF; // 高字节
+}
+
+// 从缓冲区读取2字节数据
+uint16_t read_little_endian_2(const uint8_t *buffer) {
+    return buffer[0] | (buffer[1] << 8);
+}
+
+// 写入4字节数据到缓冲区
+void write_little_endian_4(uint8_t *buffer, uint32_t data) {
+    buffer[0] = data & 0xFF;         // 最低字节
+    buffer[1] = (data >> 8) & 0xFF;  // 次低字节
+    buffer[2] = (data >> 16) & 0xFF; // 次高字节
+    buffer[3] = (data >> 24) & 0xFF; // 最高字节
+}
+
+// 从缓冲区读取4字节数据
+uint32_t read_little_endian_4(const uint8_t *buffer) {
+    return buffer[0] | (buffer[1] << 8) | (buffer[2] << 16) | (buffer[3] << 24);
+}
+
+// 写入8字节数据到缓冲区
+void write_little_endian_8(uint8_t *buffer, uint64_t data) {
+    buffer[0] = data & 0xFF;         // 最低字节
+    buffer[1] = (data >> 8) & 0xFF;  // ...
+    buffer[2] = (data >> 16) & 0xFF;
+    buffer[3] = (data >> 24) & 0xFF;
+    buffer[4] = (data >> 32) & 0xFF;
+    buffer[5] = (data >> 40) & 0xFF;
+    buffer[6] = (data >> 48) & 0xFF;
+    buffer[7] = (data >> 56) & 0xFF; // 最高字节
+}
+
+// 从缓冲区读取8字节数据
+uint64_t read_little_endian_8(const uint8_t *buffer) {
+    return (uint64_t)buffer[0] | ((uint64_t)buffer[1] << 8) | ((uint64_t)buffer[2] << 16) | ((uint64_t)buffer[3] << 24) | ((uint64_t)buffer[4] << 32) | ((uint64_t)buffer[5] << 40) | ((uint64_t)buffer[6] << 48) | ((uint64_t)buffer[7] << 56);
+}
+
