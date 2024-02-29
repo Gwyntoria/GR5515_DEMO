@@ -4,12 +4,29 @@
 #include "stdint.h"
 // GD25LE128E
 
-#define GD25LE128E_TOTAL_SIZE      0x1000000                                         // Total size: 16 MB
-#define GD25LE128E_BLOCK_OFFSET    0x10000                                           // Block size: 64KB 
-#define GD25LE128E_BLOCK_32_OFFSET 0x8000                                            // Block size: 32KB 
-#define GD25LE128E_SECTOR_OFFSET   0x1000                                            // Sector size: 4KB 
-#define GD25LE128E_PAGE_OFFSET     0x0100                                            // Page size: 256B 
-#define GD25LE128E_BLOCK_NUM       (GD25LE128E_TOTAL_SIZE / GD25LE128E_BLOCK_OFFSET) // Block num: 256
+#define GD25LE128E_OP_ADDR ((uint32_t)0x00000000) // opening address
+#define GD25LE128E_ED_ADDR ((uint32_t)0x00FFFFFF) // ending address
+
+#define GD25LE128E_TOTAL_SIZE     ((uint32_t)0x01000000) // Total size: 16 MB
+#define GD25LE128E_BLOCK_64K_SIZE ((uint32_t)0x00010000) // Block size: 64KB
+#define GD25LE128E_BLOCK_32K_SIZE ((uint32_t)0x00008000) // Block size: 32KB
+#define GD25LE128E_SECTOR_SIZE    ((uint32_t)0x00001000) // Sector size: 4KB
+#define GD25LE128E_PAGE_SIZE      ((uint32_t)0x00000100) // Page size: 256B
+
+#define GD25LE128E_BLOCK_CNT  (GD25LE128E_TOTAL_SIZE / GD25LE128E_BLOCK_64K_SIZE) // Block num: 256
+#define GD25LE128E_SECTOR_CNT (GD25LE128E_TOTAL_SIZE / GD25LE128E_SECTOR_SIZE)    // Sector num: 4096
+
+#define GD25LE128E_SECTOR_MASK         (GD25LE128E_SECTOR_SIZE - 1)       // 扇区掩码
+#define GD25LE128E_SECTOR_BASE(addr)   (addr & (~GD25LE128E_SECTOR_MASK)) // 扇区的基地址
+#define GD25LE128E_SECTOR_OFFSET(addr) (addr & GD25LE128E_SECTOR_MASK)    // 扇区内的偏移
+
+#define GD25LE128E_BLOCK_64K_MASK         (GD25LE128E_BLOCK_64K_SIZE - 1)         // 64k块区掩码
+#define GD25LE128E_BLOCK_64K_BASE(addr)   (addr & (~(GD25LE128E_BLOCK_64K_MASK))) // 64k块区的基地址
+#define GD25LE128E_BLOCK_64K_OFFSET(addr) (addr & GD25LE128E_BLOCK_64K_MASK)      // 64k块区内的偏移
+
+#define GD25LE128E_BLOCK_32K_MASK         (GD25LE128E_BLOCK_32K_SIZE - 1)         // 32k块区掩码
+#define GD25LE128E_BLOCK_32K_BASE(addr)   (addr & (~(GD25LE128E_BLOCK_32K_MASK))) // 32k块区的基地址
+#define GD25LE128E_BLOCK_32K_OFFSET(addr) (addr & GD25LE128E_BLOCK_32K_MASK)      // 32k块区内的偏移
 
 #define ELECTRONIC_ID 0x17
 #define RESID0        0xc817
@@ -54,104 +71,77 @@
 #define FLASH_INPUT_ERROR 0x05
 
 /**
- ****************************************************************************************
- * @brief 		Flash spi Initialization and check Flash ID precise
- * @Function   	int8_t flash_config(void)
+ * @brief Flash spi Initialization and check Flash ID precise
  *
- * @param[in]  	None
- *
- * @return 		int8_t              : Flash Configuar status
- ****************************************************************************************
+ * @return Flash Configuar status
  */
-int8_t flash_config(void);
+int8_t flash_init(void);
 
 /**
- ****************************************************************************************
- * @brief 		Get Flash GD25LE128E ID
- * @Function   	int8_t flash_read_rfid(uint8_t *flash_id);
+ * @brief Get Flash GD25LE128E Write statu
  *
- * @param[in]  	uint8_t *flash_id	: input Point must > 3 Byte
- *
- * @return 		int8_t				: get Point is status
- ****************************************************************************************
- */
-int8_t flash_read_rfid(uint8_t *flash_id);
-
-/**
- ****************************************************************************************
- * @brief 		Get Flash GD25LE128E Write statu
- * @Function    int8_t Flash_Statu_W(void);
- *
- * @param[in]  	None
- *
- * @return 		int8_t				: If Flash write and other status
- ****************************************************************************************
+ * @return If Flash write and other status
  */
 int8_t flash_read_status(void);
 
 /**
- ****************************************************************************************
- * @brief 		Flash GD25LE128E Chip Erase
- * @Function    int8_t flash_chip_erase(void);
+ * @brief Flash GD25LE128E Chip Erase
  *
- * @param[in]  	None
- *
- * @return 		int8_t              : return success
- ****************************************************************************************
+ * @return return success
  */
-int8_t flash_chip_erase(void);
+int8_t flash_erase_chip(void);
 
 /**
- ****************************************************************************************
- * @brief 		Flash GD25LE128E Sector Erase
- * @Function    int8_t flash_sector_erase(uint16_t page);
+ * @brief Flash GD25LE128E Sector Erase
  *
- * @param[in]  	uint16_t page 		: Enter Page and Erase this Page Data (0 - 4095)
- *
- * @return 		int8_t              : return success
- ****************************************************************************************
+ * @param address The starting address of the sector that needs to be erased (24 bits)
+ * @return return success
  */
-int8_t flash_sector_erase(uint16_t page);
+int8_t flash_erase_sector(uint32_t address);
 
 /**
- ****************************************************************************************
- * @brief 		Flash GD25LE128E Block Erase
- * @Function    int8_t flash_block_erase(uint8_t Block);
+ * @brief Flash GD25LE128E Block Erase
  *
- * @param[in]  	uint16_t Block 		: Enter Block and Erase this Block Data (0 - 127)
- *
- * @return 		int8_t              : return success
- ****************************************************************************************
+ * @param address The starting address of the block that needs to be erased (24 bits)
+ * @return return success
  */
-int8_t flash_block_erase(uint8_t Block);
+int8_t flash_erase_block_64k(uint32_t address);
 
 /**
- ****************************************************************************************
- * @brief 		Flash GD25LE128E write data to input address
- * @Function    int8_t flash_write_data(uint32_t address, uint8_t *data, uint16_t datasize);
+ * @brief Flash GD25LE128E write data to input address
  *
- * @param[in]  	uint32_t address 	: Enter want memory data to address (24 bit)
- *              uint8_t *data       : Enter Data to memory              (<= 256Byte)
- *              uint16_t datasize   : Enter DataSize                    (<= 256)
- *
- * @return 		int8_t              : if input point is null, return FLASH_DATA_EMPTY
- ****************************************************************************************
+ * @param[in] address The starting address of the data that needs to be written (24 bits)
+ * @param[in] data The buffer that holds the data to be written (<= 256 Bytes)
+ * @param[in] data_size The data size (<= 256 Bytes)
+ * @return if input pointer is null, return FLASH_DATA_EMPTY
  */
-int8_t flash_write_data(uint32_t address, uint8_t *data, uint16_t datasize);
+int8_t flash_write_data(uint32_t address, uint8_t* data, uint16_t data_size);
 
 /**
- ****************************************************************************************
- * @brief 		Flash GD25LE128E Read data from address
- * @Function    int8_t flash_write_data(uint32_t address, uint8_t *data, uint16_t datasize);
+ * @brief Flash GD25LE128E Read data from address
  *
- * @param[in]  	uint32_t address 	: read data address                 (24 bit)
- *              uint8_t *data       : read data                         (<= 256Byte)
- *              uint16_t datasize   : Enter DataSize                    (<= 256)
- *
- * @return 		int8_t              : if input point is null, return FLASH_DATA_EMPTY
- *                                    if DataSize > 256 ,return FLASH_SIZE_ERROR
- ****************************************************************************************
+ * @param[in] address The starting address of the data that needs to be read (24 bits)
+ * @param[out] data The buffer that stores the data to be read (<= 256 Bytes)
+ * @param[in] data_size The data size (<= 256 Bytes)
+ * @return if input pointer is null, return FLASH_DATA_EMPTY
+ *         if data_size > 256 ,return FLASH_SIZE_ERROR
  */
-int8_t flash_read_data(uint32_t address, uint8_t *data, uint16_t datasize);
+int8_t flash_read_data(uint32_t address, uint8_t* data, uint16_t data_size);
+
+/**
+ * @brief Flash GD25LE128E update sector data
+ *
+ * @param address The starting address of the data that needs to be updated (24 bits)
+ * @param data The buffer that holds the data to be written (<= 256 Bytes)
+ * @param data_size The data size (<= 256 Bytes)
+ * @return if input pointer is null, return FLASH_DATA_EMPTY
+ */
+int8_t flash_update_sector_data(uint32_t address, uint8_t* data, uint16_t data_size);
+
+/**
+ * @brief test demo
+ *
+ */
+int flash_func_test();
 
 #endif
