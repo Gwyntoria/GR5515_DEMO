@@ -4,9 +4,9 @@
  * @brief General function modules
  * @version 0.1
  * @date 2023-10-10
- * 
+ *
  * @copyright Copyright (c) 2023
- * 
+ *
  */
 
 #ifndef USER_COMMON_H
@@ -20,8 +20,14 @@
 extern "C" {
 #endif
 
-#define GUNTER_SUCCESS (0)
-#define GUNTER_FAILURE (1)
+#define GUNTER_FAILURE           (0xFFFF)
+#define GUNTER_SUCCESS           (0x0000)
+#define GUNTER_ERR_NULL_POINTER  (0x0001)
+#define GUNTER_ERR_INVALID_TYPE  (0x0002)
+#define GUNTER_ERR_INVALID_ADDR  (0x0003)
+#define GUNTER_ERR_INVALID_PARAM (0x0003)
+#define GUNTER_ERR_NOT_INITIAL   (0x0004)
+#define GUNTER_ERR_NOT_SUPPORT   (0x0005)
 
 // TIME
 #define SEC_TO_MS (1000)
@@ -33,7 +39,7 @@ extern "C" {
 #define DAY_TO_SEC (60 * 60 * 24)
 
 /**
- * @brief Print data in the specified format. 
+ * @brief Print data in the specified format.
  *        Print byte data in hexadecimal format, outputting sixteen bytes per line
  *
  * @param data Data that needs to be printed
@@ -43,10 +49,10 @@ void data_stream_hex(const uint8_t* data, unsigned long len);
 
 /**
  * @brief Use CRC-16-CCITT(POLY = 0x1021) to calculate the checksum
- * 
+ *
  * @param data Data that requires checksum calculation
  * @param length Datalength
- * @return checksum 
+ * @return checksum
  */
 uint16_t get_checksum_crc16(uint8_t* data, size_t length);
 
