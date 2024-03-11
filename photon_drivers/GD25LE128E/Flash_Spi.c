@@ -335,4 +335,5 @@ int flash_func_test() {
     flash_read_data(GD25LE128E_SECTOR_SIZE * 1, rd_buf, sizeof(rd_buf));
     data_stream_hex(rd_buf, sizeof(rd_buf));
 
+    flash_erase_chip();
 }

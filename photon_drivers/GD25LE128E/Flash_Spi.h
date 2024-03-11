@@ -16,6 +16,12 @@
 #define GD25LE128E_BLOCK_CNT  (GD25LE128E_TOTAL_SIZE / GD25LE128E_BLOCK_64K_SIZE) // Block num: 256
 #define GD25LE128E_SECTOR_CNT (GD25LE128E_TOTAL_SIZE / GD25LE128E_SECTOR_SIZE)    // Sector num: 4096
 
+#define GD25LE128E_PAGE_CNT_PER_SECTOR (GD25LE128E_SECTOR_SIZE / GD25LE128E_PAGE_SIZE)    // 16 pages / sector
+
+#define GD25LE128E_PAGE_MASK         (GD25LE128E_PAGE_SIZE - 1)       // 页区掩码
+#define GD25LE128E_PAGE_BASE(addr)   (addr & (~GD25LE128E_PAGE_MASK)) // 页区的基地址
+#define GD25LE128E_PAGE_OFFSET(addr) (addr & GD25LE128E_PAGE_MASK)    // 页区内的偏移
+
 #define GD25LE128E_SECTOR_MASK         (GD25LE128E_SECTOR_SIZE - 1)       // 扇区掩码
 #define GD25LE128E_SECTOR_BASE(addr)   (addr & (~GD25LE128E_SECTOR_MASK)) // 扇区的基地址
 #define GD25LE128E_SECTOR_OFFSET(addr) (addr & GD25LE128E_SECTOR_MASK)    // 扇区内的偏移
@@ -143,6 +149,6 @@ int8_t flash_update_sector_data(uint32_t address, uint8_t* data, uint16_t data_s
  * @brief test demo
  *
  */
-int flash_func_test();
+int flash_func_test(void);
 
 #endif
