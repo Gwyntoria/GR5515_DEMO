@@ -41,7 +41,11 @@
 
 #define VER_MAJOR 0
 #define VER_MINOR 1
-#define VER_BUILD 1
+#define VER_BUILD 0
+#define VER_EXTEN 3
+
+#define BLE_ACTIVA_OFF 0
+#define BLE_ACTIVA_ON  1
 
 /*
  * GLOBAL FUNCTION DECLARATION

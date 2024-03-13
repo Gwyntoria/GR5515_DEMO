@@ -2,6 +2,7 @@
 
 #include "app_log.h"
 #include "app_rtc.h"
+#include "app_log_store.h"
 #include "gr55xx_sys.h"
 
 // #include "gh3x2x_drv.h"
@@ -9,6 +10,8 @@
 #include "user_app.h"
 #include "user_common.h"
 #include "user_func_ctrl.h"
+
+#define RTC_TIMESTAMP_SIZE 26 /**< [00000000.000] */
 
 // static char* const week_str[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
@@ -59,14 +62,14 @@ uint16_t user_rtc_init() {
 
     // TODO: Get time from BLE
     
-    time.year = 23;
-    time.mon  = 10;
-    time.date = 19;
-    time.hour = 10;
-    time.min  = 45;
+    time.year = 24;
+    time.mon  = 3;
+    time.date = 12;
+    time.hour = 18;
+    time.min  = 0;
     time.sec  = 0;
     time.ms   = 0;
-    time.week = 3;
+    time.week = 2;
 
     APP_LOG_INFO("set rtc time: %04d%02d%02d%02d%02d%02d%03d\n",
                  time.year + 2000,
@@ -193,6 +196,62 @@ uint16_t rtc_get_current_local_time(app_rtc_time_t* time) {
     }
 
     return ret;
+}
+
+char* rtc_get_current_timestamp() {
+    uint16_t       ret = HAL_ERROR;
+    static char    timestamp[RTC_TIMESTAMP_SIZE];
+    app_rtc_time_t rtc_time;
+
+    memset(timestamp, 0, sizeof(timestamp));
+    memset(&rtc_time, 0, sizeof(rtc_time));
+
+    ret = app_rtc_get_time(&rtc_time);
+    if (ret != HAL_OK) {
+        APP_LOG_ERROR("app_rtc_get_time failed with %#x!\n", ret);
+        return NULL;
+    }
+
+    snprintf(timestamp,
+             RTC_TIMESTAMP_SIZE,
+             "[%04d/%02d/%02d %02d:%02d:%02d:%03d] ",
+             rtc_time.year, rtc_time.mon, rtc_time.date,
+             rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
+
+    return timestamp;
+}
+
+int rtc_get_log_real_time(app_log_store_time_t* p_time) {
+    if (p_time == NULL) {
+        APP_LOG_ERROR("init log time: pointer is null");
+        return GUNTER_ERR_NULL_POINTER;
+    }
+
+    if (s_rtc_status != kRtcOn) {
+        APP_LOG_ERROR("rtc is not initialized");
+        return GUNTER_FAILURE;
+    }
+
+    int ret = 0;
+
+    app_rtc_time_t rtc_time;
+    memset(&rtc_time, 0, sizeof(app_rtc_time_t));
+
+    ret = app_rtc_get_time(&rtc_time);
+    if (ret != HAL_OK) {
+        APP_LOG_ERROR("app_rtc_get_time failed with %#x", ret);
+        return ret;
+    }
+
+    p_time->year  = rtc_time.year;
+    p_time->month = rtc_time.mon;
+    p_time->day   = rtc_time.date;
+    p_time->hour  = rtc_time.hour;
+    p_time->min   = rtc_time.min;
+    p_time->sec   = rtc_time.sec;
+    p_time->msec  = rtc_time.ms;
+
+    return GUNTER_SUCCESS;
 }
 
 uint16_t rtc_adjust_time(app_rtc_time_t* time) {

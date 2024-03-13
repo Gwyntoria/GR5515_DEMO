@@ -43,6 +43,7 @@
 
 #include "app_error.h"
 #include "app_log.h"
+#include "app_log_dump_port.h"
 #include "app_timer.h"
 #include "dfu_port.h"
 #include "dis.h"
@@ -417,6 +418,8 @@ static void services_init(void) {
     /* OTA Service */
     dfu_port_init(NULL, &dfu_pro_call);
     dfu_service_init(NULL);
+    
+    app_log_dump_service_init();
 }
 
 /*

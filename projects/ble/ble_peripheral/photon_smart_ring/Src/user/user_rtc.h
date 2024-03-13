@@ -2,6 +2,7 @@
 #define USER_RTC_H
 
 #include "app_rtc.h"
+#include "app_log_store.h"
 #include "gr55xx_sys.h"
 
 #ifdef __cplusplus
@@ -11,8 +12,8 @@ extern "C" {
 #endif
 
 typedef enum RtcStatus {
-    kRtcOn = 0,
     kRtcOff,
+    kRtcOn,
     kRtcDefault,
 } RtcStatus;
 
@@ -47,6 +48,7 @@ uint16_t rtc_disable_date_alarm(void);
 uint16_t rtc_disable_all_alarm(void);
 
 uint16_t rtc_get_current_local_time(app_rtc_time_t* time);
+int rtc_get_log_real_time(app_log_store_time_t* p_time);
 
 uint16_t rtc_adjust_time(app_rtc_time_t* time);
 
