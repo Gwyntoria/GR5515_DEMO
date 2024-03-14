@@ -3,23 +3,22 @@
 
 #include "stdint.h"
 
-#define LSM_I2C_ID				APP_I2C_ID_0 // 六轴
-#define Nst_I2C_ID				APP_I2C_ID_1 // 温度
+/* i2c scl/sda config define*/
 
-/** i2c scl/sda config define*/
-#define I2C0_SCL_PIN			APP_IO_PIN_10
-#define I2C0_SDA_PIN			APP_IO_PIN_11
-#define I2C0_IO_MUX				APP_IO_MUX_4
-#define I2C0_ID                 LSM_I2C_ID
+// 六轴
+#define LSM_SCL_PIN APP_IO_PIN_10
+#define LSM_SDA_PIN APP_IO_PIN_11
+#define LSM_IO_MUX  APP_IO_MUX_4
+#define LSM_I2C_ID  APP_I2C_ID_0
 
-#define I2C1_SCL_PIN			APP_IO_PIN_30
-#define I2C1_SDA_PIN			APP_IO_PIN_26
-#define I2C1_IO_MUX				APP_IO_MUX_0
-#define I2C1_ID                 Nst_I2C_ID
+// 温度
+#define NST_SCL_PIN APP_IO_PIN_30
+#define NST_SDA_PIN APP_IO_PIN_26
+#define NST_IO_MUX  APP_IO_MUX_0
+#define NST_I2C_ID  APP_I2C_ID_1
 
-
-#define I2C0_OWN_ADDR			0xA1
-#define I2C1_OWN_ADDR			0xA2
+#define LSM_OWN_ADDR 0xA1
+#define NST_OWN_ADDR 0xA2
 
 void GT_I2C_Init(void);
 

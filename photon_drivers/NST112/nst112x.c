@@ -27,7 +27,7 @@ uint16_t nst112x_array_num = 0;
 /*====================================================================================================*/
 void Nst112x_Transmit(uint8_t ads_addr,uint8_t Reg)
 {
-	app_i2c_transmit_async(Nst_I2C_ID, ads_addr, &Reg, 1);
+	app_i2c_transmit_async(NST_I2C_ID, ads_addr, &Reg, 1);
 }
 
 /*====================================================================================================*/
@@ -48,14 +48,14 @@ void Nst112x_Comparator_Threshold(uint8_t Nst_Addr, int16_t LowerThreshold, int1
 	Data_send[0] = (LowerThreshold >> 8) & 0x00FF;
 	Data_send[1] = LowerThreshold & 0x00FF;
 	//printf("Nst112x_Comparator_Threshold LowerThreshold ：Data_send[0] : %x -- Data_send[1] : %x \r\n",Data_send[0],Data_send[1]);
-	app_i2c_mem_write_async(Nst_I2C_ID, Nst_Addr, T_low_Reg, I2C_MEMADD_SIZE_8BIT, Data_send, 2);
+	app_i2c_mem_write_async(NST_I2C_ID, Nst_Addr, T_low_Reg, I2C_MEMADD_SIZE_8BIT, Data_send, 2);
 	
 	delay_ms(2);
 	
 	Data_send[0] = (UpperThreshold >> 8) & 0x00FF;
 	Data_send[1] = UpperThreshold & 0x00FF;
 	//printf("Nst112x_Comparator_Threshold UpperThreshold ：Data_send[0] : %x -- Data_send[1] : %x \r\n",Data_send[0],Data_send[1]);
-	app_i2c_mem_write_async(Nst_I2C_ID, Nst_Addr, T_high_Reg, I2C_MEMADD_SIZE_8BIT, Data_send, 2);
+	app_i2c_mem_write_async(NST_I2C_ID, Nst_Addr, T_high_Reg, I2C_MEMADD_SIZE_8BIT, Data_send, 2);
 }
 
 /*====================================================================================================*/
@@ -93,7 +93,7 @@ void Nst112x_ConfigRegister(uint8_t Nst_Addr)
 	//Send configured Register data
 	Data_send[0] = nst112xConfigRegisterH.value;
 	Data_send[1] = nst112xConfigRegisterL.value;
-	app_i2c_mem_write_async(Nst_I2C_ID, Nst_Addr, Config_Reg, I2C_MEMADD_SIZE_8BIT, Data_send, 2);
+	app_i2c_mem_write_async(NST_I2C_ID, Nst_Addr, Config_Reg, I2C_MEMADD_SIZE_8BIT, Data_send, 2);
 }
 
 /*====================================================================================================*/
@@ -108,7 +108,7 @@ void Nst112x_ConfigRegister(uint8_t Nst_Addr)
 uint16_t Get_Nst112x_ChipID(uint8_t Nst_Addr)
 {
 	uint8_t Data_get[2];
-	app_i2c_mem_read_async(Nst_I2C_ID, Nst_Addr, ChipID_Reg, 1, Data_get, 2);
+	app_i2c_mem_read_async(NST_I2C_ID, Nst_Addr, ChipID_Reg, 1, Data_get, 2);
 	delay_ms(10);
 	return ((uint16_t)Data_get[0]<<8) | Data_get[1] ;
 }
@@ -176,7 +176,7 @@ int16_t Get_nst112x_temperature_value(uint8_t Nst_addr)
 {
 	uint8_t Data_Get[2];
 	uint16_t Value_Get;
-	app_i2c_mem_read_async(Nst_I2C_ID, Nst_addr, Temperature_Reg, 1, Data_Get, 2);
+	app_i2c_mem_read_async(NST_I2C_ID, Nst_addr, Temperature_Reg, 1, Data_Get, 2);
 	delay_ms(1);
 	Value_Get = ((int16_t)Data_Get[0]<<8) | Data_Get[1] ;
 	return (Value_Get >> 4);
