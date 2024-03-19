@@ -221,15 +221,60 @@ char* rtc_get_current_timestamp() {
     return timestamp;
 }
 
-int rtc_get_log_real_time(app_log_store_time_t* p_time) {
+
+#define MS_PER_SEC 1000
+#define SEC_PER_MIN 60
+#define MIN_PER_HOUR 60
+#define HOUR_PER_DAY 24
+#define DAY_PER_YEAR 365
+#define YEAR_BASE 2010
+
+int rtc_get_milliseconds() {
+    int ret = 0;
+    int milliseconds = 0;
+    app_rtc_time_t time;
+
+    memset(&time, 0, sizeof(time));
+
+    ret = app_rtc_get_time(&time);
+    if (ret != HAL_OK) {
+        APP_LOG_ERROR("app_rtc_get_time failed with %#x!\n", ret);
+        return -1;
+    }
+
+    // Convert years to milliseconds
+    int years = (int)(time.year) + YEAR_BASE;
+    milliseconds += (years - YEAR_BASE) * DAY_PER_YEAR * HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
+
+    // Convert months to milliseconds
+    static const uint16_t days_in_month[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    for (uint8_t i = 1; i < time.mon; i++) {
+        milliseconds += days_in_month[i] * HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
+        // Leap year check
+        if (i == 2 && ((years % 4 == 0 && years % 100 != 0) || years % 400 == 0)) {
+            milliseconds += MS_PER_SEC;
+        }
+    }
+
+    // Convert days to milliseconds
+    milliseconds += (int)(time.date - 1) * HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
+
+    // Convert hours, minutes, seconds, and milliseconds to milliseconds
+    milliseconds += (int)(time.hour) * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
+    milliseconds += (int)(time.min) * SEC_PER_MIN * MS_PER_SEC;
+    milliseconds += (int)(time.sec) * MS_PER_SEC;
+    milliseconds += (int)(time.ms);
+
+    return milliseconds;
+}
+
+void rtc_get_log_real_time(app_log_store_time_t* p_time) {
     if (p_time == NULL) {
         APP_LOG_ERROR("init log time: pointer is null");
-        return GUNTER_ERR_NULL_POINTER;
     }
 
     if (s_rtc_status != kRtcOn) {
         APP_LOG_ERROR("rtc is not initialized");
-        return GUNTER_FAILURE;
     }
 
     int ret = 0;
@@ -240,7 +285,6 @@ int rtc_get_log_real_time(app_log_store_time_t* p_time) {
     ret = app_rtc_get_time(&rtc_time);
     if (ret != HAL_OK) {
         APP_LOG_ERROR("app_rtc_get_time failed with %#x", ret);
-        return ret;
     }
 
     p_time->year  = rtc_time.year;
@@ -250,8 +294,6 @@ int rtc_get_log_real_time(app_log_store_time_t* p_time) {
     p_time->min   = rtc_time.min;
     p_time->sec   = rtc_time.sec;
     p_time->msec  = rtc_time.ms;
-
-    return GUNTER_SUCCESS;
 }
 
 uint16_t rtc_adjust_time(app_rtc_time_t* time) {
