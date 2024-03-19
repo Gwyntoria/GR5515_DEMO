@@ -18,8 +18,6 @@
 
 #include "stdint.h"
 
-
-
 /*I2C address for different models of Nst112*/
 #define Nst112A_I2C_Addr				0x48
 #define Nst112B_I2C_Addr				0x49
@@ -127,16 +125,13 @@ enum HRES	// High_Resolution
 	High_Resolution_14bit					//14Bit
 };
 
-void Nst112x_Init(uint8_t Nst_Addr);		// Nst112 Init
+void    nst112_init(void);                               // All Nst112 Init
+int16_t get_nst112x_temperature_value(uint8_t Nst_addr); // get_nst112x_temperature_value
+float   get_nst112x_temperature(uint8_t Nst_addr);       // get_nst112x_temperature
 
-void Nst112_four_Init(void);				// All Nst112 Init
-int16_t Get_nst112x_temperature_value(uint8_t Nst_addr);	// Get_nst112x_temperature_value
-float Get_nst112x_temperature(uint8_t Nst_addr);	// Get_nst112x_temperature
-
-
-extern int nst112x_array[30];
+extern int      nst112x_array[30];
 extern uint16_t nst112x_array_num;
 
-int16_t nst112x_Sliding_filter(int16_t values);	
+int16_t nst112x_sliding_filter(int16_t values);
 
 #endif /* __nst112x_H */
