@@ -17,19 +17,19 @@
 static void flash_spi_callback(app_spi_evt_t* p_evt) {
     switch (p_evt->type) {
         case APP_SPI_EVT_TX_CPLT:
-            printf("flash_spi_callback APP_SPI_EVT_TX_CPLT\r\n");
+            // APP_LOG_INFO("flash_spi_callback APP_SPI_EVT_TX_CPLT");
             break;
 
         case APP_SPI_EVT_RX_DATA:
-            printf("flash_spi_callback APP_SPI_EVT_RX_DATA\r\n");
+            // APP_LOG_INFO("flash_spi_callback APP_SPI_EVT_RX_DATA");
             break;
 
         case APP_SPI_EVT_ERROR:
-            printf("flash_spi_callback APP_SPI_EVT_ERROR\r\n");
+            // APP_LOG_INFO("flash_spi_callback APP_SPI_EVT_ERROR");
             break;
 
         case APP_SPI_EVT_TX_RX:
-            printf("flash_spi_callback APP_SPI_EVT_TX_RX\r\n");
+            // APP_LOG_INFO("flash_spi_callback APP_SPI_EVT_TX_RX");
             break;
 
         default:
@@ -49,8 +49,8 @@ int8_t flash_read_rfid(uint8_t* flash_id) // flash_id must > 3byte
     uint8_t Get_Data[4] = {0};
 
     app_spi_transmit_receive_async(APP_SPI_ID_MASTER, &Send_Data, Get_Data, 4);
-    // printf("flash_read_rfid: Get_Data[0] = 0x%x , Get_Data[1] = 0x%x , Get_Data[2] = 0x%x , Get_Data[3] =
-    // 0x%x\r\n",Get_Data[0],Get_Data[1],Get_Data[2],Get_Data[3]);
+    // APP_LOG_DEBUG("flash_read_rfid: Get_Data[0] = 0x%x , Get_Data[1] = 0x%x , Get_Data[2] = 0x%x , Get_Data[3] =
+    // 0x%x",Get_Data[0],Get_Data[1],Get_Data[2],Get_Data[3]);
     if (flash_id != NULL) {
         for (int i = 0; i < 3; i++) {
             flash_id[i] = Get_Data[i + 1];
@@ -104,7 +104,7 @@ int8_t flash_init(void) {
 
     ret = app_spi_init(&flash_struct, flash_spi_callback);
     if (ret != 0) {
-        printf("flash init error!\r\n");
+        APP_LOG_ERROR("flash init error!");
         return FLASH_INIT_ERROR;
     }
 
@@ -113,10 +113,10 @@ int8_t flash_init(void) {
     Flashid = Flashid << 8 | Flash_id[1];
     Flashid = Flashid << 8 | Flash_id[2];
     if (Flashid == GD25LE128E_ID) {
-        printf("flash init success!\r\n");
+        APP_LOG_INFO("flash init success!");
         return FLASH_SUCCESS;
     }
-    printf("flash id error!\r\n");
+    APP_LOG_ERROR("flash id error!");
     return FLASH_ID_ERROR;
 }
 
@@ -125,7 +125,7 @@ int8_t flash_read_status(void) {
     uint8_t send_cmd  = GD25LE128E_RDSR_L;
 
     app_spi_transmit_receive_sync(APP_SPI_ID_MASTER, &send_cmd, rd_buf, 2, 0x1000);
-    // printf("GD25LE128E_RDSR_L = 0x%x \r\n",rd_buf[1]);
+    // APP_LOG_DEBUG("GD25LE128E_RDSR_L = 0x%x ",rd_buf[1]);
     if ((rd_buf[1] & 0x01) == 1) {
         return FLASH_STATUS_BUSY;
     } else {
@@ -267,13 +267,13 @@ int8_t flash_update_sector_data(uint32_t address, uint8_t* data, uint16_t data_s
 
     ret = flash_erase_sector(address);
     if (ret != FLASH_SUCCESS) {
-        printf("flash_erase_sector[%u] error\n", address);
+        APP_LOG_ERROR("flash_erase_sector[%u] error", address);
         return FLASH_FAILURE;
     }
 
     ret = flash_write_data(address, data, data_size);
     if (ret != FLASH_SUCCESS) {
-        printf("flash_write_data error with %d\n", ret);
+        APP_LOG_ERROR("flash_write_data error with %d", ret);
         return FLASH_FAILURE;
     }
 
