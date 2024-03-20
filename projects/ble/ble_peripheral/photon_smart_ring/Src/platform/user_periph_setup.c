@@ -78,9 +78,10 @@ static void app_log_assert_init(void)
     op_func.flash_erase = hal_flash_erase;
     op_func.flash_write = hal_flash_write;
     op_func.flash_read  = hal_flash_read;
-    op_func.time_get    = rtc_get_log_real_time;
-    op_func.sem_give = NULL;
-    op_func.sem_take = NULL;
+    // op_func.time_get    = rtc_get_log_real_time;
+    op_func.time_get    = NULL;
+    op_func.sem_give    = NULL;
+    op_func.sem_take    = NULL;
 
     app_log_store_init(&store_info, &op_func);
 }
