@@ -197,7 +197,7 @@ void hal_gh3x2x_spi_init(void)
     if (ret != 0)
     {
         EXAMPLE_LOG("SPIM initial failed! Please check the input paraments. ret = %d.\r\n", ret);
-}
+    }
 
 #if (__GH3X2X_SPI_TYPE__ == __GH3X2X_SPI_TYPE_SOFTWARE_CS__)
     app_io_init_t gpio_config = APP_IO_DEFAULT_CONFIG;

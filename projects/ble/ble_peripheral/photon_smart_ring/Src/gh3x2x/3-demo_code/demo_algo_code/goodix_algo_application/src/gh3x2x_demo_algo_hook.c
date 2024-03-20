@@ -138,14 +138,14 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
 void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
 {
 #if (__USE_GOODIX_SPO2_ALGORITHM__)
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:%d%% R=%d %d %d %d %d\r\n", 
-                      __FUNCTION__, pstAlgoResult->snResult[0],
-                                    pstAlgoResult->snResult[1],
-                                    pstAlgoResult->snResult[2],
-                                    pstAlgoResult->snResult[3],
-                                    pstAlgoResult->snResult[4],
-                                    pstAlgoResult->snResult[5]);
-            
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:%d%% R=%d %d %d %d %d\r\n",
+                                 __FUNCTION__, pstAlgoResult->snResult[0],
+                                 pstAlgoResult->snResult[1],
+                                 pstAlgoResult->snResult[2],
+                                 pstAlgoResult->snResult[3],
+                                 pstAlgoResult->snResult[4],
+                                 pstAlgoResult->snResult[5]);
+
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     health_spo2_data_send(0, &data, 1);
 
