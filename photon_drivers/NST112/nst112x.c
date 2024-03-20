@@ -8,22 +8,27 @@
  * @copyright Copyright (c) 2024
  *
  */
+
 #include "nst112x.h"
 #include "app_i2c.h"
 #include "app_log.h"
-// #include "I2C_Config/I2C_Config.h"
 
 // 温度
+#define NST_I2C_ID  APP_I2C_ID_1
+#define NST_IO_MUX  APP_IO_MUX_0
 #define NST_SCL_PIN APP_IO_PIN_30
 #define NST_SDA_PIN APP_IO_PIN_26
-#define NST_IO_MUX  APP_IO_MUX_0
-#define NST_I2C_ID  APP_I2C_ID_1
 
 #define NST_OWN_ADDR 0xA2
 
-int      nst112x_array[30];
-uint16_t nst112x_array_num = 0;
-
+/**
+ * @brief Event handler for NST112x I2C events.
+ *
+ * This function is called when an I2C event occurs for the NST112x device.
+ * It handles different types of I2C events and performs corresponding actions.
+ *
+ * @param p_evt Pointer to the I2C event structure.
+ */
 void _nst112x_i2c_evt_handler(app_i2c_evt_t* p_evt) {
     switch (p_evt->type) {
         case APP_I2C_EVT_ERROR:
@@ -40,6 +45,13 @@ void _nst112x_i2c_evt_handler(app_i2c_evt_t* p_evt) {
     }
 }
 
+/**
+ * @brief Initializes the NST112X I2C interface.
+ *
+ * This function initializes the NST112X I2C interface with the specified parameters.
+ *
+ * @return 0 if the initialization is successful, -1 otherwise.
+ */
 int _nst112x_i2c_init(void) {
     int ret;
 
@@ -78,21 +90,19 @@ int _nst112x_i2c_init(void) {
     return 0;
 }
 
-/*====================================================================================================*/
-/*====================================================================================================*
-** function : 		_nst112x_config_register(uint8_t Nst_Addr)
-** description: 	Configure the parameters of the NST112
-** Input: 			uint8_t Nst_Addr			Nst112x I2C address
-** Output:			None
-** explain: 		Setting Nst112 Consultation Datasheet Page 18-19
-**====================================================================================================*/
-/*====================================================================================================*/
-void _nst112x_config_register(uint8_t Nst_Addr) {
+/**
+ * @brief Configure the parameters of the NST112.
+ *
+ * Setting Nst112 Consultation Datasheet Page 18-19.
+ *
+ * @param nst_addr The address of the NST112X device.
+ */
+void _nst112x_config_register(uint8_t nst_addr) {
     // Configuration register consortium
     union xnst112xConfigRegisterH nst112xConfigRegisterH;
     union xnst112xConfigRegisterL nst112xConfigRegisterL;
 
-    uint8_t Data_send[2];
+    uint8_t data[2];
     // 0x60 == 0b01100000
     nst112xConfigRegisterH.RegisterH.OS   = Continuous_Conversion_Mode;    // 0
     nst112xConfigRegisterH.RegisterH.R0R1 = Converter_Resolution_12bit;    // 11 ---- 0.625 resolution
@@ -110,170 +120,190 @@ void _nst112x_config_register(uint8_t Nst_Addr) {
     nst112xConfigRegisterL.RegisterL.NA1    = 0;                    // 0
 
     // Send configured Register data
-    Data_send[0] = nst112xConfigRegisterH.value;
-    Data_send[1] = nst112xConfigRegisterL.value;
-    app_i2c_mem_write_sync(NST_I2C_ID, Nst_Addr, Config_Reg, I2C_MEMADD_SIZE_8BIT, Data_send, 2, 0x1000);
+    data[0] = nst112xConfigRegisterH.value;
+    data[1] = nst112xConfigRegisterL.value;
+    app_i2c_mem_write_sync(NST_I2C_ID, nst_addr, CONFIG_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
 }
 
-/*====================================================================================================*/
-/*====================================================================================================*
-** function : 		_nst112x_comparator_threshold(uint8_t Nst_Addr, int16_t LowerThreshold, int16_t UpperThreshold)
-** description: 	Setting thresholds for maximum and minimum temperatures
-** Input: 			uint8_t Nst_Addr			Nst112x I2C address
-                    int16_t LowerThreshold		input LowerThreshold
-                    int16_t UpperThreshold		input UpperThreshold
-** Output:			None
-** explain: 		If the threshold alarm is turned on, exceeding the lower or upper threshold limit will generate a level jump in the AL bit
-**====================================================================================================*/
-/*====================================================================================================*/
-void _nst112x_comparator_threshold(uint8_t Nst_Addr, int16_t LowerThreshold, int16_t UpperThreshold) {
-    uint8_t Data_send[2];
+/**
+ * Sets the comparator threshold value for the NST112x device.
+ *
+ * @param nst_addr The address of the NST112x device.
+ * @param LowerThreshold The lower threshold value to be set.
+ * @param UpperThreshold The upper threshold value to be set.
+ */
+void _nst112x_comparator_threshold(uint8_t nst_addr, int16_t LowerThreshold, int16_t UpperThreshold) {
+    uint8_t data[2];
 
-    Data_send[0] = (LowerThreshold >> 8) & 0x00FF;
-    Data_send[1] = LowerThreshold & 0x00FF;
-    // printf("_nst112x_comparator_threshold LowerThreshold ：Data_send[0] : %x -- Data_send[1] : %x \r\n",Data_send[0],Data_send[1]);
-    app_i2c_mem_write_sync(NST_I2C_ID, Nst_Addr, T_low_Reg, I2C_MEMADD_SIZE_8BIT, Data_send, 2, 0x1000);
+    data[0] = (LowerThreshold >> 8) & 0x00FF;
+    data[1] = LowerThreshold & 0x00FF;
+    // printf("_nst112x_comparator_threshold LowerThreshold ：Data_send[0] : %x -- data[1] : %x \r\n",data[0],data[1]);
+    app_i2c_mem_write_sync(NST_I2C_ID, nst_addr, T_LOW_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
 
     delay_ms(2);
 
-    Data_send[0] = (UpperThreshold >> 8) & 0x00FF;
-    Data_send[1] = UpperThreshold & 0x00FF;
-    // printf("_nst112x_comparator_threshold UpperThreshold ：Data_send[0] : %x -- Data_send[1] : %x \r\n",Data_send[0],Data_send[1]);
-    app_i2c_mem_write_sync(NST_I2C_ID, Nst_Addr, T_high_Reg, I2C_MEMADD_SIZE_8BIT, Data_send, 2, 0x1000);
+    data[0] = (UpperThreshold >> 8) & 0x00FF;
+    data[1] = UpperThreshold & 0x00FF;
+    // printf("_nst112x_comparator_threshold UpperThreshold ：Data_send[0] : %x -- data[1] : %x \r\n",data[0],data[1]);
+    app_i2c_mem_write_sync(NST_I2C_ID, nst_addr, T_HIGH_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
 }
 
-/*====================================================================================================*/
-/*====================================================================================================*
-** function : 		_get_nst112x_chip_id(uint8_t Nst_Addr)
-** description: 	Get Nst112 ChipID to know Nst112 remain or not
-** Input: 			Nst_Addr	I2C address
-** Output:			None
-** explain: 		None
-**====================================================================================================*/
-/*====================================================================================================*/
-uint16_t _get_nst112x_chip_id(uint8_t Nst_Addr) {
-    uint8_t Data_get[2];
-    app_i2c_mem_read_sync(NST_I2C_ID, Nst_Addr, ChipID_Reg, 1, Data_get, 2, 0x1000);
+/**
+ * @brief Get the chip ID of NST112x.
+ *
+ * This function reads the chip ID register of NST112x device at the specified address.
+ *
+ * @param nst_addr The I2C address of the NST112x device.
+ * @return The chip ID of NST112x as a 16-bit unsigned integer.
+ */
+uint16_t _nst112x_get_chip_id(uint8_t nst_addr) {
+    uint8_t buffer[2];
+    app_i2c_mem_read_sync(NST_I2C_ID, nst_addr, CHIP_ID_REG, 1, buffer, 2, 0x1000);
     delay_ms(10);
-    return ((uint16_t)Data_get[0] << 8) | Data_get[1];
+    return ((uint16_t)buffer[0] << 8) | buffer[1];
 }
 
-/*====================================================================================================*/
-/*====================================================================================================*
-** function : 		_nst112x_init(uint8_t Nst_Addr)
-** description: 	Initialization for  NST112
-** Input: 			Nst_Addr	I2C address
-** Output:			None
-** explain: 		want to Get IIC is OK
-**====================================================================================================*/
-/*====================================================================================================*/
-void _nst112x_init(uint8_t Nst_Addr) {
-    uint16_t value_temp;
-    uint8_t  temp;
+/**
+ * @brief Initializes the NST112x device at the specified address.
+ *
+ * This function initializes the NST112x device at the specified I2C address.
+ *
+ * @param nst_addr The I2C address of the NST112x device.
+ */
+void _nst112x_init(uint8_t nst_addr) {
+    uint16_t id = 0;
 
-    _nst112x_config_register(Nst_Addr);
+    _nst112x_config_register(nst_addr);
     delay_ms(10);
 
-    _nst112x_comparator_threshold(Nst_Addr, 0x10, 0x30);
+    _nst112x_comparator_threshold(nst_addr, 0x10, 0x30);
     delay_ms(10);
 
-    value_temp = _get_nst112x_chip_id(Nst_Addr);
-    if (value_temp == 0xA3A3) {
-        temp = Nst_Addr;
-        APP_LOG_INFO("nst112x IIC is OK : NST112 number - %d", temp - 0x47);
+    id = _nst112x_get_chip_id(nst_addr);
+    if (id == 0xA3A3) {
+        APP_LOG_INFO("nst112x IIC is OK : NST112 number[%d]", nst_addr - 0x47);
     } else {
-        temp = Nst_Addr;
-        APP_LOG_INFO("nst112x IIC is Error : NST112 number - %d ,plese check ConfigRegister", temp - 0x47);
+        APP_LOG_ERROR("nst112x IIC is Error : NST112 number[%d], plese check ConfigRegister", nst_addr - 0x47);
     }
 
     delay_ms(10);
 }
 
-/*====================================================================================================*/
-/*====================================================================================================*
-** function : 		nst112_init(uint8_t Nst_Addr)
-** description: 	Initialization for All NST112
-** Input: 			Nst_Addr	I2C address
-** Output:			None
-** explain: 		None
-**====================================================================================================*/
-/*====================================================================================================*/
+/**
+ * @brief Initializes the NST112x device.
+ *
+ * This function initializes the NST112x device by calling the _nst112x_init function for each device.
+ */
 void nst112_init(void) {
-	_nst112x_i2c_init();
-
-    // _nst112x_init(Nst112A_I2C_Addr);
-    // delay_ms(10);
-    // _nst112x_init(Nst112B_I2C_Addr);
-    // delay_ms(10);
-    _nst112x_init(Nst112C_I2C_Addr);
+    _nst112x_i2c_init();
     delay_ms(10);
-    _nst112x_init(Nst112D_I2C_Addr);
+
+    _nst112x_init(NST112C_I2C_ADDR);
+    _nst112x_init(NST112D_I2C_ADDR);
 }
 
-/*====================================================================================================*/
-/*====================================================================================================*
-** function : 		nst112x_transmit(uint8_t ads_addr,uint8_t point)
-** description: 	Don't Kown
-** Input: 			uint8_t ads_addr : Nst112 I2C  Address
-                    uint8_t Reg	 	 : Nst112 Register Address
-** Output:			None
-** explain: 		None
-**====================================================================================================*/
-/*====================================================================================================*/
+/**
+ * @brief Transmit data to the NST112x device.
+ *
+ * This function transmits data to the NST112x device at the specified I2C address.
+ *
+ * @param ads_addr The I2C address of the NST112x device.
+ * @param Reg The register address to which the data is to be written.
+ */
 void nst112x_transmit(uint8_t ads_addr, uint8_t Reg) {
     app_i2c_transmit_sync(NST_I2C_ID, ads_addr, &Reg, 1, 0x1000);
 }
 
 /**
- * @brief Get Nst112 temperature_value
+ * @brief Get Nst112 sensor_value
  *
- * @param Nst_addr I2C address
+ * @param nst_addr I2C address
  *
- * @return Value_Get 12Bit Value
+ * @return value 12Bit Value
  */
-int16_t get_nst112x_temperature_value(uint8_t Nst_addr) {
-    uint8_t  Data_Get[2];
-    uint16_t Value_Get;
+int16_t _nst112x_get_sensor_value(uint8_t nst_addr) {
+    uint8_t buffer[2];
+    int16_t value;
 
-    app_i2c_mem_read_sync(NST_I2C_ID, Nst_addr, Temperature_Reg, 1, Data_Get, 2, 0x1000);
+    app_i2c_mem_read_sync(NST_I2C_ID, nst_addr, TEMPERATURE_REG, 1, buffer, 2, 0x1000);
     delay_ms(1);
 
-    Value_Get = ((int16_t)Data_Get[0] << 8) | Data_Get[1];
+    value = ((int16_t)buffer[0] << 8) | buffer[1];
 
-    return (Value_Get >> 4);
+    return (value >> 4);
 }
 
-/*====================================================================================================*/
-/*====================================================================================================*
-** function : 		get_nst112x_temperature(uint8_t Nst_Addr)
-** description: 	Get Nst112 	temperature
-** Input: 			Nst_Addr	I2C address
-** Output:			Get_Temperature	temperature
-** explain: 		None
-**====================================================================================================*/
-/*====================================================================================================*/
-float get_nst112x_temperature(uint8_t Nst_addr) {
-    int16_t Value_Get;
-    float   Get_Temperature = 0.0;
+static int32_t  nst112x_array[30]   = {0};
+static uint16_t nst112x_array_num   = 0;
+static uint16_t nst112x_array_index = 0;
 
-    Value_Get = get_nst112x_temperature_value(Nst_addr);
+void nst112x_fifo_add_sensor_value() {
+    int16_t value = 0;
 
-    Get_Temperature = Value_Get * 0.0625;
+    for (int i = 0; i < 2; i++) {
+        value = _nst112x_get_sensor_value(NST112C_I2C_ADDR + i);
+        APP_LOG_DEBUG("NST112C sensor[%d] value: %d", NST112C_I2C_ADDR + i, value);
 
-    return Get_Temperature;
-}
-
-int16_t nst112x_sliding_filter(int16_t values) //
-{
-    nst112x_array[nst112x_array_num] = values;
-    nst112x_array_num++;
-    nst112x_array_num = nst112x_array_num % 2;
-
-    double nst112x_array_total = 0;
-    for (uint8_t i = 0; i < 2; i++) {
-        nst112x_array_total += nst112x_array[i];
+        nst112x_array[nst112x_array_index] = value;
+        nst112x_array_num++;
+        nst112x_array_index = nst112x_array_num % NST_STATISTICS_NUM;
     }
-    nst112x_array_total = (int16_t)(nst112x_array_total / 2);
+}
 
-    return nst112x_array_total;
+int16_t _nst112x_fifo_get_average_sensor_value(void) {
+    if (nst112x_array_num < NST_STATISTICS_NUM) {
+        return NST112X_VALUE_ERROR;
+    }
+
+    int32_t sum = 0;
+    for (int i = 0; i < NST_STATISTICS_NUM; i++) {
+        sum += nst112x_array[i];
+    }
+
+    int16_t average = (int16_t)(sum / NST_STATISTICS_NUM);
+
+    nst112x_array_num   = 0;
+    nst112x_array_index = 0;
+    memset(nst112x_array, 0, sizeof(nst112x_array));
+
+    if (average < (int16_t)0xFCE0 || average > (int16_t)0x0800) {
+        APP_LOG_ERROR("NST112X_VALUE_ERROR");
+        return NST112X_VALUE_ERROR;
+    }
+
+    return average;
+}
+
+/**
+ * @brief Get the temperature value from the NST112x device.
+ *
+ * This function reads the temperature value from the NST112x device at the specified I2C address.
+ *
+ * @param nst_addr The I2C address of the NST112x device.
+ * @return The temperature.
+ */
+float nst112x_get_temperature() {
+    int16_t value       = 0;
+    float   temperature = 0.0;
+
+    value = _nst112x_fifo_get_average_sensor_value();
+
+    temperature = value * 0.0625;
+
+    return temperature;
+}
+
+void nst112x_test(void) {
+    int count = 0;
+
+    while (count < 10) {
+        nst112x_fifo_add_sensor_value();
+
+        count++;
+
+        delay_ms(100);
+    }
+
+    float temperature = nst112x_get_temperature(NST112C_I2C_ADDR);
+    APP_LOG_INFO("NST112C temperature: %.2f", temperature);
 }

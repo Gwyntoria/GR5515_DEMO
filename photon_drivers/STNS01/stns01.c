@@ -73,6 +73,8 @@ void stns01_init(void) {
     sample_node1.len     = TEST_CONV_LENGTH;
 
     sample_node0.next = &sample_node1;
+
+    APP_LOG_INFO("stns01 init success");
 }
 
 double stns01_get_voltage(uint8_t channel) {
@@ -123,8 +125,8 @@ void stns01_test(void) {
     double Power1 = 0.0, Power2 = 0.0;
 
     Power1 = stns01_get_voltage(STNS01_CHANNEL_BATTERY); // 获取电池电压
-    APP_LOG_DEBUG("Now VABAT Power is %.2f", Power1);
+    APP_LOG_DEBUG("Now VABAT Power is %.2fV", Power1);
 
     Power2 = stns01_get_voltage(STNS01_CHANNEL_CHARGING); // 获取充电时的电压
-    APP_LOG_DEBUG("Now BATMS Power is %.2f", Power2);
+    APP_LOG_DEBUG("Now BATMS Power is %.2fV", Power2);
 }
