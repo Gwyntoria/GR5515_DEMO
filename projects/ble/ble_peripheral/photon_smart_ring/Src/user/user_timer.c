@@ -38,7 +38,7 @@ static void battery_level_update(void* args) {
 
 static void adt_meas_timeout_handler(void* args) {
     func_ctrl_stop(kFuncOptAdt);
-    func_ctrl_set_adt_switch(kFuncSwitchNull);
+    func_ctrl_set_adt_switch(kFuncSwitchOff);
 }
 
 static void hr_meas_timeout_handler(void* args) {
