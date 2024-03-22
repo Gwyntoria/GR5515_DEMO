@@ -6,8 +6,8 @@
 
 #define TEST_CONV_LENGTH (16UL)
 
-#define STNS01_CHANNEL_BATTERY  (0)
-#define STNS01_CHANNEL_CHARGING (1)
+#define STNS01_CHANNEL_BATTERY  (0) // VABAT
+#define STNS01_CHANNEL_CHARGING (1) // BATMS
 
 #define DEFAULT_IO_CONFIG                              \
     {                                                  \
