@@ -12,6 +12,10 @@ extern "C" {
 
 int lsm6dso_init(void);
 
+int lsm6dso_get_event_status(void);
+
+void lsm6dso_test(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

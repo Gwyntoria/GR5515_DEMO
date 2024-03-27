@@ -38,9 +38,10 @@ static void _lsm6dso_i2c_evt_handler(app_i2c_evt_t* p_evt) {
 }
 
 static int _lsm6dso_i2c_init(void) {
-    int ret;
+    int ret = 0;
 
     app_i2c_params_t lsm6dso_i2c_params_t;
+    memset(&lsm6dso_i2c_params_t, 0, sizeof(app_i2c_params_t));
 
     // 六轴
     lsm6dso_i2c_params_t.id   = LSM_I2C_ID;
@@ -83,7 +84,7 @@ static int _lsm6dso_i2c_deinit(void) {
 static int _lsm6dso_i2c_write_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, uint16_t length) {
     int ret = 0;
 
-    ret = app_i2c_mem_write_sync(LSM_I2C_ID, dev_address, reg, LSM_REG_ADDR_SIZE, data, length,0x1000);
+    ret = app_i2c_mem_write_sync(LSM_I2C_ID, dev_address, reg, LSM_REG_ADDR_SIZE, data, length, 0x1000);
     if (ret != 0) {
         APP_LOG_ERROR("lsm6dso i2c write reg [0x%02x] failed with 0x%04x", reg, ret);
         return LSM6DSO_ERROR;
@@ -142,53 +143,547 @@ int lsm6dso_init(void) {
         return LSM6DSO_ERROR;
     }
 
+    //* Check device id
+    uint8_t device_id = 0;
+
+    ret = LSM6DSO_ReadID(&lsm6dso_obj, &device_id);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("Read lsm6dso device_id failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    if (device_id != LSM6DSO_ID) {
+        APP_LOG_ERROR("lsm6dso device_id [0x%02x] is wrong", device_id);
+        return LSM6DSO_ERROR;
+    } else {
+        APP_LOG_INFO("lsm6dso device connected successfully !");
+    }
+
+    //* Initialize the LSM6DSO sensor
     ret = LSM6DSO_Init(&lsm6dso_obj);
     if (ret != LSM6DSO_OK) {
         APP_LOG_ERROR("lsm6dso init failed with 0x%02x", ret);
         return LSM6DSO_ERROR;
     }
 
-    uint8_t id = 0;
-
-    ret = LSM6DSO_ReadID(&lsm6dso_obj, &id);
+    //* Enable the LSM6DSO sensor
+    ret = LSM6DSO_ACC_Enable(&lsm6dso_obj);
     if (ret != LSM6DSO_OK) {
-        APP_LOG_ERROR("Read lsm6dso id failed with 0x%02x", ret);
+        APP_LOG_ERROR("lsm6dso acc enable failed with 0x%02x", ret);
         return LSM6DSO_ERROR;
     }
 
-    if (id != LSM6DSO_ID) {
-        APP_LOG_ERROR("lsm6dso id [0x%02x] is wrong", id);
+    ret = LSM6DSO_GYRO_Enable(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso gyro enable failed with 0x%02x", ret);
         return LSM6DSO_ERROR;
-    } else {
-        APP_LOG_INFO("lsm6dso device connected successfully !");
     }
+
+    //* Enable the LSM6DSO sensor features
+    ret = LSM6DSO_ACC_Enable_Inactivity_Detection(&lsm6dso_obj, LSM6DSO_XL_12Hz5_GY_PD, LSM6DSO_INT1_PIN);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc enable inactivity detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    ret = LSM6DSO_ACC_Enable_Free_Fall_Detection(&lsm6dso_obj, LSM6DSO_INT1_PIN);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc enable free fall detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    ret = LSM6DSO_ACC_Enable_Pedometer(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc enable pedometer failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    ret = LSM6DSO_ACC_Enable_Tilt_Detection(&lsm6dso_obj, LSM6DSO_INT1_PIN);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc enable tilt detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    ret = LSM6DSO_ACC_Enable_Wake_Up_Detection(&lsm6dso_obj, LSM6DSO_INT1_PIN);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc enable wake up detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    ret = LSM6DSO_ACC_Enable_Single_Tap_Detection(&lsm6dso_obj, LSM6DSO_INT1_PIN);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc enable single tap detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    ret = LSM6DSO_ACC_Enable_Double_Tap_Detection(&lsm6dso_obj, LSM6DSO_INT1_PIN);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc enable double tap detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    ret = LSM6DSO_ACC_Enable_6D_Orientation(&lsm6dso_obj, LSM6DSO_INT1_PIN);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc enable 6D orientation failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    // ret = LSM6DSO_ACC_Enable_DRDY_On_INT1(&lsm6dso_obj);
+    // if (ret != LSM6DSO_OK) {
+    //     APP_LOG_ERROR("lsm6dso acc enable drdy on int1 failed with 0x%02x", ret);
+    //     return LSM6DSO_ERROR;
+    // }
+
+    APP_LOG_INFO("lsm6dso init success");
+
     return ret;
 }
 
-// void lsm6dso_test(void) {
-//     uint16_t LSM6D_Temp    = 0;
-//     uint16_t LSM6D_Data[6];
+/**
+ * @brief Deinitialize the LSM6DSO sensor
+ * @return 0 in case of success, an error code otherwise
+ */
+int lsm6dso_deinit() {
+    int ret = 0;
 
-//     memset(LSM6D_Data, 0, sizeof(LSM6D_Data));
+    ret = LSM6DSO_ACC_Disable_Inactivity_Detection(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc disable inactivity detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
 
-//     LSM6D_Temp = LSM6DSOWTR_Read_Data(LSM6DSO_OUT_TEMP_L); // 获取温度
-//     APP_LOG_DEBUG("Now LSM6D_Temp is %d\r\n", LSM6D_Temp);
+    ret = LSM6DSO_ACC_Disable_Free_Fall_Detection(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc disable free fall detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
 
-//     LSM6D_Data[0] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTX_L_G);
-//     APP_LOG_DEBUG("Now LSM6DSO_OUTX_L_G is %d\r\n", LSM6D_Data[0]);
+    ret = LSM6DSO_ACC_Disable_Pedometer(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc disable pedometer failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
 
-//     LSM6D_Data[1] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTY_L_G);
-//     APP_LOG_DEBUG("Now LSM6DSO_OUTY_L_G is %d\r\n", LSM6D_Data[1]);
+    ret = LSM6DSO_ACC_Disable_Tilt_Detection(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc disable tilt detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
 
-//     LSM6D_Data[2] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTZ_L_G);
-//     APP_LOG_DEBUG("Now LSM6DSO_OUTZ_L_G is %d\r\n", LSM6D_Data[2]);
+    ret = LSM6DSO_ACC_Disable_Wake_Up_Detection(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc disable wake up detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
 
-//     LSM6D_Data[3] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTX_L_A);
-//     APP_LOG_DEBUG("Now LSM6DSO_OUTX_L_A is %d\r\n", LSM6D_Data[3]);
+    ret = LSM6DSO_ACC_Disable_Single_Tap_Detection(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc disable single tap detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
 
-//     LSM6D_Data[4] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTY_L_A);
-//     APP_LOG_DEBUG("Now LSM6DSO_OUTY_L_A is %d\r\n", LSM6D_Data[4]);
+    ret = LSM6DSO_ACC_Disable_Double_Tap_Detection(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc disable double tap detection failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
 
-//     LSM6D_Data[5] = LSM6DSOWTR_Read_Data(LSM6DSO_OUTZ_L_A);
-//     APP_LOG_DEBUG("Now LSM6DSO_OUTZ_L_A is %d\r\n", LSM6D_Data[5]);
-// }
+    ret = LSM6DSO_ACC_Disable_6D_Orientation(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso acc disable 6D orientation failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    // ret = LSM6DSO_ACC_Disable_DRDY_On_INT1(&lsm6dso_obj);
+    // if (ret != LSM6DSO_OK) {
+    //     APP_LOG_ERROR("lsm6dso acc disable drdy on int1 failed with 0x%02x", ret);
+    //     return LSM6DSO_ERROR;
+    // }
+
+    ret = LSM6DSO_DeInit(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso deinit failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    APP_LOG_INFO("lsm6dso deinit success");
+
+    return ret;
+}
+
+int lsm6dso_get_activity_status() {
+    APP_LOG_INFO("lsm6dso_get_activity_status");
+
+    int ret = 0;
+
+    lsm6dso_all_sources_t all_source;
+    memset(&all_source, 0, sizeof(lsm6dso_all_sources_t));
+
+    /* Check if Activity/Inactivity events */
+    ret = lsm6dso_all_sources_get(&(lsm6dso_obj.Ctx), &all_source);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get all sources failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    if (all_source.sleep_state) {
+        APP_LOG_INFO("activity_status: Inactivity Detected");
+    }
+
+    if (all_source.wake_up) {
+        APP_LOG_INFO("activity_status: Activity Detected");
+    }
+
+    return ret;
+}
+
+int lsm6dso_get_free_fall_status() {
+    APP_LOG_INFO("lsm6dso_get_free_fall_status");
+
+    int ret = 0;
+
+    lsm6dso_all_sources_t all_source;
+    memset(&all_source, 0, sizeof(lsm6dso_all_sources_t));
+
+    /* Check if Free Fall events */
+    ret = lsm6dso_all_sources_get(&(lsm6dso_obj.Ctx), &all_source);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get all sources failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    if (all_source.free_fall) {
+        APP_LOG_INFO("free_fall_status: Free Fall Detected");
+    }
+
+    return ret;
+}
+
+int lsm6dso_get_tilt_status() {
+    APP_LOG_INFO("lsm6dso_get_tilt_status");
+
+    int ret = 0;
+
+    // lsm6dso_all_sources_t all_source;
+    // memset(&all_source, 0, sizeof(lsm6dso_all_sources_t));
+
+    // /* Check if Tilt events */
+    // ret = lsm6dso_all_sources_get(&(lsm6dso_obj.Ctx), &all_source);
+    // if (ret != LSM6DSO_OK) {
+    //     APP_LOG_ERROR("lsm6dso get all sources failed with 0x%02x", ret);
+    //     return LSM6DSO_ERROR;
+    // }
+
+    // if (all_source.tilt) {
+    //     APP_LOG_INFO("tilt_status: Tilt Detected");
+    // }
+
+    uint8_t is_tilt;
+    ret = lsm6dso_tilt_flag_data_ready_get(&(lsm6dso_obj.Ctx), &is_tilt);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get tilt flag failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    if (is_tilt) {
+        APP_LOG_INFO("tilt_status: Tilt Detected");
+    }
+
+    return ret;
+}
+
+int lsm6dso_get_wake_up_status() {
+    APP_LOG_INFO("lsm6dso_get_wake_up_status");
+
+    int ret = 0;
+
+    lsm6dso_all_sources_t all_source;
+    memset(&all_source, 0, sizeof(lsm6dso_all_sources_t));
+
+    /* Check if Wake Up events */
+    ret = lsm6dso_all_sources_get(&(lsm6dso_obj.Ctx), &all_source);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get all sources failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    char log[128];
+    memset(log, 0, sizeof(log));
+
+    if (all_source.wake_up) {
+        APP_LOG_INFO("wake_up_status: Wake Up Detected");
+
+        sprintf(log, "Wake-Up event on ");
+
+        if (all_source.wake_up_x) {
+            strcat(log, "X");
+        }
+
+        if (all_source.wake_up_y) {
+            strcat(log, "Y");
+        }
+
+        if (all_source.wake_up_z) {
+            strcat(log, "Z");
+        }
+
+        strcat(log, " direction");
+
+        APP_LOG_INFO(log);
+    }
+
+    return ret;
+}
+
+int lsm6dso_get_tap_status() {
+    APP_LOG_INFO("lsm6dso_get_tap_status");
+
+    int ret = 0;
+
+    lsm6dso_all_sources_t all_source;
+    memset(&all_source, 0, sizeof(lsm6dso_all_sources_t));
+
+    /* Check if Tap events */
+    ret = lsm6dso_all_sources_get(&(lsm6dso_obj.Ctx), &all_source);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get all sources failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    char log[128];
+    memset(log, 0, sizeof(log));
+
+    if (all_source.double_tap) {
+        if (all_source.tap_x) {
+            strcat(log, "x-axis");
+        }
+
+        else if (all_source.tap_y) {
+            strcat(log, "y-axis");
+        }
+
+        else {
+            strcat(log, "z-axis");
+        }
+
+        if (all_source.tap_sign) {
+            strcat(log, " negative");
+        }
+
+        else {
+            strcat(log, " positive");
+        }
+
+        strcat(log, " sign");
+
+        APP_LOG_INFO("D-Tap: %s", log);
+    }
+
+    if (all_source.single_tap) {
+        if (all_source.tap_x) {
+            strcat(log, "x-axis");
+        }
+
+        else if (all_source.tap_y) {
+            strcat(log, "y-axis");
+        }
+
+        else {
+            strcat(log, "z-axis");
+        }
+
+        if (all_source.tap_sign) {
+            strcat(log, " negative");
+        }
+
+        else {
+            strcat(log, " positive");
+        }
+
+        strcat(log, " sign");
+
+        APP_LOG_INFO("S-Tap: %s", log);
+    }
+
+    return ret;
+}
+
+int lsm6dso_get_orientation_status() {
+    APP_LOG_INFO("lsm6dso_get_orientation_status");
+
+    int ret = 0;
+
+    lsm6dso_all_sources_t all_source;
+    memset(&all_source, 0, sizeof(lsm6dso_all_sources_t));
+
+    /* Check if 6D Orientation events */
+    ret = lsm6dso_all_sources_get(&(lsm6dso_obj.Ctx), &all_source);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get all sources failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    char log[128];
+    memset(log, 0, sizeof(log));
+
+    if (all_source.six_d) {
+        if (all_source.six_d_xh) {
+            strcat(log, "XH");
+        }
+
+        if (all_source.six_d_xl) {
+            strcat(log, "XL");
+        }
+
+        if (all_source.six_d_yh) {
+            strcat(log, "YH");
+        }
+
+        if (all_source.six_d_yl) {
+            strcat(log, "YL");
+        }
+
+        if (all_source.six_d_zh) {
+            strcat(log, "ZH");
+        }
+
+        if (all_source.six_d_zl) {
+            strcat(log, "ZL");
+        }
+
+        APP_LOG_INFO("6D Or. switched to %s", log);
+    }
+
+    return ret;
+}
+
+static uint16_t s_lsm6dso_step_count = 0;
+
+uint16_t lsm6dso_get_step_count() {
+    // APP_LOG_INFO("lsm6dso_get_step_count");
+
+    int ret = 0;
+
+    ret = LSM6DSO_ACC_Get_Step_Count(&lsm6dso_obj, &s_lsm6dso_step_count);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get step count failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    APP_LOG_INFO("step_count: %d", s_lsm6dso_step_count);
+
+    return s_lsm6dso_step_count;
+}
+
+int lsm6dso_reset_step_counter() {
+    APP_LOG_INFO("lsm6dso_reset_step_counter");
+
+    int ret = 0;
+
+    ret = LSM6DSO_ACC_Step_Counter_Reset(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso reset step count failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    s_lsm6dso_step_count = 0;
+
+    return ret;
+}
+
+int lsm6dso_get_event_status(void) {
+    APP_LOG_INFO("lsm6dso_get_event_status");
+
+    int ret = 0;
+
+    LSM6DSO_Event_Status_t status;
+    memset(&status, 0, sizeof(LSM6DSO_Event_Status_t));
+
+    ret = LSM6DSO_ACC_Get_Event_Status(&lsm6dso_obj, &status);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get event status failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    if (status.FreeFallStatus) {
+        APP_LOG_INFO("Event: FREE_FALL detected");
+    }
+
+    if (status.WakeUpStatus) {
+        APP_LOG_INFO("Event: WAKE_UP detected");
+    }
+
+    if (status.TapStatus) {
+        APP_LOG_INFO("Event: S-TAP detected");
+    }
+
+    if (status.DoubleTapStatus) {
+        APP_LOG_INFO("Event: D-TAP detected");
+    }
+
+    if (status.D6DOrientationStatus) {
+        APP_LOG_INFO("Event: 6D OR. detected");
+    }
+
+    if (status.StepStatus) {
+        APP_LOG_INFO("Event: STEP detected");
+    }
+
+    if (status.TiltStatus) {
+        APP_LOG_INFO("Event: TILT detected");
+    }
+
+    if (status.SleepStatus) {
+        APP_LOG_INFO("Event: SLEEP detected");
+    }
+
+    return ret;
+}
+
+/**
+ * @brief Test the LSM6DSO sensor
+ */
+void lsm6dso_test(void) {
+    int ret = 0;
+
+    // ret = lsm6dso_init();
+    // if (ret != LSM6DSO_OK) {
+    //     APP_LOG_ERROR("lsm6dso init failed with 0x%02x", ret);
+    //     return;
+    // }
+
+    LSM6DSO_Axes_t acceleration;
+    LSM6DSO_Axes_t angular_rate;
+
+    lsm6dso_reset_step_counter();
+
+    int cnt = 0;
+    while (cnt++ < 5000) {
+        ret = LSM6DSO_ACC_GetAxes(&lsm6dso_obj, &acceleration);
+        if (ret != LSM6DSO_OK) {
+            APP_LOG_ERROR("lsm6dso get axes failed with 0x%02x", ret);
+            return;
+        }
+        APP_LOG_INFO("lsm6dso accel: x[%d], y[%d], z[%d]", acceleration.x, acceleration.y, acceleration.z);
+
+        ret = LSM6DSO_GYRO_GetAxes(&lsm6dso_obj, &angular_rate);
+        if (ret != LSM6DSO_OK) {
+            APP_LOG_ERROR("lsm6dso get axes failed with 0x%02x", ret);
+            return;
+        }
+        APP_LOG_INFO("lsm6dso gyro:  x[%d], y[%d], z[%d]", angular_rate.x, angular_rate.y, angular_rate.z);
+
+        lsm6dso_get_event_status();
+
+        // lsm6dso_get_free_fall_status();
+        // lsm6dso_get_tap_status();
+        // lsm6dso_get_wake_up_status();
+        // lsm6dso_get_tilt_status();
+        // lsm6dso_get_orientation_status();
+        // lsm6dso_get_activity_status();
+
+        lsm6dso_get_step_count();
+
+        delay_ms(200);
+    }
+}

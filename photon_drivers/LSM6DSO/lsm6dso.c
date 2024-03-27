@@ -19,6 +19,10 @@
 /* Includes ------------------------------------------------------------------*/
 #include "lsm6dso.h"
 
+#include "app_log.h"
+
+#define LSM6DSO_LOG (1)
+
 /** @addtogroup BSP BSP
   * @{
   */
@@ -1293,6 +1297,12 @@ int32_t LSM6DSO_ACC_Enable_Free_Fall_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_S
     return LSM6DSO_ERROR;
   }
 
+  /* Enable LIR */
+  if (lsm6dso_int_notification_set(&(pObj->Ctx), LSM6DSO_ALL_INT_LATCHED) != LSM6DSO_OK)
+  {
+    return LSM6DSO_ERROR;
+  }
+
   /* FF_DUR setting */
   if (lsm6dso_ff_dur_set(&(pObj->Ctx), 0x06) != LSM6DSO_OK)
   {
@@ -1516,7 +1526,8 @@ int32_t LSM6DSO_ACC_Enable_Pedometer(LSM6DSO_Object_t *pObj)
 
   /* Enable pedometer algorithm. */
   emb_sens.step = PROPERTY_ENABLE;
-
+  emb_sens.step_adv = PROPERTY_ENABLE;
+  
   if (lsm6dso_pedo_sens_set(&(pObj->Ctx), LSM6DSO_PEDO_BASE_MODE) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
@@ -1629,7 +1640,7 @@ int32_t LSM6DSO_ACC_Enable_Tilt_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_Sensor
   lsm6dso_emb_sens_t emb_sens;
 
   /* Output Data Rate selection */
-  if (LSM6DSO_ACC_SetOutputDataRate(pObj, 26.0f) != LSM6DSO_OK)
+  if (LSM6DSO_ACC_SetOutputDataRate(pObj, 417.0f) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -1780,8 +1791,14 @@ int32_t LSM6DSO_ACC_Enable_Wake_Up_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_Sen
     return LSM6DSO_ERROR;
   }
 
+  /* Apply high-pass digital filter on Wake-Up function */
+  if (lsm6dso_xl_hp_path_internal_set(&(pObj->Ctx), LSM6DSO_USE_SLOPE) != LSM6DSO_OK)
+  {
+    return LSM6DSO_ERROR;
+  }
+
   /* WAKE_DUR setting */
-  if (lsm6dso_wkup_dur_set(&(pObj->Ctx), 0x00) != LSM6DSO_OK)
+  if (lsm6dso_wkup_dur_set(&(pObj->Ctx), 0x02) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -1958,7 +1975,17 @@ int32_t LSM6DSO_ACC_Enable_Single_Tap_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_
   }
 
   /* Set tap threshold. */
-  if (lsm6dso_tap_threshold_x_set(&(pObj->Ctx), 0x08) != LSM6DSO_OK)
+  if (lsm6dso_tap_threshold_x_set(&(pObj->Ctx), 0x06) != LSM6DSO_OK)
+  {
+    return LSM6DSO_ERROR;
+  }
+
+  if (lsm6dso_tap_threshold_y_set(&(pObj->Ctx), 0x06) != LSM6DSO_OK)
+  {
+    return LSM6DSO_ERROR;
+  }
+  
+  if (lsm6dso_tap_threshold_z_set(&(pObj->Ctx), 0x06) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -2135,7 +2162,17 @@ int32_t LSM6DSO_ACC_Enable_Double_Tap_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_
   }
 
   /* Set tap threshold. */
-  if (lsm6dso_tap_threshold_x_set(&(pObj->Ctx), 0x08) != LSM6DSO_OK)
+  if (lsm6dso_tap_threshold_x_set(&(pObj->Ctx), 0x06) != LSM6DSO_OK)
+  {
+    return LSM6DSO_ERROR;
+  }
+
+  if (lsm6dso_tap_threshold_y_set(&(pObj->Ctx), 0x06) != LSM6DSO_OK)
+  {
+    return LSM6DSO_ERROR;
+  }
+
+  if (lsm6dso_tap_threshold_z_set(&(pObj->Ctx), 0x06) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -2667,6 +2704,11 @@ int32_t LSM6DSO_ACC_Get_Event_Status(LSM6DSO_Object_t *pObj, LSM6DSO_Event_Statu
   lsm6dso_emb_func_int1_t int1_ctrl;
   lsm6dso_emb_func_int2_t int2_ctrl;
 
+#if LSM6DSO_LOG
+  char log[128];
+  (void)memset((void *)log, 0x0, sizeof(log));
+#endif
+
   (void)memset((void *)Status, 0x0, sizeof(LSM6DSO_Event_Status_t));
 
   if (lsm6dso_read_reg(&(pObj->Ctx), LSM6DSO_WAKE_UP_SRC, (uint8_t *)&wake_up_src, 1) != LSM6DSO_OK)
@@ -2737,30 +2779,103 @@ int32_t LSM6DSO_ACC_Get_Event_Status(LSM6DSO_Object_t *pObj, LSM6DSO_Event_Statu
     if (wake_up_src.wu_ia == 1U)
     {
       Status->WakeUpStatus = 1;
+
+#if LSM6DSO_LOG
+      sprintf(log, "Wake Up event on ");
+
+      if (wake_up_src.x_wu) {
+        strcat(log, "x-axis");
+      } else if (wake_up_src.y_wu) {
+        strcat(log, "y-axis");
+      } else if (wake_up_src.z_wu){
+        strcat(log, "z-axis");
+      }
+
+      strcat(log, " direction");
+
+      APP_LOG_DEBUG(log);
+      memset(log, 0x0, sizeof(log));
+#endif
     }
   }
+
 
   if ((md1_cfg.int1_single_tap == 1U) || (md2_cfg.int2_single_tap == 1U))
   {
     if (tap_src.single_tap == 1U)
     {
       Status->TapStatus = 1;
+
+#if LSM6DSO_LOG
+      sprintf(log, "S-Tap: ");
+
+      if (tap_src.x_tap) {
+        strcat(log, "x-axis");
+      } else if (tap_src.y_tap) {
+        strcat(log, "y-axis");
+      } else {
+        strcat(log, "z-axis");
+      }
+
+      if (tap_src.tap_sign) {
+        strcat(log, " negative");
+      } else {
+        strcat(log, " positive");
+      }
+
+      strcat(log, " sign");
+
+      APP_LOG_DEBUG(log);
+      memset(log, 0x0, sizeof(log));
+#endif
     }
   }
+
 
   if ((md1_cfg.int1_double_tap == 1U) || (md2_cfg.int2_double_tap == 1U))
   {
     if (tap_src.double_tap == 1U)
     {
       Status->DoubleTapStatus = 1;
+
+#if LSM6DSO_LOG
+      sprintf(log, "D-Tap: ");
+
+      if (tap_src.x_tap) {
+        strcat(log, "x-axis");
+      } else if (tap_src.y_tap) {
+        strcat(log, "y-axis");
+      } else {
+        strcat(log, "z-axis");
+      }
+
+      if (tap_src.tap_sign) {
+        strcat(log, " negative");
+      } else {
+        strcat(log, " positive");
+      }
+      
+      strcat(log, " sign");
+
+      APP_LOG_DEBUG(log);
+      memset(log, 0x0, sizeof(log));
+#endif
     }
   }
+
 
   if ((md1_cfg.int1_6d == 1U) || (md2_cfg.int2_6d == 1U))
   {
     if (d6d_src.d6d_ia == 1U)
     {
       Status->D6DOrientationStatus = 1;
+
+#if LSM6DSO_LOG
+      APP_LOG_DEBUG("6D OR: XL[%d], XH[%d], YL[%d], YH[%d], ZL[%d], ZH[%d]",
+                    d6d_src.xl, d6d_src.xh,
+                    d6d_src.yl, d6d_src.yh,
+                    d6d_src.zl, d6d_src.zh);
+#endif
     }
   }
 
@@ -2778,6 +2893,11 @@ int32_t LSM6DSO_ACC_Get_Event_Status(LSM6DSO_Object_t *pObj, LSM6DSO_Event_Statu
     {
       Status->TiltStatus = 1;
     }
+  }
+
+  if (wake_up_src.sleep_state == 1U)
+  {
+    Status->SleepStatus = 1;
   }
 
   return LSM6DSO_OK;
@@ -3380,7 +3500,7 @@ int32_t LSM6DSO_ACC_Enable_Inactivity_Detection(LSM6DSO_Object_t *pObj, lsm6dso_
   }
 
   /* SLEEP_DUR setting */
-  if (lsm6dso_act_sleep_dur_set(&(pObj->Ctx), 0x01) != LSM6DSO_OK)
+  if (lsm6dso_act_sleep_dur_set(&(pObj->Ctx), 0x02) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
