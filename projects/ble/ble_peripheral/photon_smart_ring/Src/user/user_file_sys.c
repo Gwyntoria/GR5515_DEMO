@@ -620,6 +620,12 @@ int ufs_write_data(FlashZone flash_zone, uint8_t* data, uint32_t len) {
 
     int ret = 0;
 
+    ret = flash_init();
+    if (ret != FLASH_SUCCESS) {
+        printf("ufs: flash_init failed\n");
+        return GUNTER_FAILURE;
+    }
+
     ret = _read_flash_zone_info(flash_zone);
     if (ret != GUNTER_SUCCESS) {
         printf("ufs_rd: _read_flash_zone_info[%d] failed with 0x%02x\n", flash_zone, ret);
@@ -798,6 +804,12 @@ int ufs_read_data(FlashZone flash_zone, uint8_t* buffer, bool whole) {
     }
 
     int ret = 0;
+
+    ret = flash_init();
+    if (ret != FLASH_SUCCESS) {
+        printf("ufs: flash_init failed\n");
+        return GUNTER_FAILURE;
+    }
 
     ret = _read_flash_zone_info(flash_zone);
     if (ret != GUNTER_SUCCESS) {
