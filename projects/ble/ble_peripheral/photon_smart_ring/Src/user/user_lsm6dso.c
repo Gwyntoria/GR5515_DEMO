@@ -640,6 +640,26 @@ int lsm6dso_get_event_status(void) {
     return ret;
 }
 
+float lsm6dso_get_temperature() {
+    // APP_LOG_INFO("lsm6dso_get_temperature");
+
+    int32_t ret             = 0;
+    int16_t temperature_raw = 0;
+    float   temperature     = 0;
+
+    ret = lsm6dso_temperature_raw_get(&(lsm6dso_obj.Ctx), &temperature_raw);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get temperature failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    temperature = temperature_raw * (1 / 256.0f) + 25.0f;
+
+    APP_LOG_DEBUG("lsm6dso temperature: %.2f", temperature);
+
+    return temperature;
+}
+
 /**
  * @brief Test the LSM6DSO sensor
  */
@@ -683,6 +703,8 @@ void lsm6dso_test(void) {
         // lsm6dso_get_activity_status();
 
         lsm6dso_get_step_count();
+
+        lsm6dso_get_temperature();
 
         delay_ms(200);
     }
