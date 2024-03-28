@@ -74,6 +74,8 @@
 #define MAX_TX_OCTET_DEFUALT      251          /**< Default maximum transmitted number of payload octets. */
 #define MAX_TX_TIME_DEFUALT       2120         /**< Defualt maximum packet transmission time. */
 
+extern char APP_VERSION[32];
+
 /*
  * LOCAL VARIABLE DEFINITIONS
  *****************************************************************************************

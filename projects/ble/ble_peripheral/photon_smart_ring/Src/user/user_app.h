@@ -41,8 +41,8 @@
 
 #define VER_MAJOR 0
 #define VER_MINOR 1
-#define VER_BUILD 0
-#define VER_EXTEN 3
+#define VER_BUILD 1
+#define VER_EXTEN 20240328
 
 #define BLE_ACTIVA_OFF 0
 #define BLE_ACTIVA_ON  1
