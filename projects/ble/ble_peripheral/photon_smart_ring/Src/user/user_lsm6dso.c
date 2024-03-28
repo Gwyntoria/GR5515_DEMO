@@ -243,7 +243,7 @@ int lsm6dso_init(void) {
  * @brief Deinitialize the LSM6DSO sensor
  * @return 0 in case of success, an error code otherwise
  */
-int lsm6dso_deinit() {
+int lsm6dso_deinit(void) {
     int ret = 0;
 
     ret = LSM6DSO_ACC_Disable_Inactivity_Detection(&lsm6dso_obj);
@@ -311,7 +311,7 @@ int lsm6dso_deinit() {
     return ret;
 }
 
-int lsm6dso_get_activity_status() {
+int lsm6dso_get_activity_status(void) {
     APP_LOG_INFO("lsm6dso_get_activity_status");
 
     int ret = 0;
@@ -337,7 +337,7 @@ int lsm6dso_get_activity_status() {
     return ret;
 }
 
-int lsm6dso_get_free_fall_status() {
+int lsm6dso_get_free_fall_status(void) {
     APP_LOG_INFO("lsm6dso_get_free_fall_status");
 
     int ret = 0;
@@ -359,7 +359,7 @@ int lsm6dso_get_free_fall_status() {
     return ret;
 }
 
-int lsm6dso_get_tilt_status() {
+int lsm6dso_get_tilt_status(void) {
     APP_LOG_INFO("lsm6dso_get_tilt_status");
 
     int ret = 0;
@@ -392,7 +392,7 @@ int lsm6dso_get_tilt_status() {
     return ret;
 }
 
-int lsm6dso_get_wake_up_status() {
+int lsm6dso_get_wake_up_status(void) {
     APP_LOG_INFO("lsm6dso_get_wake_up_status");
 
     int ret = 0;
@@ -435,7 +435,7 @@ int lsm6dso_get_wake_up_status() {
     return ret;
 }
 
-int lsm6dso_get_tap_status() {
+int lsm6dso_get_tap_status(void) {
     APP_LOG_INFO("lsm6dso_get_tap_status");
 
     int ret = 0;
@@ -508,7 +508,7 @@ int lsm6dso_get_tap_status() {
     return ret;
 }
 
-int lsm6dso_get_orientation_status() {
+int lsm6dso_get_orientation_status(void) {
     APP_LOG_INFO("lsm6dso_get_orientation_status");
 
     int ret = 0;
@@ -553,40 +553,6 @@ int lsm6dso_get_orientation_status() {
 
         APP_LOG_INFO("6D Or. switched to %s", log);
     }
-
-    return ret;
-}
-
-static uint16_t s_lsm6dso_step_count = 0;
-
-uint16_t lsm6dso_get_step_count() {
-    // APP_LOG_INFO("lsm6dso_get_step_count");
-
-    int ret = 0;
-
-    ret = LSM6DSO_ACC_Get_Step_Count(&lsm6dso_obj, &s_lsm6dso_step_count);
-    if (ret != LSM6DSO_OK) {
-        APP_LOG_ERROR("lsm6dso get step count failed with 0x%02x", ret);
-        return LSM6DSO_ERROR;
-    }
-
-    APP_LOG_INFO("step_count: %d", s_lsm6dso_step_count);
-
-    return s_lsm6dso_step_count;
-}
-
-int lsm6dso_reset_step_counter() {
-    APP_LOG_INFO("lsm6dso_reset_step_counter");
-
-    int ret = 0;
-
-    ret = LSM6DSO_ACC_Step_Counter_Reset(&lsm6dso_obj);
-    if (ret != LSM6DSO_OK) {
-        APP_LOG_ERROR("lsm6dso reset step count failed with 0x%02x", ret);
-        return LSM6DSO_ERROR;
-    }
-
-    s_lsm6dso_step_count = 0;
 
     return ret;
 }
@@ -640,7 +606,41 @@ int lsm6dso_get_event_status(void) {
     return ret;
 }
 
-float lsm6dso_get_temperature() {
+static uint16_t s_lsm6dso_step_count = 0;
+
+uint16_t lsm6dso_get_step_count(void) {
+    // APP_LOG_INFO("lsm6dso_get_step_count");
+
+    int ret = 0;
+
+    ret = LSM6DSO_ACC_Get_Step_Count(&lsm6dso_obj, &s_lsm6dso_step_count);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso get step count failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    APP_LOG_INFO("step_count: %d", s_lsm6dso_step_count);
+
+    return s_lsm6dso_step_count;
+}
+
+int lsm6dso_reset_step_counter(void) {
+    APP_LOG_INFO("lsm6dso_reset_step_counter");
+
+    int ret = 0;
+
+    ret = LSM6DSO_ACC_Step_Counter_Reset(&lsm6dso_obj);
+    if (ret != LSM6DSO_OK) {
+        APP_LOG_ERROR("lsm6dso reset step count failed with 0x%02x", ret);
+        return LSM6DSO_ERROR;
+    }
+
+    s_lsm6dso_step_count = 0;
+
+    return ret;
+}
+
+float lsm6dso_get_temperature(void) {
     // APP_LOG_INFO("lsm6dso_get_temperature");
 
     int32_t ret             = 0;
@@ -678,7 +678,7 @@ void lsm6dso_test(void) {
     lsm6dso_reset_step_counter();
 
     int cnt = 0;
-    while (cnt++ < 5000) {
+    while (cnt++ < 10) {
         ret = LSM6DSO_ACC_GetAxes(&lsm6dso_obj, &acceleration);
         if (ret != LSM6DSO_OK) {
             APP_LOG_ERROR("lsm6dso get axes failed with 0x%02x", ret);
@@ -693,14 +693,14 @@ void lsm6dso_test(void) {
         }
         APP_LOG_INFO("lsm6dso gyro:  x[%d], y[%d], z[%d]", angular_rate.x, angular_rate.y, angular_rate.z);
 
-        lsm6dso_get_event_status();
+        // // lsm6dso_get_free_fall_status();
+        // // lsm6dso_get_tap_status();
+        // // lsm6dso_get_wake_up_status();
+        // // lsm6dso_get_tilt_status();
+        // // lsm6dso_get_orientation_status();
+        // // lsm6dso_get_activity_status();
 
-        // lsm6dso_get_free_fall_status();
-        // lsm6dso_get_tap_status();
-        // lsm6dso_get_wake_up_status();
-        // lsm6dso_get_tilt_status();
-        // lsm6dso_get_orientation_status();
-        // lsm6dso_get_activity_status();
+        lsm6dso_get_event_status();
 
         lsm6dso_get_step_count();
 
