@@ -107,8 +107,8 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
     printf("low_confidence_cnt_hr: %d\n", low_confidence_cnt_hr);
 
 
-    if (low_confidence_cnt_hr > (5)) {
-        func_ctrl_set_wearing_status(kWearingStatusOff);
+    if (low_confidence_cnt_hr > CONFIDENCE_THRESHOLD_FUNC_COUNT) {
+        func_ctrl_set_adt_result(kFuncResultOff);
         low_confidence_cnt_hr = 0;
     }
 
@@ -160,8 +160,8 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
     printf("low_confidence_cnt_spo2: %d\n", low_confidence_cnt_spo2);
 
 
-    if (low_confidence_cnt_spo2 > (5)) {
-        func_ctrl_set_wearing_status(kWearingStatusOff);
+    if (low_confidence_cnt_spo2 > CONFIDENCE_THRESHOLD_FUNC_COUNT) {
+        func_ctrl_set_adt_result(kFuncResultOff);
         low_confidence_cnt_spo2 = 0;
     }
 #endif
@@ -209,8 +209,8 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
     printf("low_confidence_cnt_hrv: %d\n", low_confidence_cnt_hrv);
 
 
-    if (low_confidence_cnt_hrv > (5)) {
-        func_ctrl_set_wearing_status(kWearingStatusOff);
+    if (low_confidence_cnt_hrv > CONFIDENCE_THRESHOLD_FUNC_COUNT) {
+        func_ctrl_set_adt_result(kFuncResultOff);
         low_confidence_cnt_hrv = 0;
     }
 }
@@ -237,6 +237,9 @@ void GH3X2X_EcgAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 #endif
 }
 
+GU16 lower_lvl_cnt_adt  = 0;
+GU16 higher_lvl_cnt_adt = 0;
+
 /**
  * @fn     void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
  *
@@ -258,37 +261,31 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
                                  pstAlgoResult->snResult[0],
                                  pstAlgoResult->snResult[1]);
 
-    static GU16 lower_lvl_cnt = 0;
-    static GU16 higher_lvl_cnt = 0;
-
     if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_NADT_GREEN) {
-        lower_lvl_cnt++;
-        higher_lvl_cnt = 0;
+        lower_lvl_cnt_adt++;
+        // higher_lvl_cnt_adt = 0;
     } else {
-        lower_lvl_cnt = 0;
-        higher_lvl_cnt++;
+        // lower_lvl_cnt_adt = 0;
+        higher_lvl_cnt_adt++;
     }
 
-    printf("lower_lvl_cnt: %d\n", lower_lvl_cnt);
-    printf("higher_lvl_cnt: %d\n", higher_lvl_cnt);
+    printf("lower_lvl_cnt_adt: %d\n", lower_lvl_cnt_adt);
+    printf("higher_lvl_cnt_adt: %d\n", higher_lvl_cnt_adt);
 
     // live object
-    if (pstAlgoResult->snResult[0] == 0x1 ||
-        ((pstAlgoResult->snResult[1] >= CONFIDENCE_THRESHOLD_NADT_GREEN) && higher_lvl_cnt > (20 * 2))) {
+    if ((pstAlgoResult->snResult[0] == 0x1) || (higher_lvl_cnt_adt > (20 * 10))) {
         // extern GU32 g_unDemoFuncMode;
         // if((g_unDemoFuncMode & GH3X2X_FUNCTION_HR) != GH3X2X_FUNCTION_HR)
         // {
         //     Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
         // }
 
-        func_ctrl_set_wearing_status(kWearingStatusOn);
-        func_ctrl_set_adt_switch(kFuncSwitchOff);
-        lower_lvl_cnt = 0;
-        higher_lvl_cnt = 0;
+        func_ctrl_set_adt_result(kFuncResultOn);
+        func_ctrl_stop(kFuncOptAdt);
     }
     // non live object
     // TODO: Further improvement is needed
-    else if ((pstAlgoResult->snResult[0] & 0x2) || (lower_lvl_cnt > (20 * 15))) {
+    else if ((pstAlgoResult->snResult[0] & 0x2) || (lower_lvl_cnt_adt > (20 * 30))) {
 #if __GH_MSG_WTIH_DRV_LAYER_EN__
         GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
 #else
@@ -296,10 +293,8 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
 #endif
         /* code implement by user */
 
-        func_ctrl_set_wearing_status(kWearingStatusOff);
-        func_ctrl_set_adt_switch(kFuncSwitchOff);
-        lower_lvl_cnt = 0;
-        higher_lvl_cnt = 0;
+        func_ctrl_set_adt_result(kFuncResultOff);
+        func_ctrl_stop(kFuncOptAdt);
     }
     GOODIX_PLANFROM_NADT_RESULT_HANDLE_ENTITY();
 #endif
