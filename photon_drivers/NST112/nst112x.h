@@ -16,7 +16,7 @@
 
 #include "stdint.h"
 
-#define NST112X_VALUE_ERROR ((int16_t)0x0800) // Error value for nst112x
+#define NST112X_VALUE_ERROR ((int16_t)0x0801) // Error value for nst112x
 
 /*I2C address for different models of Nst112*/
 #define NST112A_I2C_ADDR 0x48
@@ -32,7 +32,7 @@
 #define CHIP_ID_REG     0x07 // Chip ID
 
 #define NST_STATISTICS_GRP_SIZE (5)
-#define NST_STATISTICS_NUM      (4 * NST_STATISTICS_GRP_SIZE) // Number of values to be used in the sliding filter.
+#define NST_STATISTICS_NUM      (2 * NST_STATISTICS_GRP_SIZE) // Number of values to be used in the sliding filter.
 
 /* Configuring Registers Using Unions & Bit Fields */
 // You can refer to the website: http://www.stmcu.org.cn/module/forum/forum.php?mod=viewthread&tid=610197

@@ -10,6 +10,7 @@
  */
 
 #include "nst112x.h"
+
 #include "app_i2c.h"
 #include "app_log.h"
 
@@ -275,7 +276,7 @@ void nst112x_fifo_add_sensor_value() {
 
     for (int i = 0; i < 2; i++) {
         value = _nst112x_get_sensor_value(NST_I2C_ID_1, NST112C_I2C_ADDR + i);
-        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#02x] value: %d",NST_I2C_ID_0 , NST112C_I2C_ADDR + i, value);
+        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#02x] value: %d", NST_I2C_ID_1 , NST112C_I2C_ADDR + i, value);
 
         nst112x_array[nst112x_array_index] = value;
         nst112x_array_num++;
@@ -289,11 +290,11 @@ int16_t _nst112x_fifo_get_average_sensor_value(void) {
     }
 
     int32_t sum = 0;
-    for (int i = 0; i < NST_STATISTICS_NUM; i++) {
+    for (int i = 0; i < nst112x_array_num; i++) {
         sum += nst112x_array[i];
     }
 
-    int16_t average = (int16_t)(sum / NST_STATISTICS_NUM);
+    int16_t average = (int16_t)(sum / nst112x_array_num);
 
     nst112x_array_num   = 0;
     nst112x_array_index = 0;
@@ -320,6 +321,10 @@ float nst112x_get_temperature() {
     float   temperature = 0.0;
 
     value = _nst112x_fifo_get_average_sensor_value();
+    if (value == NST112X_VALUE_ERROR) {
+        APP_LOG_ERROR("NST112X_VALUE_ERROR");
+        return -256.0;
+    }
 
     temperature = value * 0.0625;
 
