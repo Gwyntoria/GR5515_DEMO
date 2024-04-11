@@ -21,7 +21,7 @@
 
 #define LSM_REG_ADDR_SIZE (1)
 
-static void _lsm6dso_i2c_evt_handler(app_i2c_evt_t* p_evt) {
+void _lsm6dso_i2c_evt_handler(app_i2c_evt_t* p_evt) {
     switch (p_evt->type) {
         case APP_I2C_EVT_ERROR:
             // APP_LOG_INFO("APP_I2C_EVT_ERROR");
@@ -37,51 +37,51 @@ static void _lsm6dso_i2c_evt_handler(app_i2c_evt_t* p_evt) {
     }
 }
 
-static int _lsm6dso_i2c_init(void) {
-    int ret = 0;
+int _lsm6dso_i2c_init(void) {
+    // int ret = 0;
 
-    app_i2c_params_t lsm6dso_i2c_params_t;
-    memset(&lsm6dso_i2c_params_t, 0, sizeof(app_i2c_params_t));
+    // app_i2c_params_t lsm6dso_i2c_params_t;
+    // memset(&lsm6dso_i2c_params_t, 0, sizeof(app_i2c_params_t));
 
-    // 六轴
-    lsm6dso_i2c_params_t.id   = LSM_I2C_ID;
-    lsm6dso_i2c_params_t.role = APP_I2C_ROLE_MASTER;
+    // // 六轴
+    // lsm6dso_i2c_params_t.id   = LSM_I2C_ID;
+    // lsm6dso_i2c_params_t.role = APP_I2C_ROLE_MASTER;
 
-    lsm6dso_i2c_params_t.pin_cfg.scl.type = APP_IO_TYPE_NORMAL;
-    lsm6dso_i2c_params_t.pin_cfg.scl.mux  = LSM_IO_MUX;
-    lsm6dso_i2c_params_t.pin_cfg.scl.pin  = LSM_SCL_PIN;
-    lsm6dso_i2c_params_t.pin_cfg.scl.pull = APP_IO_NOPULL;
+    // lsm6dso_i2c_params_t.pin_cfg.scl.type = APP_IO_TYPE_NORMAL;
+    // lsm6dso_i2c_params_t.pin_cfg.scl.mux  = LSM_IO_MUX;
+    // lsm6dso_i2c_params_t.pin_cfg.scl.pin  = LSM_SCL_PIN;
+    // lsm6dso_i2c_params_t.pin_cfg.scl.pull = APP_IO_NOPULL;
 
-    lsm6dso_i2c_params_t.pin_cfg.sda.type = APP_IO_TYPE_NORMAL;
-    lsm6dso_i2c_params_t.pin_cfg.sda.mux  = LSM_IO_MUX;
-    lsm6dso_i2c_params_t.pin_cfg.sda.pin  = LSM_SDA_PIN;
-    lsm6dso_i2c_params_t.pin_cfg.sda.pull = APP_IO_NOPULL;
+    // lsm6dso_i2c_params_t.pin_cfg.sda.type = APP_IO_TYPE_NORMAL;
+    // lsm6dso_i2c_params_t.pin_cfg.sda.mux  = LSM_IO_MUX;
+    // lsm6dso_i2c_params_t.pin_cfg.sda.pin  = LSM_SDA_PIN;
+    // lsm6dso_i2c_params_t.pin_cfg.sda.pull = APP_IO_NOPULL;
 
-    lsm6dso_i2c_params_t.use_mode.type = APP_I2C_TYPE_INTERRUPT;
-    // lsm6dso_i2c_params_t.use_mode.tx_dma_channel	= DMA_Channel0;
-    // lsm6dso_i2c_params_t.use_mode.rx_dma_channel	= DMA_Channel1;
+    // lsm6dso_i2c_params_t.use_mode.type = APP_I2C_TYPE_INTERRUPT;
+    // // lsm6dso_i2c_params_t.use_mode.tx_dma_channel	= DMA_Channel0;
+    // // lsm6dso_i2c_params_t.use_mode.rx_dma_channel	= DMA_Channel1;
 
-    lsm6dso_i2c_params_t.init.speed             = I2C_SPEED_400K;
-    lsm6dso_i2c_params_t.init.own_address       = LSM_MASTER_ADDR;
-    lsm6dso_i2c_params_t.init.addressing_mode   = I2C_ADDRESSINGMODE_7BIT;
-    lsm6dso_i2c_params_t.init.general_call_mode = I2C_GENERALCALL_DISABLE;
+    // lsm6dso_i2c_params_t.init.speed             = I2C_SPEED_400K;
+    // lsm6dso_i2c_params_t.init.own_address       = LSM_MASTER_ADDR;
+    // lsm6dso_i2c_params_t.init.addressing_mode   = I2C_ADDRESSINGMODE_7BIT;
+    // lsm6dso_i2c_params_t.init.general_call_mode = I2C_GENERALCALL_DISABLE;
 
-    ret = app_i2c_init(&lsm6dso_i2c_params_t, _lsm6dso_i2c_evt_handler);
-    if (ret != 0) {
-        APP_LOG_ERROR("lsm6dso i2c init failed with 0x%04x", ret);
-        return LSM6DSO_ERROR;
-    }
+    // ret = app_i2c_init(&lsm6dso_i2c_params_t, _lsm6dso_i2c_evt_handler);
+    // if (ret != 0) {
+    //     APP_LOG_ERROR("lsm6dso i2c init failed with 0x%04x", ret);
+    //     return LSM6DSO_ERROR;
+    // }
 
     APP_LOG_INFO("lsm6dso i2c init success");
 
     return LSM6DSO_OK;
 }
 
-static int _lsm6dso_i2c_deinit(void) {
+int _lsm6dso_i2c_deinit(void) {
     return app_i2c_deinit(LSM_I2C_ID);
 }
 
-static int _lsm6dso_i2c_write_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, uint16_t length) {
+int _lsm6dso_i2c_write_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, uint16_t length) {
     int ret = 0;
 
     ret = app_i2c_mem_write_sync(LSM_I2C_ID, dev_address, reg, LSM_REG_ADDR_SIZE, data, length, 0x1000);
@@ -94,7 +94,7 @@ static int _lsm6dso_i2c_write_reg(uint16_t dev_address, uint16_t reg, uint8_t* d
     return ret;
 }
 
-static int _lsm6dso_i2c_read_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, uint16_t length) {
+int _lsm6dso_i2c_read_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, uint16_t length) {
     int ret = 0;
 
     ret = app_i2c_mem_read_sync(LSM_I2C_ID, dev_address, reg, LSM_REG_ADDR_SIZE, data, length, 0x1000);
@@ -107,11 +107,11 @@ static int _lsm6dso_i2c_read_reg(uint16_t dev_address, uint16_t reg, uint8_t* da
     return ret;
 }
 
-static int _lsm6dso_get_tick(void) {
+int _lsm6dso_get_tick(void) {
     return rtc_get_milliseconds();
 }
 
-static void _lsm6dso_delay_ms(uint32_t ms) {
+void _lsm6dso_delay_ms(uint32_t ms) {
     delay_ms(ms);
 }
 

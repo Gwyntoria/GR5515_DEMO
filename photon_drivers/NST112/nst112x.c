@@ -14,10 +14,11 @@
 #include "app_log.h"
 
 // 温度
-#define NST_I2C_ID  APP_I2C_ID_1
-#define NST_IO_MUX  APP_IO_MUX_0
-#define NST_SCL_PIN APP_IO_PIN_30
-#define NST_SDA_PIN APP_IO_PIN_26
+#define NST_I2C_ID_0 APP_I2C_ID_0
+#define NST_I2C_ID_1 APP_I2C_ID_1
+#define NST_IO_MUX   APP_IO_MUX_0
+#define NST_SCL_PIN  APP_IO_PIN_30
+#define NST_SDA_PIN  APP_IO_PIN_26
 
 #define NST_OWN_ADDR 0xA2
 
@@ -53,37 +54,37 @@ void _nst112x_i2c_evt_handler(app_i2c_evt_t* p_evt) {
  * @return 0 if the initialization is successful, -1 otherwise.
  */
 int _nst112x_i2c_init(void) {
-    int ret;
+    // int ret;
 
-    app_i2c_params_t nst112x_params_t;
+    // app_i2c_params_t nst112x_params_t;
 
-    nst112x_params_t.id   = NST_I2C_ID;
-    nst112x_params_t.role = APP_I2C_ROLE_MASTER;
+    // nst112x_params_t.id   = NST_I2C_ID_1;
+    // nst112x_params_t.role = APP_I2C_ROLE_MASTER;
 
-    nst112x_params_t.pin_cfg.scl.type = APP_IO_TYPE_NORMAL;
-    nst112x_params_t.pin_cfg.scl.mux  = NST_IO_MUX;
-    nst112x_params_t.pin_cfg.scl.pin  = NST_SCL_PIN;
-    nst112x_params_t.pin_cfg.scl.pull = APP_IO_NOPULL;
+    // nst112x_params_t.pin_cfg.scl.type = APP_IO_TYPE_NORMAL;
+    // nst112x_params_t.pin_cfg.scl.mux  = NST_IO_MUX;
+    // nst112x_params_t.pin_cfg.scl.pin  = NST_SCL_PIN;
+    // nst112x_params_t.pin_cfg.scl.pull = APP_IO_NOPULL;
 
-    nst112x_params_t.pin_cfg.sda.type = APP_IO_TYPE_NORMAL;
-    nst112x_params_t.pin_cfg.sda.mux  = NST_IO_MUX;
-    nst112x_params_t.pin_cfg.sda.pin  = NST_SDA_PIN;
-    nst112x_params_t.pin_cfg.sda.pull = APP_IO_NOPULL;
+    // nst112x_params_t.pin_cfg.sda.type = APP_IO_TYPE_NORMAL;
+    // nst112x_params_t.pin_cfg.sda.mux  = NST_IO_MUX;
+    // nst112x_params_t.pin_cfg.sda.pin  = NST_SDA_PIN;
+    // nst112x_params_t.pin_cfg.sda.pull = APP_IO_NOPULL;
 
-    nst112x_params_t.use_mode.type = APP_I2C_TYPE_INTERRUPT;
-    // nst112x_params_t.use_mode.tx_dma_channel	= DMA_Channel0;
-    // nst112x_params_t.use_mode.rx_dma_channel	= DMA_Channel1;
+    // nst112x_params_t.use_mode.type = APP_I2C_TYPE_INTERRUPT;
+    // // nst112x_params_t.use_mode.tx_dma_channel	= DMA_Channel0;
+    // // nst112x_params_t.use_mode.rx_dma_channel	= DMA_Channel1;
 
-    nst112x_params_t.init.speed             = I2C_SPEED_400K;
-    nst112x_params_t.init.own_address       = NST_OWN_ADDR;
-    nst112x_params_t.init.addressing_mode   = I2C_ADDRESSINGMODE_7BIT;
-    nst112x_params_t.init.general_call_mode = I2C_GENERALCALL_DISABLE;
+    // nst112x_params_t.init.speed             = I2C_SPEED_400K;
+    // nst112x_params_t.init.own_address       = NST_OWN_ADDR;
+    // nst112x_params_t.init.addressing_mode   = I2C_ADDRESSINGMODE_7BIT;
+    // nst112x_params_t.init.general_call_mode = I2C_GENERALCALL_DISABLE;
 
-    ret = app_i2c_init(&nst112x_params_t, _nst112x_i2c_evt_handler);
-    if (ret != 0) {
-        APP_LOG_ERROR("nst112x i2c init failed with 0x%04x", ret);
-        return -1;
-    }
+    // ret = app_i2c_init(&nst112x_params_t, _nst112x_i2c_evt_handler);
+    // if (ret != 0) {
+    //     APP_LOG_ERROR("nst112x i2c init failed with 0x%04x", ret);
+    //     return -1;
+    // }
 
     APP_LOG_INFO("nst112x i2c init success");
 
@@ -97,7 +98,9 @@ int _nst112x_i2c_init(void) {
  *
  * @param nst_addr The address of the NST112X device.
  */
-void _nst112x_config_register(uint8_t nst_addr) {
+void _nst112x_config_register(app_i2c_id_t i2c_id, uint8_t nst_addr) {
+    int ret;
+
     // Configuration register consortium
     union xnst112xConfigRegisterH nst112xConfigRegisterH;
     union xnst112xConfigRegisterL nst112xConfigRegisterL;
@@ -122,7 +125,11 @@ void _nst112x_config_register(uint8_t nst_addr) {
     // Send configured Register data
     data[0] = nst112xConfigRegisterH.value;
     data[1] = nst112xConfigRegisterL.value;
-    app_i2c_mem_write_sync(NST_I2C_ID, nst_addr, CONFIG_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
+
+    ret = app_i2c_mem_write_sync(i2c_id, nst_addr, CONFIG_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
+    if (ret != 0) {
+        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] config register failed with 0x%04x", i2c_id, nst_addr, ret);
+    }
 }
 
 /**
@@ -132,20 +139,27 @@ void _nst112x_config_register(uint8_t nst_addr) {
  * @param LowerThreshold The lower threshold value to be set.
  * @param UpperThreshold The upper threshold value to be set.
  */
-void _nst112x_comparator_threshold(uint8_t nst_addr, int16_t LowerThreshold, int16_t UpperThreshold) {
+void _nst112x_comparator_threshold(app_i2c_id_t i2c_id, uint8_t nst_addr, int16_t LowerThreshold, int16_t UpperThreshold) {
+    int ret = 0;
     uint8_t data[2];
 
     data[0] = (LowerThreshold >> 8) & 0x00FF;
     data[1] = LowerThreshold & 0x00FF;
     // printf("_nst112x_comparator_threshold LowerThreshold ：Data_send[0] : %x -- data[1] : %x \r\n",data[0],data[1]);
-    app_i2c_mem_write_sync(NST_I2C_ID, nst_addr, T_LOW_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
+    ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_LOW_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
+    if (ret != 0) {
+        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] LowerThreshold failed with 0x%04x", i2c_id, nst_addr, ret);
+    }
 
     delay_ms(2);
 
     data[0] = (UpperThreshold >> 8) & 0x00FF;
     data[1] = UpperThreshold & 0x00FF;
     // printf("_nst112x_comparator_threshold UpperThreshold ：Data_send[0] : %x -- data[1] : %x \r\n",data[0],data[1]);
-    app_i2c_mem_write_sync(NST_I2C_ID, nst_addr, T_HIGH_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
+    ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_HIGH_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
+    if (ret != 0) {
+        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] UpperThreshold failed with 0x%04x", i2c_id, nst_addr, ret);
+    }
 }
 
 /**
@@ -156,9 +170,15 @@ void _nst112x_comparator_threshold(uint8_t nst_addr, int16_t LowerThreshold, int
  * @param nst_addr The I2C address of the NST112x device.
  * @return The chip ID of NST112x as a 16-bit unsigned integer.
  */
-uint16_t _nst112x_get_chip_id(uint8_t nst_addr) {
+uint16_t _nst112x_get_chip_id(app_i2c_id_t i2c_id, uint8_t nst_addr) {
+    int ret = 0;
     uint8_t buffer[2];
-    app_i2c_mem_read_sync(NST_I2C_ID, nst_addr, CHIP_ID_REG, 1, buffer, 2, 0x1000);
+
+    ret = app_i2c_mem_read_sync(i2c_id, nst_addr, CHIP_ID_REG, 1, buffer, 2, 0x1000);
+    if (ret != 0) {
+        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] get chip id failed with 0x%04x", i2c_id, nst_addr, ret);
+    }
+
     delay_ms(10);
     return ((uint16_t)buffer[0] << 8) | buffer[1];
 }
@@ -170,16 +190,16 @@ uint16_t _nst112x_get_chip_id(uint8_t nst_addr) {
  *
  * @param nst_addr The I2C address of the NST112x device.
  */
-void _nst112x_init(uint8_t nst_addr) {
+void _nst112x_init(app_i2c_id_t i2c_id, uint8_t nst_addr) {
     uint16_t id = 0;
 
-    _nst112x_config_register(nst_addr);
+    _nst112x_config_register(i2c_id, nst_addr);
     delay_ms(10);
 
-    _nst112x_comparator_threshold(nst_addr, 0x10, 0x30);
+    _nst112x_comparator_threshold(i2c_id, nst_addr, 0x10, 0x30);
     delay_ms(10);
 
-    id = _nst112x_get_chip_id(nst_addr);
+    id = _nst112x_get_chip_id(i2c_id, nst_addr);
     if (id == 0xA3A3) {
         APP_LOG_INFO("nst112x IIC is OK : NST112 number[%d]", nst_addr - 0x47);
     } else {
@@ -198,8 +218,11 @@ void nst112_init(void) {
     _nst112x_i2c_init();
     delay_ms(10);
 
-    _nst112x_init(NST112C_I2C_ADDR);
-    _nst112x_init(NST112D_I2C_ADDR);
+    // _nst112x_init(NST_I2C_ID_0, NST112C_I2C_ADDR);
+    // _nst112x_init(NST_I2C_ID_0, NST112D_I2C_ADDR);
+
+    _nst112x_init(NST_I2C_ID_1, NST112C_I2C_ADDR);
+    _nst112x_init(NST_I2C_ID_1, NST112D_I2C_ADDR);
 }
 
 /**
@@ -211,21 +234,22 @@ void nst112_init(void) {
  * @param Reg The register address to which the data is to be written.
  */
 void nst112x_transmit(uint8_t ads_addr, uint8_t Reg) {
-    app_i2c_transmit_sync(NST_I2C_ID, ads_addr, &Reg, 1, 0x1000);
+    app_i2c_transmit_sync(NST_I2C_ID_1, ads_addr, &Reg, 1, 0x1000);
 }
 
 /**
  * @brief Get Nst112 sensor_value
  *
+ * @param i2c_id I2C ID
  * @param nst_addr I2C address
  *
  * @return value 12Bit Value
  */
-int16_t _nst112x_get_sensor_value(uint8_t nst_addr) {
+int16_t _nst112x_get_sensor_value(app_i2c_id_t i2c_id, uint8_t nst_addr) {
     uint8_t buffer[2];
     int16_t value;
 
-    app_i2c_mem_read_sync(NST_I2C_ID, nst_addr, TEMPERATURE_REG, 1, buffer, 2, 0x1000);
+    app_i2c_mem_read_sync(i2c_id, nst_addr, TEMPERATURE_REG, 1, buffer, 2, 0x1000);
     delay_ms(1);
 
     value = ((int16_t)buffer[0] << 8) | buffer[1];
@@ -233,16 +257,25 @@ int16_t _nst112x_get_sensor_value(uint8_t nst_addr) {
     return (value >> 4);
 }
 
-static int32_t  nst112x_array[30]   = {0};
+static int32_t  nst112x_array[NST_STATISTICS_NUM * 2]   = {0};
 static uint16_t nst112x_array_num   = 0;
 static uint16_t nst112x_array_index = 0;
 
 void nst112x_fifo_add_sensor_value() {
     int16_t value = 0;
 
+    // for (int i = 0; i < 2; i++) {
+    //     value = _nst112x_get_sensor_value(NST_I2C_ID_0, NST112C_I2C_ADDR + i);
+    //     APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#02x] value: %d",NST_I2C_ID_0 , NST112C_I2C_ADDR + i, value);
+
+    //     nst112x_array[nst112x_array_index] = value;
+    //     nst112x_array_num++;
+    //     nst112x_array_index = nst112x_array_num % NST_STATISTICS_NUM;
+    // }
+
     for (int i = 0; i < 2; i++) {
-        value = _nst112x_get_sensor_value(NST112C_I2C_ADDR + i);
-        APP_LOG_DEBUG("NST112C sensor[%d] value: %d", NST112C_I2C_ADDR + i, value);
+        value = _nst112x_get_sensor_value(NST_I2C_ID_1, NST112C_I2C_ADDR + i);
+        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#02x] value: %d",NST_I2C_ID_0 , NST112C_I2C_ADDR + i, value);
 
         nst112x_array[nst112x_array_index] = value;
         nst112x_array_num++;

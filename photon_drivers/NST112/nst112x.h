@@ -31,7 +31,8 @@
 #define T_HIGH_REG      0x03 // temperature threshold Toper Limit
 #define CHIP_ID_REG     0x07 // Chip ID
 
-#define NST_STATISTICS_NUM (2 * 10) // Number of values to be used in the sliding filter, (1, 30).
+#define NST_STATISTICS_GRP_SIZE (5)
+#define NST_STATISTICS_NUM      (4 * NST_STATISTICS_GRP_SIZE) // Number of values to be used in the sliding filter.
 
 /* Configuring Registers Using Unions & Bit Fields */
 // You can refer to the website: http://www.stmcu.org.cn/module/forum/forum.php?mod=viewthread&tid=610197
