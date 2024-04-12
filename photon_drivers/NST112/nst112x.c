@@ -219,11 +219,15 @@ void nst112_init(void) {
     _nst112x_i2c_init();
     delay_ms(10);
 
-    // _nst112x_init(NST_I2C_ID_0, NST112C_I2C_ADDR);
-    // _nst112x_init(NST_I2C_ID_0, NST112D_I2C_ADDR);
+#if NST_I2C_CHN_0
+    _nst112x_init(NST_I2C_ID_0, NST112C_I2C_ADDR);
+    _nst112x_init(NST_I2C_ID_0, NST112D_I2C_ADDR);
+#endif
 
+#if NST_I2C_CHN_1
     _nst112x_init(NST_I2C_ID_1, NST112C_I2C_ADDR);
     _nst112x_init(NST_I2C_ID_1, NST112D_I2C_ADDR);
+#endif
 }
 
 /**
@@ -258,34 +262,38 @@ int16_t _nst112x_get_sensor_value(app_i2c_id_t i2c_id, uint8_t nst_addr) {
     return (value >> 4);
 }
 
-static int32_t  nst112x_array[NST_STATISTICS_NUM * 2]   = {0};
+static int32_t  nst112x_array[NST_STATS_DATA_NUM * 2]   = {0};
 static uint16_t nst112x_array_num   = 0;
 static uint16_t nst112x_array_index = 0;
 
 void nst112x_fifo_add_sensor_value() {
     int16_t value = 0;
 
-    // for (int i = 0; i < 2; i++) {
-    //     value = _nst112x_get_sensor_value(NST_I2C_ID_0, NST112C_I2C_ADDR + i);
-    //     APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#02x] value: %d",NST_I2C_ID_0 , NST112C_I2C_ADDR + i, value);
+#if NST_I2C_CHN_0
+    for (int i = 0; i < 2; i++) {
+        value = _nst112x_get_sensor_value(NST_I2C_ID_0, NST112C_I2C_ADDR + i);
+        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#02x] value: %d", NST_I2C_ID_0 , NST112C_I2C_ADDR + i, value);
 
-    //     nst112x_array[nst112x_array_index] = value;
-    //     nst112x_array_num++;
-    //     nst112x_array_index = nst112x_array_num % NST_STATISTICS_NUM;
-    // }
+        nst112x_array[nst112x_array_index] = value;
+        nst112x_array_num++;
+        nst112x_array_index = nst112x_array_num % NST_STATS_DATA_NUM;
+    }
+#endif
 
+#if NST_I2C_CHN_1
     for (int i = 0; i < 2; i++) {
         value = _nst112x_get_sensor_value(NST_I2C_ID_1, NST112C_I2C_ADDR + i);
         APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#02x] value: %d", NST_I2C_ID_1 , NST112C_I2C_ADDR + i, value);
 
         nst112x_array[nst112x_array_index] = value;
         nst112x_array_num++;
-        nst112x_array_index = nst112x_array_num % NST_STATISTICS_NUM;
+        nst112x_array_index = nst112x_array_num % NST_STATS_DATA_NUM;
     }
 }
+#endif
 
 int16_t _nst112x_fifo_get_average_sensor_value(void) {
-    if (nst112x_array_num < NST_STATISTICS_NUM) {
+    if (nst112x_array_num < NST_STATS_DATA_NUM) {
         return NST112X_VALUE_ERROR;
     }
 
