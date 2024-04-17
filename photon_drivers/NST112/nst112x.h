@@ -31,7 +31,7 @@
 #define T_HIGH_REG      0x03 // temperature threshold Toper Limit
 #define CHIP_ID_REG     0x07 // Chip ID
 
-#define NST_I2C_CHN_0 0
+#define NST_I2C_CHN_0 1
 #define NST_I2C_CHN_1 1
 
 #define NST_I2C_DATA_NUM   (2)

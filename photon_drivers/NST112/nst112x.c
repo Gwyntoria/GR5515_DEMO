@@ -87,7 +87,7 @@ int _nst112x_i2c_init(void) {
     //     return -1;
     // }
 
-    APP_LOG_INFO("nst112x i2c init success");
+    // APP_LOG_INFO("nst112x i2c init success");
 
     return 0;
 }
@@ -146,17 +146,13 @@ void _nst112x_comparator_threshold(app_i2c_id_t i2c_id, uint8_t nst_addr, int16_
 
     data[0] = (LowerThreshold >> 8) & 0x00FF;
     data[1] = LowerThreshold & 0x00FF;
-    // printf("_nst112x_comparator_threshold LowerThreshold ：Data_send[0] : %x -- data[1] : %x \r\n",data[0],data[1]);
     ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_LOW_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
     if (ret != 0) {
         APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] LowerThreshold failed with 0x%04x", i2c_id, nst_addr, ret);
     }
 
-    delay_ms(2);
-
     data[0] = (UpperThreshold >> 8) & 0x00FF;
     data[1] = UpperThreshold & 0x00FF;
-    // printf("_nst112x_comparator_threshold UpperThreshold ：Data_send[0] : %x -- data[1] : %x \r\n",data[0],data[1]);
     ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_HIGH_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
     if (ret != 0) {
         APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] UpperThreshold failed with 0x%04x", i2c_id, nst_addr, ret);
@@ -194,20 +190,16 @@ uint16_t _nst112x_get_chip_id(app_i2c_id_t i2c_id, uint8_t nst_addr) {
 void _nst112x_init(app_i2c_id_t i2c_id, uint8_t nst_addr) {
     uint16_t id = 0;
 
-    _nst112x_config_register(i2c_id, nst_addr);
-    delay_ms(10);
-
-    _nst112x_comparator_threshold(i2c_id, nst_addr, 0x10, 0x30);
-    delay_ms(10);
-
     id = _nst112x_get_chip_id(i2c_id, nst_addr);
     if (id == 0xA3A3) {
-        APP_LOG_INFO("nst112x IIC is OK : NST112 number[%d]", nst_addr - 0x47);
+        APP_LOG_INFO("nst112x: Init Success, i2c_id[%d], addr[%#02x]", i2c_id, nst_addr);
     } else {
-        APP_LOG_ERROR("nst112x IIC is Error : NST112 number[%d], plese check ConfigRegister", nst_addr - 0x47);
+        APP_LOG_INFO("nst112x: Init Error, i2c_id[%d], addr[%#02x], chip id: [%#04x]", i2c_id, nst_addr, id);
     }
 
-    delay_ms(10);
+    _nst112x_config_register(i2c_id, nst_addr);
+
+    _nst112x_comparator_threshold(i2c_id, nst_addr, 0x10, 0x30);
 }
 
 /**
