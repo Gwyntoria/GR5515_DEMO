@@ -1,8 +1,8 @@
 #include "user_rtc.h"
 
 #include "app_log.h"
-#include "app_rtc.h"
 #include "app_log_store.h"
+#include "app_rtc.h"
 #include "gr55xx_sys.h"
 
 // #include "gh3x2x_drv.h"
@@ -10,22 +10,34 @@
 #include "user_app.h"
 #include "user_common.h"
 #include "user_func_ctrl.h"
+#include "user_lsm6dso.h"
 
 #define RTC_TIMESTAMP_SIZE 26 /**< [00000000.000] */
+
+#define MS_PER_SEC   1000
+#define SEC_PER_MIN  60
+#define MIN_PER_HOUR 60
+#define HOUR_PER_DAY 24
+#define DAY_PER_YEAR 365
+#define BASE_YEAR    2010
 
 // static char* const week_str[7] = {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
 
 static RtcStatus s_rtc_status = kRtcDefault;
 
-void rtc_evt_tick_alarm_handler() {
-    APP_LOG_INFO("rtc tick alarm triggered\r\n");
+void rtc_evt_tick_alarm_handler(viod) {
+    APP_LOG_INFO("rtc tick alarm triggered");
 
-    func_ctrl_set_func_switch(kFuncSwitchOn);
+    func_ctrl_set_switch_func(kFuncSwitchOn);
+    func_ctrl_set_switch_adt(kFuncSwitchOn);
+    func_ctrl_set_switch_bms(kFuncSwitchOn);
+    func_ctrl_set_switch_tmp(kFuncSwitchOn);
 }
 
-void rtc_evt_date_alarm_handler() {
-    APP_LOG_INFO("rtc date alarm triggered\r\n");
+void rtc_evt_date_alarm_handler(viod) {
+    APP_LOG_INFO("rtc date alarm triggered");
 
+    func_ctrl_set_switch_rst(kFuncSwitchOn);
 }
 
 void rtc_alarm_evt_handler(app_rtc_evt_t* p_evt) {
@@ -44,11 +56,11 @@ void rtc_alarm_evt_handler(app_rtc_evt_t* p_evt) {
     }
 }
 
-RtcStatus rtc_get_rtc_status() {
+RtcStatus rtc_get_rtc_status(viod) {
     return s_rtc_status;
 }
 
-uint16_t user_rtc_init() {
+uint16_t user_rtc_init(viod) {
     uint16_t ret = 1;
 
     ret = app_rtc_init(rtc_alarm_evt_handler);
@@ -61,18 +73,18 @@ uint16_t user_rtc_init() {
     memset(&time, 0, sizeof(app_rtc_time_t));
 
     // TODO: Get time from BLE
-    
-    time.year = 24;
-    time.mon  = 3;
-    time.date = 12;
-    time.hour = 18;
+
+    time.year = 14;
+    time.mon  = 4;
+    time.date = 18;
+    time.hour = 0;
     time.min  = 0;
     time.sec  = 0;
     time.ms   = 0;
-    time.week = 2;
+    time.week = 4;
 
-    APP_LOG_INFO("set rtc time: %04d%02d%02d%02d%02d%02d%03d\n",
-                 time.year + 2000,
+    APP_LOG_INFO("set rtc time: [%04d/%02d/%02d %02d:%02d:%02d:%03d]",
+                 time.year + BASE_YEAR,
                  time.mon,
                  time.date,
                  time.hour,
@@ -88,12 +100,12 @@ uint16_t user_rtc_init() {
 
     s_rtc_status = kRtcOn;
 
-    APP_LOG_INFO("user_rtc_init success!\n");
+    // APP_LOG_INFO("user_rtc_init success!");
 
     return 0;
 }
 
-uint16_t user_rtc_deinit() {
+uint16_t user_rtc_deinit(viod) {
     if (s_rtc_status != kRtcOn) {
         return 1;
     }
@@ -120,7 +132,7 @@ uint16_t rtc_set_tick_alarm(uint32_t tick_interval_ms) {
     return ret;
 }
 
-uint16_t rtc_disable_tick_alarm() {
+uint16_t rtc_disable_tick_alarm(viod) {
     uint16_t ret = HAL_ERROR;
 
     if (s_rtc_status != kRtcOn) {
@@ -151,7 +163,7 @@ uint16_t rtc_set_date_alarm(app_rtc_alarm_t* alarm) {
     return ret;
 }
 
-uint16_t rtc_disable_date_alarm() {
+uint16_t rtc_disable_date_alarm(viod) {
     uint16_t ret = HAL_ERROR;
 
     if (s_rtc_status != kRtcOn) {
@@ -166,7 +178,7 @@ uint16_t rtc_disable_date_alarm() {
     return ret;
 }
 
-uint16_t rtc_disable_all_alarm() {
+uint16_t rtc_disable_all_alarm(viod) {
     uint16_t ret = HAL_ERROR;
 
     if (s_rtc_status != kRtcOn) {
@@ -180,7 +192,6 @@ uint16_t rtc_disable_all_alarm() {
 
     return ret;
 }
-
 
 uint16_t rtc_get_current_local_time(app_rtc_time_t* time) {
     uint16_t ret = HAL_ERROR;
@@ -198,7 +209,7 @@ uint16_t rtc_get_current_local_time(app_rtc_time_t* time) {
     return ret;
 }
 
-char* rtc_get_current_timestamp() {
+char* rtc_get_current_timestamp(void) {
     uint16_t       ret = HAL_ERROR;
     static char    timestamp[RTC_TIMESTAMP_SIZE];
     app_rtc_time_t rtc_time;
@@ -215,57 +226,10 @@ char* rtc_get_current_timestamp() {
     snprintf(timestamp,
              RTC_TIMESTAMP_SIZE,
              "[%04d/%02d/%02d %02d:%02d:%02d:%03d] ",
-             rtc_time.year, rtc_time.mon, rtc_time.date,
+             rtc_time.year + BASE_YEAR, rtc_time.mon, rtc_time.date,
              rtc_time.hour, rtc_time.min, rtc_time.sec, rtc_time.ms);
 
     return timestamp;
-}
-
-
-#define MS_PER_SEC 1000
-#define SEC_PER_MIN 60
-#define MIN_PER_HOUR 60
-#define HOUR_PER_DAY 24
-#define DAY_PER_YEAR 365
-#define YEAR_BASE 2010
-
-int rtc_get_milliseconds() {
-    int ret = 0;
-    int milliseconds = 0;
-    app_rtc_time_t time;
-
-    memset(&time, 0, sizeof(time));
-
-    ret = app_rtc_get_time(&time);
-    if (ret != HAL_OK) {
-        APP_LOG_ERROR("app_rtc_get_time failed with %#x!\n", ret);
-        return -1;
-    }
-
-    // Convert years to milliseconds
-    int years = (int)(time.year) + YEAR_BASE;
-    milliseconds += (years - YEAR_BASE) * DAY_PER_YEAR * HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
-
-    // Convert months to milliseconds
-    static const uint16_t days_in_month[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-    for (uint8_t i = 1; i < time.mon; i++) {
-        milliseconds += days_in_month[i] * HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
-        // Leap year check
-        if (i == 2 && ((years % 4 == 0 && years % 100 != 0) || years % 400 == 0)) {
-            milliseconds += MS_PER_SEC;
-        }
-    }
-
-    // Convert days to milliseconds
-    milliseconds += (int)(time.date - 1) * HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
-
-    // Convert hours, minutes, seconds, and milliseconds to milliseconds
-    milliseconds += (int)(time.hour) * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
-    milliseconds += (int)(time.min) * SEC_PER_MIN * MS_PER_SEC;
-    milliseconds += (int)(time.sec) * MS_PER_SEC;
-    milliseconds += (int)(time.ms);
-
-    return milliseconds;
 }
 
 void rtc_get_log_real_time(app_log_store_time_t* p_time) {
@@ -296,6 +260,54 @@ void rtc_get_log_real_time(app_log_store_time_t* p_time) {
     p_time->msec  = rtc_time.ms;
 }
 
+uint64_t rtc_get_relative_ms(void) {
+    uint16_t ret = HAL_ERROR;
+    uint64_t ms = 0;
+    app_rtc_time_t rtc_time;
+    memset(&rtc_time, 0, sizeof(app_rtc_time_t));
+
+    ret = app_rtc_get_time(&rtc_time);
+    if (ret != HAL_OK) {
+        APP_LOG_ERROR("app_rtc_get_time failed with %#x!\n", ret);
+        return -1;
+    }
+
+    // APP_LOG_DEBUG("rtc_time: [%04d/%02d/%02d %02d:%02d:%02d:%03d]",
+    //               rtc_time.year + BASE_YEAR,
+    //               rtc_time.mon,
+    //               rtc_time.date,
+    //               rtc_time.hour,
+    //               rtc_time.min,
+    //               rtc_time.sec,
+    //               rtc_time.ms);
+
+    int years = (int)(rtc_time.year) + BASE_YEAR;
+
+    // Convert years to milliseconds
+    ms += (uint64_t)(rtc_time.year) * DAY_PER_YEAR * HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
+
+    // Convert months to milliseconds
+    static const uint16_t days_in_month[] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+    for (uint8_t i = 1; i < rtc_time.mon; i++) {
+        ms += days_in_month[i] * HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
+        // Leap year check
+        if (i == 2 && ((years % 4 == 0 && years % 100 != 0) || years % 400 == 0)) {
+            ms += HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
+        }
+    }
+
+    // Convert days to milliseconds
+    ms += (uint64_t)(rtc_time.date) * HOUR_PER_DAY * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
+
+    // Convert hours, minutes, seconds, and milliseconds to milliseconds
+    ms += (uint64_t)(rtc_time.hour) * MIN_PER_HOUR * SEC_PER_MIN * MS_PER_SEC;
+    ms += (uint64_t)(rtc_time.min) * SEC_PER_MIN * MS_PER_SEC;
+    ms += (uint64_t)(rtc_time.sec) * MS_PER_SEC;
+    ms += (uint64_t)(rtc_time.ms);
+
+    return ms;
+}
+
 uint16_t rtc_adjust_time(app_rtc_time_t* time) {
     uint16_t ret = HAL_ERROR;
 
@@ -310,7 +322,7 @@ uint16_t rtc_adjust_time(app_rtc_time_t* time) {
     }
 
     APP_LOG_INFO("set rtc time: %04d%02d%02d%02d%02d%02d%03d",
-                 time->year + 2000,
+                 time->year + BASE_YEAR,
                  time->mon,
                  time->date,
                  time->hour,
@@ -321,7 +333,7 @@ uint16_t rtc_adjust_time(app_rtc_time_t* time) {
     return ret;
 }
 
-uint16_t rtc_time_diff_test() {
+uint16_t rtc_time_diff_test(viod) {
     uint16_t ret = HAL_ERROR;
 
     if (s_rtc_status != kRtcOn) {

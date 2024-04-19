@@ -48,9 +48,9 @@ uint16_t rtc_disable_date_alarm(void);
 uint16_t rtc_disable_all_alarm(void);
 
 uint16_t rtc_get_current_local_time(app_rtc_time_t* time);
-char* rtc_get_current_timestamp();
-int rtc_get_milliseconds();
+char* rtc_get_current_timestamp(void);
 void rtc_get_log_real_time(app_log_store_time_t* p_time);
+uint64_t rtc_get_rel2ative_ms(void);
 
 uint16_t rtc_adjust_time(app_rtc_time_t* time);
 
