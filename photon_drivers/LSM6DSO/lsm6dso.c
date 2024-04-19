@@ -3978,10 +3978,14 @@ static int32_t LSM6DSO_GYRO_SetOutputDataRate_When_Disabled(LSM6DSO_Object_t *pO
   */
 static void LSM6DSO_Delay(LSM6DSO_Object_t *pObj, uint32_t msDelay)
 {
-  uint32_t tickstart = pObj->IO.GetTick();
+  // uint32_t tickstart = pObj->IO.GetTick();
 
-  while ((pObj->IO.GetTick() - tickstart) < msDelay)
-  {
+  // while ((pObj->IO.GetTick() - tickstart) < msDelay)
+  // {
+  // }
+
+  if (pObj->IO.Delay) {
+      pObj->IO.Delay(msDelay);
   }
 }
 
