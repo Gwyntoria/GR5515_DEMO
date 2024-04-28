@@ -200,7 +200,7 @@ int32_t LSM6DSO_Init(LSM6DSO_Object_t *pObj)
   }
 
   /* Full scale selection. */
-  if (lsm6dso_xl_full_scale_set(&(pObj->Ctx), LSM6DSO_2g) != LSM6DSO_OK)
+  if (lsm6dso_xl_full_scale_set(&(pObj->Ctx), LSM6DSO_4g) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -1292,7 +1292,7 @@ int32_t LSM6DSO_ACC_Enable_Free_Fall_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_S
   }
 
   /* Full scale selection */
-  if (LSM6DSO_ACC_SetFullScale(pObj, 2) != LSM6DSO_OK)
+  if (LSM6DSO_ACC_SetFullScale(pObj, 4) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -1504,7 +1504,7 @@ int32_t LSM6DSO_ACC_Enable_Pedometer(LSM6DSO_Object_t *pObj)
   }
 
   /* Full scale selection */
-  if (LSM6DSO_ACC_SetFullScale(pObj, 2) != LSM6DSO_OK)
+  if (LSM6DSO_ACC_SetFullScale(pObj, 4) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -1646,7 +1646,7 @@ int32_t LSM6DSO_ACC_Enable_Tilt_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_Sensor
   }
 
   /* Full scale selection */
-  if (LSM6DSO_ACC_SetFullScale(pObj, 2) != LSM6DSO_OK)
+  if (LSM6DSO_ACC_SetFullScale(pObj, 4) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -1786,7 +1786,7 @@ int32_t LSM6DSO_ACC_Enable_Wake_Up_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_Sen
   }
 
   /* Full scale selection */
-  if (LSM6DSO_ACC_SetFullScale(pObj, 2) != LSM6DSO_OK)
+  if (LSM6DSO_ACC_SetFullScale(pObj, 4) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -1951,7 +1951,7 @@ int32_t LSM6DSO_ACC_Enable_Single_Tap_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_
   }
 
   /* Full scale selection */
-  if (LSM6DSO_ACC_SetFullScale(pObj, 2) != LSM6DSO_OK)
+  if (LSM6DSO_ACC_SetFullScale(pObj, 4) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -2138,7 +2138,7 @@ int32_t LSM6DSO_ACC_Enable_Double_Tap_Detection(LSM6DSO_Object_t *pObj, LSM6DSO_
   }
 
   /* Full scale selection */
-  if (LSM6DSO_ACC_SetFullScale(pObj, 2) != LSM6DSO_OK)
+  if (LSM6DSO_ACC_SetFullScale(pObj, 4) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -2413,7 +2413,7 @@ int32_t LSM6DSO_ACC_Enable_6D_Orientation(LSM6DSO_Object_t *pObj, LSM6DSO_Sensor
   }
 
   /* Full scale selection */
-  if (LSM6DSO_ACC_SetFullScale(pObj, 2) != LSM6DSO_OK)
+  if (LSM6DSO_ACC_SetFullScale(pObj, 4) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }
@@ -3490,7 +3490,7 @@ int32_t LSM6DSO_ACC_Enable_Inactivity_Detection(LSM6DSO_Object_t *pObj, lsm6dso_
   int32_t ret = LSM6DSO_OK;
 
   /* Full scale selection */
-  if (LSM6DSO_ACC_SetFullScale(pObj, 2) != LSM6DSO_OK)
+  if (LSM6DSO_ACC_SetFullScale(pObj, 4) != LSM6DSO_OK)
   {
     return LSM6DSO_ERROR;
   }

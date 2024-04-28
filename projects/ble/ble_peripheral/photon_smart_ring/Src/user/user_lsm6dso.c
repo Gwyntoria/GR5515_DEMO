@@ -10,6 +10,8 @@
 #include "LSM6DSO/lsm6dso_reg.h"
 
 #include "user_rtc.h"
+#include "user_func_ctrl.h"
+#include "user_common.h"
 
 #define LSM_I2C_ID  APP_I2C_ID_0
 #define LSM_IO_MUX  APP_IO_MUX_4
@@ -72,7 +74,7 @@ int _lsm6dso_i2c_init(void) {
     //     return LSM6DSO_ERROR;
     // }
 
-    APP_LOG_INFO("lsm6dso i2c init success");
+    // APP_LOG_INFO("lsm6dso i2c init success");
 
     return LSM6DSO_OK;
 }
@@ -108,7 +110,15 @@ int _lsm6dso_i2c_read_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, uin
 }
 
 int _lsm6dso_get_tick(void) {
-    return rtc_get_milliseconds();
+    uint64_t tick = rtc_get_relative_ms();
+
+    // while (tick > 0x7FFF0000) {
+    //     tick -= 0x7FFF0000;
+
+    //     APP_LOG_DEBUG("tick: %llu", tick);
+    // }
+
+    return (int)tick;
 }
 
 void _lsm6dso_delay_ms(uint32_t ms) {
@@ -558,9 +568,17 @@ int lsm6dso_get_orientation_status(void) {
 }
 
 int lsm6dso_get_event_status(void) {
-    APP_LOG_INFO("lsm6dso_get_event_status");
+    // APP_LOG_INFO("lsm6dso_get_event_status");
 
     int ret = 0;
+
+    static uint32_t sleep_time_op  = 0;
+    static uint32_t sleep_time     = 0;
+    static uint32_t sleep_duration = 0;
+
+    static uint32_t wake_time_op  = 0;
+    static uint32_t wake_time     = 0;
+    static uint32_t wake_duration = 0;
 
     LSM6DSO_Event_Status_t status;
     memset(&status, 0, sizeof(LSM6DSO_Event_Status_t));
@@ -568,39 +586,65 @@ int lsm6dso_get_event_status(void) {
     ret = LSM6DSO_ACC_Get_Event_Status(&lsm6dso_obj, &status);
     if (ret != LSM6DSO_OK) {
         APP_LOG_ERROR("lsm6dso get event status failed with 0x%02x", ret);
-        return LSM6DSO_ERROR;
+        return GUNTER_FAILURE;
     }
 
     if (status.FreeFallStatus) {
-        APP_LOG_INFO("Event: FREE_FALL detected");
+        // APP_LOG_INFO("Event: FREE_FALL detected");
     }
 
     if (status.WakeUpStatus) {
-        APP_LOG_INFO("Event: WAKE_UP detected");
+        // APP_LOG_INFO("Event: WAKE_UP detected");
+
+        sleep_time_op = 0;
+        sleep_time    = 0;
+
+        func_ctrl_set_result_act(kFuncResultOn);
     }
 
     if (status.TapStatus) {
-        APP_LOG_INFO("Event: S-TAP detected");
+        // APP_LOG_INFO("Event: S-TAP detected");
     }
 
     if (status.DoubleTapStatus) {
-        APP_LOG_INFO("Event: D-TAP detected");
+        // APP_LOG_INFO("Event: D-TAP detected");
     }
 
     if (status.D6DOrientationStatus) {
-        APP_LOG_INFO("Event: 6D OR. detected");
+        // APP_LOG_INFO("Event: 6D OR. detected");
     }
 
     if (status.StepStatus) {
-        APP_LOG_INFO("Event: STEP detected");
+        // APP_LOG_INFO("Event: STEP detected");
     }
 
     if (status.TiltStatus) {
-        APP_LOG_INFO("Event: TILT detected");
+        // APP_LOG_INFO("Event: TILT detected");
     }
 
     if (status.SleepStatus) {
-        APP_LOG_INFO("Event: SLEEP detected");
+
+        if (sleep_time_op == 0) {
+            sleep_time_op = rtc_get_relative_ms();
+            sleep_time = sleep_time_op;
+        } else {
+            sleep_time = rtc_get_relative_ms();
+        }
+
+        if (sleep_time_op > 0 &&
+            sleep_time > 0 &&
+            sleep_time > sleep_time_op) {
+            sleep_duration = sleep_time - sleep_time_op;
+            // APP_LOG_INFO("Sleep Duration: %d ms", sleep_duration);
+        }
+
+        if (sleep_duration > LSM6DSO_RELAX_THRESHOLD && sleep_duration < LSM6DSO_SLEEP_THRESHOLD) {
+            func_ctrl_set_result_act(kFuncResultOff);
+        } else if (sleep_duration > LSM6DSO_SLEEP_THRESHOLD) {
+            func_ctrl_set_result_slp(kFuncResultOn);
+        }
+
+        // APP_LOG_INFO("Event: SLEEP detected");
     }
 
     return ret;
