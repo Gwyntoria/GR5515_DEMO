@@ -19,7 +19,6 @@
 #include "string.h"
 
 #include "app_gpiote.h"
-#include "app_log.h"
 #include "app_timer.h"
 #include "gr55xx_sys.h"
 

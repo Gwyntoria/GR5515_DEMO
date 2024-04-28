@@ -21,6 +21,7 @@
 
 #include "app_error.h"
 #include "app_log.h"
+
 app_timer_id_t gh3x2x_soft_adt_timer_id;
 app_timer_id_t gh3x2x_serial_timer_id;
 #if (__DRIVER_LIB_MODE__ == __DRV_LIB_WITH_ALGO__)
@@ -621,7 +622,6 @@ void hal_temp_drv_get_fifo_data(STTempRawdata temp_data_buffer[], GU16 *temp_buf
 void GH3X2X_Log(GCHAR *log_string)
 {
     printf("%s", log_string);
-     
 }
 #endif
 
