@@ -80,7 +80,7 @@ int _lsm6dso_i2c_init(void) {
 }
 
 int _lsm6dso_i2c_deinit(void) {
-    return app_i2c_deinit(LSM_I2C_ID);
+    return LSM6DSO_OK;
 }
 
 int _lsm6dso_i2c_write_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, uint16_t length) {

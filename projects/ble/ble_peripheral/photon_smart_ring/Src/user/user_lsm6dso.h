@@ -1,8 +1,7 @@
 #ifndef USER_LSM6DSO_H
 #define USER_LSM6DSO_H
 
-#include "LSM6DSO/lsm6dso.h"
-#include "LSM6DSO/lsm6dso_reg.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 #if __cplusplus
