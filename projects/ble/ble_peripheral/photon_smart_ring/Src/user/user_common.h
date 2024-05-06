@@ -48,6 +48,15 @@ extern "C" {
 void data_stream_hex(const uint8_t* data, unsigned long len);
 
 /**
+ * @brief Use CRC-8(POLY = 0x8C) to calculate the checksum
+ *
+ * @param data Data that requires checksum calculation
+ * @param length Datalength
+ * @return checksum
+ */
+uint8_t get_checksum_crc8(uint8_t* data, size_t length);
+
+/**
  * @brief Use CRC-16-CCITT(POLY = 0x1021) to calculate the checksum
  *
  * @param data Data that requires checksum calculation
@@ -55,6 +64,15 @@ void data_stream_hex(const uint8_t* data, unsigned long len);
  * @return checksum
  */
 uint16_t get_checksum_crc16(uint8_t* data, size_t length);
+
+/**
+ * @brief Use CRC-32(POLY = 0x04C11DB7) to calculate the checksum
+ *
+ * @param data Data that requires checksum calculation
+ * @param length Datalength
+ * @return checksum
+ */
+uint32_t get_checksum_crc32(uint8_t* data, size_t length);
 
 void     write_big_endian_2(uint8_t* buffer, uint16_t data);
 uint16_t read_big_endian_2(const uint8_t* buffer);

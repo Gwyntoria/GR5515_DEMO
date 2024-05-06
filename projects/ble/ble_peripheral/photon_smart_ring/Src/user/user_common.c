@@ -64,9 +64,25 @@ void data_stream_hex(const uint8_t* data, unsigned long len)
     printf("%s\n", line);
 }
 
+uint8_t get_checksum_crc8(uint8_t* data, size_t length) {
+    const uint8_t kPoly = 0x8C;
+    uint8_t       crc   = 0x00;
+    while (length--) {
+        crc ^= *data++;
+        for (int i = 0; i < 8; i++) {
+            if (crc & 0x01) {
+                crc = (crc >> 1) ^ kPoly; // 多项式：x^8 + x^5 + x^4 + 1
+            } else {
+                crc >>= 1;
+            }
+        }
+    }
+    return crc;
+}
+
 uint16_t get_checksum_crc16(uint8_t* data, size_t length) {
     const uint16_t kPoly = 0x1021;
-    uint16_t       crc16 = 0;
+    uint16_t       crc16 = 0x0000;
 
     for (size_t i = 0; i < length; ++i) {
         crc16 ^= ((uint16_t)data[i] << 8);
@@ -80,6 +96,24 @@ uint16_t get_checksum_crc16(uint8_t* data, size_t length) {
     }
 
     return crc16;
+}
+
+uint32_t get_checksum_crc32(uint8_t* data, size_t length) {
+    const uint32_t kPoly = 0x04C11DB7;
+    uint32_t       crc32 = 0xFFFFFFFF;
+
+    for (size_t i = 0; i < length; ++i) {
+        crc32 ^= ((uint32_t)data[i] << 24);
+        for (size_t j = 0; j < 8; ++j) {
+            if (crc32 & 0x80000000) {
+                crc32 = (crc32 << 1) ^ kPoly;
+            } else {
+                crc32 <<= 1;
+            }
+        }
+    }
+
+    return crc32;
 }
 
 // 写入2字节数据到缓冲区
