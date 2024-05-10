@@ -25,7 +25,7 @@ void _i2c_evt_handler(app_i2c_evt_t* p_evt) {
 }
 
 uint16_t user_i2c_init(void) {
-    int ret = 0;
+    uint16_t  ret = 0;
 
     // IIC0
     app_i2c_params_t i2c0_params_t;

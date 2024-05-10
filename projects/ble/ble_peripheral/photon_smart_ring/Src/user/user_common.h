@@ -20,15 +20,15 @@
 extern "C" {
 #endif
 
-#define GUNTER_SUCCESS           (0x0000)
-#define GUNTER_FAILURE           (0xFFFF)
-#define GUNTER_ERR_NULL_POINTER  (0xF001)
-#define GUNTER_ERR_INVALID_TYPE  (0xF002)
-#define GUNTER_ERR_INVALID_ADDR  (0xF003)
-#define GUNTER_ERR_INVALID_PARAM (0xF003)
-#define GUNTER_ERR_NOT_INITIAL   (0xF004)
-#define GUNTER_ERR_NOT_SUPPORT   (0xF005)
-#define GUNTER_ERR_MOD_CONFLICT  (0xF006)
+#define GUNTER_SUCCESS           (0)
+#define GUNTER_FAILURE           (-1)
+#define GUNTER_ERR_NULL_POINTER  (-2)
+#define GUNTER_ERR_INVALID_TYPE  (-3)
+#define GUNTER_ERR_INVALID_ADDR  (-4)
+#define GUNTER_ERR_INVALID_PARAM (-5)
+#define GUNTER_ERR_NOT_INITIAL   (-6)
+#define GUNTER_ERR_NOT_SUPPORT   (-7)
+#define GUNTER_ERR_MOD_CONFLICT  (-8)
 
 // TIME
 #define SEC_TO_MS (1000)

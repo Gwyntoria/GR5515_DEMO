@@ -53,7 +53,7 @@ int32_t _st25dv_i2c_is_ready(uint16_t dev_addr, const uint32_t trials) {
 }
 
 int32_t _st25dv_i2c_write(uint16_t dev_addr, uint16_t reg_addr, uint8_t* data, uint16_t size) {
-    int ret;
+    uint16_t  ret;
 
     dev_addr = dev_addr >> 1;
 
@@ -67,7 +67,7 @@ int32_t _st25dv_i2c_write(uint16_t dev_addr, uint16_t reg_addr, uint8_t* data, u
 }
 
 int32_t _st25dv_i2c_read(uint16_t dev_addr, uint16_t reg_addr, uint8_t* buf, uint16_t size) {
-    int ret;
+    uint16_t  ret;
 
     dev_addr = dev_addr >> 1;
 
