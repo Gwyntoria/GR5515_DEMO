@@ -803,7 +803,7 @@ void Gh3x2x_HalSerialSendData(GU8* uchTxDataBuf, GU16 usBufLen)
 //    printf("send: ");
 //    for(uint16_t i = 0;i < usBufLen; i ++)
 //    {
-//        printf("0x%02X\t",uchTxDataBuf[i]);
+//        printf("%#.2x\t",uchTxDataBuf[i]);
 //    }
 //    printf("\r\n");
 }

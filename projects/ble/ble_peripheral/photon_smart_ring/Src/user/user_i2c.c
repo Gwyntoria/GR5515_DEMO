@@ -55,7 +55,7 @@ uint16_t user_i2c_init(void) {
 
     ret = app_i2c_init(&i2c0_params_t, _i2c_evt_handler);
     if (ret != 0) {
-        APP_LOG_ERROR("i2c_0 init failed with 0x%04x", ret);
+        APP_LOG_ERROR("i2c_0 init failed with %#.4x", ret);
         return GUNTER_FAILURE;
     }
 
@@ -87,7 +87,7 @@ uint16_t user_i2c_init(void) {
 
     ret = app_i2c_init(&i2c1_params_t, _i2c_evt_handler);
     if (ret != 0) {
-        APP_LOG_ERROR("i2c_1 init failed with 0x%04x", ret);
+        APP_LOG_ERROR("i2c_1 init failed with %#.4x", ret);
         return GUNTER_FAILURE;
     }
 

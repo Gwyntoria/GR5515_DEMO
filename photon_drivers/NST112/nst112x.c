@@ -83,7 +83,7 @@ int _nst112x_i2c_init(void) {
 
     // ret = app_i2c_init(&nst112x_params_t, _nst112x_i2c_evt_handler);
     // if (ret != 0) {
-    //     APP_LOG_ERROR("nst112x i2c init failed with 0x%04x", ret);
+    //     APP_LOG_ERROR("nst112x i2c init failed with %#.4x", ret);
     //     return -1;
     // }
 
@@ -129,7 +129,7 @@ void _nst112x_config_register(app_i2c_id_t i2c_id, uint8_t nst_addr) {
 
     ret = app_i2c_mem_write_sync(i2c_id, nst_addr, CONFIG_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
     if (ret != 0) {
-        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] config register failed with 0x%04x", i2c_id, nst_addr, ret);
+        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#.2x] config register failed with %#.4x", i2c_id, nst_addr, ret);
     }
 }
 
@@ -148,14 +148,14 @@ void _nst112x_comparator_threshold(app_i2c_id_t i2c_id, uint8_t nst_addr, int16_
     data[1] = LowerThreshold & 0x00FF;
     ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_LOW_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
     if (ret != 0) {
-        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] LowerThreshold failed with 0x%04x", i2c_id, nst_addr, ret);
+        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#.2x] LowerThreshold failed with %#.4x", i2c_id, nst_addr, ret);
     }
 
     data[0] = (UpperThreshold >> 8) & 0x00FF;
     data[1] = UpperThreshold & 0x00FF;
     ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_HIGH_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
     if (ret != 0) {
-        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] UpperThreshold failed with 0x%04x", i2c_id, nst_addr, ret);
+        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#.2x] UpperThreshold failed with %#.4x", i2c_id, nst_addr, ret);
     }
 }
 
@@ -173,7 +173,7 @@ uint16_t _nst112x_get_chip_id(app_i2c_id_t i2c_id, uint8_t nst_addr) {
 
     ret = app_i2c_mem_read_sync(i2c_id, nst_addr, CHIP_ID_REG, 1, buffer, 2, 0x1000);
     if (ret != 0) {
-        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#02x] get chip id failed with 0x%04x", i2c_id, nst_addr, ret);
+        APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#.2x] get chip id failed with %#.4x", i2c_id, nst_addr, ret);
     }
 
     delay_ms(10);
@@ -192,9 +192,9 @@ void _nst112x_init(app_i2c_id_t i2c_id, uint8_t nst_addr) {
 
     id = _nst112x_get_chip_id(i2c_id, nst_addr);
     if (id == 0xA3A3) {
-        APP_LOG_INFO("nst112x: Init Success, i2c_id[%d], addr[%#02x]", i2c_id, nst_addr);
+        APP_LOG_INFO("nst112x: Init Success, i2c_id[%d], addr[%#.2x]", i2c_id, nst_addr);
     } else {
-        APP_LOG_INFO("nst112x: Init Error, i2c_id[%d], addr[%#02x], chip id: [%#04x]", i2c_id, nst_addr, id);
+        APP_LOG_INFO("nst112x: Init Error, i2c_id[%d], addr[%#.2x], chip id: [%#.4x]", i2c_id, nst_addr, id);
     }
 
     _nst112x_config_register(i2c_id, nst_addr);
@@ -264,7 +264,7 @@ void nst112x_fifo_add_sensor_value() {
 #if NST_I2C_CHN_0
     for (int i = 0; i < 2; i++) {
         value = _nst112x_get_sensor_value(NST_I2C_ID_0, NST112C_I2C_ADDR + i);
-        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#02x] value: %d", NST_I2C_ID_0 , NST112C_I2C_ADDR + i, value);
+        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#.2x] value: %d", NST_I2C_ID_0 , NST112C_I2C_ADDR + i, value);
 
         nst112x_array[nst112x_array_index] = value;
         nst112x_array_num++;
@@ -275,7 +275,7 @@ void nst112x_fifo_add_sensor_value() {
 #if NST_I2C_CHN_1
     for (int i = 0; i < 2; i++) {
         value = _nst112x_get_sensor_value(NST_I2C_ID_1, NST112C_I2C_ADDR + i);
-        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#02x] value: %d", NST_I2C_ID_1 , NST112C_I2C_ADDR + i, value);
+        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#.2x] value: %d", NST_I2C_ID_1 , NST112C_I2C_ADDR + i, value);
 
         nst112x_array[nst112x_array_index] = value;
         nst112x_array_num++;

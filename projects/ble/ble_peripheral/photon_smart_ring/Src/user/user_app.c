@@ -265,7 +265,7 @@ static void heartrate_service_process_event(hrs_evt_t* p_hrs_evt) {
         case HRS_EVT_READ_BODY_SEN_LOCATION:
             // Output log for PTS Automation.
             // The log must be same with the HRS/SEN/CR/BV-01-C's condition defined in hrs_config.xml.
-            APP_LOG_DEBUG("Body Sensor Location: 0x%02x.", HRS_SENS_LOC_FINGER);
+            APP_LOG_DEBUG("Body Sensor Location: %#.2x.", HRS_SENS_LOC_FINGER);
             break;
 
         default:
@@ -440,7 +440,7 @@ void app_disconnected_handler(uint8_t conn_idx, uint8_t reason) {
 
 void app_connected_handler(uint8_t conn_idx, const gap_conn_cmp_t* p_param) {
     APP_LOG_DEBUG("con_interval: %d us", p_param->con_interval * 1250);
-    APP_LOG_DEBUG("con_latency : 0x%04X", p_param->con_latency);
+    APP_LOG_DEBUG("con_latency : %#.4x", p_param->con_latency);
     APP_LOG_DEBUG("sup_to      : %d ms", p_param->sup_to * 10);
     bleConnectState = 1;
 }

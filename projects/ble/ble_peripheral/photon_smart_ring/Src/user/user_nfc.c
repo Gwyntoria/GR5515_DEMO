@@ -59,7 +59,7 @@ int32_t _st25dv_i2c_write(uint16_t dev_addr, uint16_t reg_addr, uint8_t* data, u
 
     ret = app_i2c_mem_write_sync(ST25DV_I2C_ID, dev_addr, reg_addr, ST25DV_REG_LEN, data, size, 0x1000);
     if (ret != 0) {
-        APP_LOG_ERROR("write reg[%#04x] failed with %#04x", reg_addr, ret);
+        APP_LOG_ERROR("write reg[%#.4x] failed with %#.4x", reg_addr, ret);
         return ST25DV_ERROR;
     }
 
@@ -73,7 +73,7 @@ int32_t _st25dv_i2c_read(uint16_t dev_addr, uint16_t reg_addr, uint8_t* buf, uin
 
     ret = app_i2c_mem_read_sync(ST25DV_I2C_ID, dev_addr, reg_addr, ST25DV_REG_LEN, buf, size, 0x1000);
     if (ret != 0) {
-        APP_LOG_ERROR("read reg[%#04x] failed with %#04x", reg_addr, ret);
+        APP_LOG_ERROR("read reg[%#.4x] failed with %#.4x", reg_addr, ret);
         return ST25DV_ERROR;
     }
 
