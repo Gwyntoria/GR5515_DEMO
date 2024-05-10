@@ -41,7 +41,6 @@
  */
 #include "health.h"
 
-#include "app_log.h"
 #include "ble_prf_types.h"
 #include "ble_prf_utils.h"
 #include "utility.h"
@@ -382,7 +381,6 @@ static void health_write_att_cb(uint8_t conn_idx, const gatts_write_req_cb_t* p_
         //     cccd_value                        = le16toh(&p_param->value[0]);
         //     event.evt_type                    = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_TX_PORT_OPENED : HEALTH_EVT_TX_PORT_CLOSED;
         //     s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
-        //     // APP_LOG_INFO("HEALTH_IDX_TX_CFG %d", cccd_value);
         //     break;
 
         case HEALTH_IDX_RX_VAL:
@@ -450,31 +448,26 @@ static void health_cccd_set_cb(uint8_t conn_idx, uint16_t handle, uint16_t cccd_
 
     switch (tab_index) {
         // case HEALTH_IDX_TX_CFG:
-        //     // APP_LOG_INFO("HEALTH_IDX_TX_CFG %d", cccd_value);
         //     event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_TX_PORT_OPENED : HEALTH_EVT_TX_PORT_CLOSED;
         //     s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
         //     break;
 
         case HEALTH_IDX_HR_CFG:
-            // APP_LOG_INFO("HEALTH_IDX_TX_CFG %d", cccd_value);
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HR_PORT_OPENED : HEALTH_EVT_HR_PORT_CLOSED;
             s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_HRV_CFG:
-            // APP_LOG_INFO("HEALTH_IDX_TX_CFG %d", cccd_value);
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HRV_PORT_OPENED : HEALTH_EVT_HRV_PORT_CLOSED;
             s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_SPO2_CFG:
-            // APP_LOG_INFO("HEALTH_IDX_TX_CFG %d", cccd_value);
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_SPO2_PORT_OPENED : HEALTH_EVT_SPO2_PORT_CLOSED;
             s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_RR_CFG:
-            // APP_LOG_INFO("HEALTH_IDX_TX_CFG %d", cccd_value);
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_RR_PORT_OPENED : HEALTH_EVT_RR_PORT_CLOSED;
             s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
             break;
