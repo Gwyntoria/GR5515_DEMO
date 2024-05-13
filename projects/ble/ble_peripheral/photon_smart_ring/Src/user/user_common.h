@@ -93,6 +93,9 @@ uint32_t read_little_endian_4(const uint8_t* buffer);
 void     write_little_endian_8(uint8_t* buffer, uint64_t data);
 uint64_t read_little_endian_8(const uint8_t* buffer);
 
+int count_sequence_in_buffer(const uint8_t* buffer, size_t buffer_size,
+                             const uint8_t* sequence, size_t sequence_size);
+
 #ifdef __cplusplus
 }
 #endif

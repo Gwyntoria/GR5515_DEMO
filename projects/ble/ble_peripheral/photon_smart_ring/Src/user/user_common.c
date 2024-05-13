@@ -199,3 +199,30 @@ uint64_t read_little_endian_8(const uint8_t *buffer) {
     return (uint64_t)buffer[0] | ((uint64_t)buffer[1] << 8) | ((uint64_t)buffer[2] << 16) | ((uint64_t)buffer[3] << 24) | ((uint64_t)buffer[4] << 32) | ((uint64_t)buffer[5] << 40) | ((uint64_t)buffer[6] << 48) | ((uint64_t)buffer[7] << 56);
 }
 
+/**
+ * 计算特定字节序列在给定缓冲区中出现的次数。
+ * 
+ * @param buffer 指向要搜索的缓冲区的指针。
+ * @param buffer_size 缓冲区的大小（字节为单位）。
+ * @param sequence 要查找的字节序列。
+ * @param sequence_size 字节序列的大小。
+ * @return 出现的次数。
+ */
+int count_sequence_in_buffer(const uint8_t* buffer, size_t buffer_size,
+                             const uint8_t* sequence, size_t sequence_size) {
+    int count = 0;
+    if (sequence_size > buffer_size) {
+        return GUNTER_ERR_INVALID_PARAM; // 序列比缓冲区还大，无法匹配
+    }
+    
+    // 遍历缓冲区查找序列
+    for (size_t i = 0; i <= buffer_size - sequence_size; i++) {
+        // 比较当前位置开始的sequence_size长度的数据
+        if (memcmp(buffer + i, sequence, sequence_size) == 0) {
+            count++; // 发现匹配
+            i += sequence_size - 1; // 移动索引到匹配序列的末尾的前一个位置，因为循环会自动加1
+        }
+    }
+    
+    return count;
+}
