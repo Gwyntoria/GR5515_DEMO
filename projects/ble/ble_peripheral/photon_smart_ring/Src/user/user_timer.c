@@ -21,39 +21,33 @@
 #include "user_func_ctrl.h"
 
 static app_timer_id_t s_init_dev_timer_id;
-static app_timer_id_t s_battery_level_timer_id;
 static app_timer_id_t s_adt_timer_id;
 static app_timer_id_t s_hr_meas_timer_id;
 static app_timer_id_t s_hrv_meas_timer_id;
 static app_timer_id_t s_spo2_meas_timer_id;
 static app_timer_id_t s_rr_meas_timer_id;
 
-static void init_dev_timeout_handler(void* args) {
+void init_dev_timeout_handler(void* args) {
     func_ctrl_stop(kFuncOptHr);
 }
 
-static void battery_level_update(void* args) {
-    // TODO: 响应电池状态请求
-}
-
-static void adt_meas_timeout_handler(void* args) {
+void adt_meas_timeout_handler(void* args) {
     func_ctrl_stop(kFuncOptAdt);
-    func_ctrl_set_adt_switch(kFuncSwitchOff);
 }
 
-static void hr_meas_timeout_handler(void* args) {
+void hr_meas_timeout_handler(void* args) {
     func_ctrl_stop(kFuncOptHr);
 }
 
-static void hrv_meas_timeout_handler(void* args) {
+void hrv_meas_timeout_handler(void* args) {
     func_ctrl_stop(kFuncOptHrv);
 }
 
-static void spo2_meas_timeout_handler(void* args) {
+void spo2_meas_timeout_handler(void* args) {
     func_ctrl_stop(kFuncOptSpo2);
 }
 
-static void rr_meas_timeout_handler(void* args) {
+void rr_meas_timeout_handler(void* args) {
     // TODO: 结束呼吸频率检测
 }
 
@@ -61,9 +55,6 @@ void user_timer_init(void) {
     sdk_err_t error_code;
 
     error_code = app_timer_create(&s_init_dev_timer_id, ATIMER_ONE_SHOT, init_dev_timeout_handler);
-    APP_ERROR_CHECK(error_code);
-
-    error_code = app_timer_create(&s_battery_level_timer_id, ATIMER_ONE_SHOT, battery_level_update);
     APP_ERROR_CHECK(error_code);
 
     error_code = app_timer_create(&s_adt_timer_id, ATIMER_ONE_SHOT, adt_meas_timeout_handler);
