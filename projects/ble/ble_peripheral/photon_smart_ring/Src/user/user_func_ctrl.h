@@ -3,22 +3,30 @@
 
 #include "user_common.h"
 
-#define DETECTION_INTERVAL          (SEC_TO_MS * 40)
-#define DETECTION_CONTIOUS_TIME     (SEC_TO_MS * 20)
-#define DETECTION_CONTIOUS_TIME_ADT (SEC_TO_MS * 15)
+#define DETECTION_INTERVAL          (SEC_TO_MS * 60 * 2)
+#define DETECTION_CONTIOUS_TIME     (SEC_TO_MS * 60)
+#define DETECTION_CONTIOUS_TIME_ADT (SEC_TO_MS * 30)
+
+#define LSM6DSO_RELAX_THRESHOLD (SEC_TO_MS * 30)
+#define LSM6DSO_SLEEP_THRESHOLD (SEC_TO_MS * 90)
 
 #define CONFIDENCE_THRESHOLD            (60)
-#define CONFIDENCE_THRESHOLD_NADT_GREEN (80)
+#define CONFIDENCE_THRESHOLD_NADT_GREEN (55)
 
-#define BASE_OPTION (0x01)
+#define LOWER_CONFIDENCE_THRESHOLD_CNT (30)
+
+// #define BASE_OPTION (0x01)
 
 typedef enum FuncOption {
-    kFuncOptInitDev = BASE_OPTION << 0,
-    kFuncOptAdt     = BASE_OPTION << 1,
-    kFuncOptHr      = BASE_OPTION << 2,
-    kFuncOptHrv     = BASE_OPTION << 3,
-    kFuncOptSpo2    = BASE_OPTION << 4,
-    kFuncOptRr      = BASE_OPTION << 5,
+    kFuncOptInitDev,
+    kFuncOptAdt,
+    kFuncOptHr,
+    kFuncOptHrv,
+    kFuncOptSpo2,
+    kFuncOptRr,
+    kFuncOptBms,
+    kFuncOptTmp,
+    kFuncOptStp,
     kFuncOptNull
 } FuncOption;
 
@@ -28,11 +36,11 @@ typedef enum FuncSwitch {
     kFuncSwitchNull
 } FuncSwitch;
 
-typedef enum WearingStatus {
-    kWearingStatusOff = 0,
-    kWearingStatusOn  = 1,
-    kWearingStatusNull
-} WearingStatus;
+typedef enum FuncResult {
+    kFuncResultOff = 0,
+    kFuncResultOn  = 1,
+    kFuncResultNull
+} FuncResult;
 
 typedef enum FuncStatus {
     kFuncStatusOff = 0,
@@ -44,22 +52,26 @@ typedef enum FuncStatus {
 extern "C" {
 #endif
 
-uint16_t func_ctrl_init();
-uint16_t func_ctrl_deinit();
+uint16_t func_ctrl_init(void);
+uint16_t func_ctrl_deinit(void);
 
-uint16_t func_ctrl_get_func_switch();
-uint16_t func_ctrl_set_func_switch(FuncSwitch func_switch);
+void func_ctrl_set_switch_fct(FuncSwitch func_switch);
+void func_ctrl_set_switch_adt(FuncSwitch func_switch);
+void func_ctrl_set_switch_bms(FuncSwitch func_switch);
+void func_ctrl_set_switch_tmp(FuncSwitch func_switch);
+void func_ctrl_set_switch_rst(FuncSwitch func_switch);
 
-uint16_t func_ctrl_set_adt_switch(FuncSwitch func_switch);
-
-uint16_t func_ctrl_get_wearing_status();
-uint16_t func_ctrl_set_wearing_status(WearingStatus wearing_status);
+void func_ctrl_set_result_adt(FuncResult func_result);
+void func_ctrl_set_result_act(FuncResult func_result);
+void func_ctrl_set_result_chg(FuncResult func_result);
+void func_ctrl_set_result_slp(FuncResult func_result);
 
 void func_ctrl_start(FuncOption func_option);
 void func_ctrl_stop(FuncOption func_option);
 
-void func_ctrl_handler();
+void func_ctrl_handler(void);
 
+void func_ctrl_test(void);
 
 #ifdef __cplusplus
 }
