@@ -5,6 +5,9 @@
 
 #include "GD25LE128E/Flash_Spi.h"
 
+#define FS_USAGE_STATUS_OFF 0
+#define FS_USAGE_STATUS_ON  1
+
 #define FS_SECTOR_OP 0
 #define FS_SECTOR_ED (GD25LE128E_SECTOR_CNT - 1)
 
@@ -57,10 +60,10 @@ typedef enum SectorStatus {
 } SectorStatus;
 
 typedef enum FlashZone {
-    kFlashZone_Config,
-    kFlashZone_Log,
-    kFlashZone_SensorData,
-    kFlashZone_Max
+    kFlashZoneConfig,
+    kFlashZoneLog,
+    kFlashZoneData,
+    kFlashZoneMax
 } FlashZone;
 
 typedef struct FlashZoneConfig {
@@ -104,13 +107,22 @@ extern "C" {
 #endif
 #endif
 
+uint8_t ufs_is_flash_used(void);
+void    ufs_set_flash_used(void);
+void    ufs_set_flash_unused(void);
+
+#define UFS_SET_FLASH_USED()   ufs_set_flash_used()
+#define UFS_SET_FLASH_UNUSED() ufs_set_flash_unused()
+
 int ufs_init(void);
 int ufs_reinit(void);
 
-int ufs_write_data(FlashZone flash_zone, uint8_t* data, uint32_t len);
-int ufs_write_data_mass(FlashZone flash_zone, uint8_t* data, uint32_t len);
-int ufs_read_data(FlashZone flash_zone, uint8_t* buffer, bool whole);
-int ufs_get_zone_data_sector_cnt(FlashZone flash_zone);
+int ufs_write_zone_data(FlashZone flash_zone, uint8_t* data, uint32_t len);
+int ufs_write_zone_data_mass(FlashZone flash_zone, uint8_t* data, uint32_t len);
+int ufs_get_readable_zone_data_size(FlashZone flash_zone);
+int ufs_get_readable_zone_data_sector_cnt(FlashZone flash_zone, int* data_len);
+int ufs_read_zone_data(FlashZone flash_zone, uint8_t* buffer, const uint32_t* len, bool whole, bool erase);
+int ufs_erase_zone_data(FlashZone flash_zone);
 
 int ufs_test(void);
 
