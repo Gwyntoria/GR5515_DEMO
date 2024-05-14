@@ -759,6 +759,26 @@
               <FileType>1</FileType>
               <FilePath>..\Src\user\user_lsm6dso.c</FilePath>
             </File>
+            <File>
+              <FileName>user_battery.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\user\user_battery.c</FilePath>
+            </File>
+            <File>
+              <FileName>user_i2c.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\user\user_i2c.c</FilePath>
+            </File>
+            <File>
+              <FileName>user_nfc.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\user\user_nfc.c</FilePath>
+            </File>
+            <File>
+              <FileName>user_data_center.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\user\user_data_center.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
@@ -775,11 +795,6 @@
               <FilePath>..\..\..\..\..\photon_drivers\NST112\nst112x.c</FilePath>
             </File>
             <File>
-              <FileName>ST25DV.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>..\..\..\..\..\photon_drivers\ST25DV04K\ST25DV.c</FilePath>
-            </File>
-            <File>
               <FileName>lsm6dso.c</FileName>
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\photon_drivers\LSM6DSO\lsm6dso.c</FilePath>
@@ -794,10 +809,50 @@
               <FileType>1</FileType>
               <FilePath>..\..\..\..\..\photon_drivers\STNS01\stns01.c</FilePath>
             </File>
+            <File>
+              <FileName>st25dv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\photon_drivers\ST25DV04KC\st25dv.c</FilePath>
+            </File>
+            <File>
+              <FileName>st25dv_reg.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\..\..\..\..\photon_drivers\ST25DV04KC\st25dv_reg.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>
           <GroupName>gh3x2x_drv_lib</GroupName>
+          <Files>
+            <File>
+              <FileName>gh3x2x_drv.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\gh3x2x_drv.h</FilePath>
+            </File>
+            <File>
+              <FileName>libgh3x2x_drv_cortexM4l_band_keil_agc.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_agc.lib</FilePath>
+            </File>
+            <File>
+              <FileName>libgh3x2x_drv_cortexM4l_band_keil_ecg.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_ecg.lib</FilePath>
+            </File>
+            <File>
+              <FileName>libgh3x2x_drv_cortexM4l_band_keil_kernel.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_kernel.lib</FilePath>
+            </File>
+            <File>
+              <FileName>libgh3x2x_drv_cortexM4l_band_keil_zip.lib</FileName>
+              <FileType>4</FileType>
+              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_zip.lib</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
+          <GroupName>gh3x2x_drv_lib_debug</GroupName>
           <GroupOption>
             <CommonProperty>
               <UseCPPCompiler>0</UseCPPCompiler>
@@ -867,36 +922,6 @@
               </Aads>
             </GroupArmAds>
           </GroupOption>
-          <Files>
-            <File>
-              <FileName>gh3x2x_drv.h</FileName>
-              <FileType>5</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\gh3x2x_drv.h</FilePath>
-            </File>
-            <File>
-              <FileName>libgh3x2x_drv_cortexM4l_band_keil_agc.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_agc.lib</FilePath>
-            </File>
-            <File>
-              <FileName>libgh3x2x_drv_cortexM4l_band_keil_ecg.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_ecg.lib</FilePath>
-            </File>
-            <File>
-              <FileName>libgh3x2x_drv_cortexM4l_band_keil_kernel.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_kernel.lib</FilePath>
-            </File>
-            <File>
-              <FileName>libgh3x2x_drv_cortexM4l_band_keil_zip.lib</FileName>
-              <FileType>4</FileType>
-              <FilePath>..\Src\gh3x2x\1-drv_lib\keil_M4\_build\libgh3x2x_drv_cortexM4l_band_keil_zip.lib</FilePath>
-            </File>
-          </Files>
-        </Group>
-        <Group>
-          <GroupName>gh3x2x_drv_lib_debug</GroupName>
           <Files>
             <File>
               <FileName>gh3x2x_drv.h</FileName>
