@@ -29,6 +29,7 @@ extern "C" {
 #define GUNTER_ERR_NOT_INITIAL   (-6)
 #define GUNTER_ERR_NOT_SUPPORT   (-7)
 #define GUNTER_ERR_MOD_CONFLICT  (-8)
+#define GUNTER_ERR_INSUFFICIENT  (-9)
 
 // TIME
 #define SEC_TO_MS (1000)
