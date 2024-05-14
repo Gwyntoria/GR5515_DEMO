@@ -59,6 +59,9 @@
 
 #include "user_rtc.h"
 
+#define INTER_MEM_ADDR_LOG 0x010A6800
+#define INTER_MEM_SiZE_LOG 0x20000
+
 // static const uint8_t  s_bd_addr[SYS_BD_ADDR_LEN] = {0x0f, 0x00, 0xcf, 0x3e, 0xcb, 0xea};
 
 static void app_log_assert_init(void)
@@ -70,16 +73,16 @@ static void app_log_assert_init(void)
     app_log_store_op_t   op_func;
 
     store_info.nv_tag   = 0x40ff;
-    store_info.db_addr  = 0x01096000;
-    store_info.db_size  = 0x20000; // 128 KB
+    store_info.db_addr  = INTER_MEM_ADDR_LOG;
+    store_info.db_size  = INTER_MEM_SiZE_LOG; // 128 KB
     store_info.blk_size = 0x1000;
 
     op_func.flash_init  = hal_flash_init;
     op_func.flash_erase = hal_flash_erase;
     op_func.flash_write = hal_flash_write;
     op_func.flash_read  = hal_flash_read;
-    // op_func.time_get    = rtc_get_log_real_time;
-    op_func.time_get    = NULL;
+    op_func.time_get    = rtc_get_log_real_time;
+    // op_func.time_get    = NULL;
     op_func.sem_give    = NULL;
     op_func.sem_take    = NULL;
 
