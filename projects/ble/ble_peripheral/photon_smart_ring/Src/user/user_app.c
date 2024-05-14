@@ -43,6 +43,7 @@
 
 #include "app_error.h"
 #include "app_log.h"
+#include "app_log_dump_port.h"
 #include "app_timer.h"
 #include "dfu_port.h"
 #include "dis.h"
@@ -72,6 +73,8 @@
 #define MAX_NB_LECB_DEFUALT       10           /**< Defualt length of maximal number of LE Credit based connection. */
 #define MAX_TX_OCTET_DEFUALT      251          /**< Default maximum transmitted number of payload octets. */
 #define MAX_TX_TIME_DEFUALT       2120         /**< Defualt maximum packet transmission time. */
+
+extern char APP_VERSION[32];
 
 /*
  * LOCAL VARIABLE DEFINITIONS
@@ -262,7 +265,7 @@ static void heartrate_service_process_event(hrs_evt_t* p_hrs_evt) {
         case HRS_EVT_READ_BODY_SEN_LOCATION:
             // Output log for PTS Automation.
             // The log must be same with the HRS/SEN/CR/BV-01-C's condition defined in hrs_config.xml.
-            APP_LOG_DEBUG("Body Sensor Location: 0x%02x.", HRS_SENS_LOC_FINGER);
+            APP_LOG_DEBUG("Body Sensor Location: %#.2x.", HRS_SENS_LOC_FINGER);
             break;
 
         default:
@@ -417,6 +420,8 @@ static void services_init(void) {
     /* OTA Service */
     dfu_port_init(NULL, &dfu_pro_call);
     dfu_service_init(NULL);
+    
+    app_log_dump_service_init();
 }
 
 /*
@@ -435,7 +440,7 @@ void app_disconnected_handler(uint8_t conn_idx, uint8_t reason) {
 
 void app_connected_handler(uint8_t conn_idx, const gap_conn_cmp_t* p_param) {
     APP_LOG_DEBUG("con_interval: %d us", p_param->con_interval * 1250);
-    APP_LOG_DEBUG("con_latency : 0x%04X", p_param->con_latency);
+    APP_LOG_DEBUG("con_latency : %#.4x", p_param->con_latency);
     APP_LOG_DEBUG("sup_to      : %d ms", p_param->sup_to * 10);
     bleConnectState = 1;
 }

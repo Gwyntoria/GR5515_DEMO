@@ -21,6 +21,7 @@
 
 #include "app_error.h"
 #include "app_log.h"
+
 app_timer_id_t gh3x2x_soft_adt_timer_id;
 app_timer_id_t gh3x2x_serial_timer_id;
 #if (__DRIVER_LIB_MODE__ == __DRV_LIB_WITH_ALGO__)
@@ -157,7 +158,7 @@ volatile uint8_t spi_master_tdone = 0;
 volatile uint8_t spi_master_rdone = 0;
 
     
-void app_spi_callback(app_spi_evt_t *p_evt)
+static void app_spi_callback(app_spi_evt_t *p_evt)
 {
     if (p_evt->type == APP_SPI_EVT_TX_CPLT)
     {
@@ -197,7 +198,7 @@ void hal_gh3x2x_spi_init(void)
     if (ret != 0)
     {
         EXAMPLE_LOG("SPIM initial failed! Please check the input paraments. ret = %d.\r\n", ret);
-}
+    }
 
 #if (__GH3X2X_SPI_TYPE__ == __GH3X2X_SPI_TYPE_SOFTWARE_CS__)
     app_io_init_t gpio_config = APP_IO_DEFAULT_CONFIG;
@@ -621,7 +622,6 @@ void hal_temp_drv_get_fifo_data(STTempRawdata temp_data_buffer[], GU16 *temp_buf
 void GH3X2X_Log(GCHAR *log_string)
 {
     printf("%s", log_string);
-     
 }
 #endif
 
@@ -803,7 +803,7 @@ void Gh3x2x_HalSerialSendData(GU8* uchTxDataBuf, GU16 usBufLen)
 //    printf("send: ");
 //    for(uint16_t i = 0;i < usBufLen; i ++)
 //    {
-//        printf("0x%02X\t",uchTxDataBuf[i]);
+//        printf("%#.2x\t",uchTxDataBuf[i]);
 //    }
 //    printf("\r\n");
 }

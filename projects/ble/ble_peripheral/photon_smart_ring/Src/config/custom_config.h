@@ -106,7 +106,7 @@
 // <0=> DISABLE
 // <1=> ENABLE
 #ifndef APP_LOG_STORE_ENABLE
-#define APP_LOG_STORE_ENABLE    0
+#define APP_LOG_STORE_ENABLE    1
 #endif
 
 #if     (CHIP_TYPE == 0)

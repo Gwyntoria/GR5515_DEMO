@@ -1220,7 +1220,7 @@ void Gh3x2xDemoHardConfigReset(const STGh3x2xInitConfig *pstGh3x2xInitConfigPara
                     ((pstGh3x2xInitConfigParam)->pstRegConfigArr[usArrCnt].usRegAddr) ==\
                         0x0112 + (uchSlotIndex * 0x001C))
                 {
-                    EXAMPLE_LOG("[%s]:addr-value = 0x%04x-0x%04x\n", __FUNCTION__, (pstGh3x2xInitConfigParam)->pstRegConfigArr[usArrCnt].usRegAddr, (pstGh3x2xInitConfigParam)->pstRegConfigArr[usArrCnt].usRegData);
+                    EXAMPLE_LOG("[%s]:addr-value = %#.4x-%#.4x\n", __FUNCTION__, (pstGh3x2xInitConfigParam)->pstRegConfigArr[usArrCnt].usRegAddr, (pstGh3x2xInitConfigParam)->pstRegConfigArr[usArrCnt].usRegData);
                     GH3X2X_WriteReg((pstGh3x2xInitConfigParam)->pstRegConfigArr[usArrCnt].usRegAddr,\
                                 (pstGh3x2xInitConfigParam)->pstRegConfigArr[usArrCnt].usRegData);
                     if ((pstGh3x2xInitConfigParam)->pstRegConfigArr[usArrCnt].usRegData != \
@@ -1830,12 +1830,12 @@ void Gh3x2xDemoInterruptProcess(void)
              GH3X2X_CascadeOperationMasterChip();
              if((usGotEvent|usGotSlaverEvent)&(GH3X2X_IRQ_MSK_WEAR_ON_BIT|GH3X2X_IRQ_MSK_WEAR_OFF_BIT|GH3X2X_IRQ_MSK_LEAD_ON_DET_BIT|GH3X2X_IRQ_MSK_LEAD_ON_DET_BIT))
              {
-                EXAMPLE_LOG("usGotMasterEvent:0x%04x usGotSlaverEvent:0x%04x\r\n",usGotEvent, usGotSlaverEvent);
+                EXAMPLE_LOG("usGotMasterEvent:%#.4x usGotSlaverEvent:%#.4x\r\n",usGotEvent, usGotSlaverEvent);
              }
          }
          else
          {
-            EXAMPLE_LOG("usGotMasterEvent:0x%04x \r\n",usGotEvent);
+            EXAMPLE_LOG("usGotMasterEvent:%#.4x \r\n",usGotEvent);
          }
     #endif
         usGotEvent &= __GH3X2X_EVENT_PROCESS_MASK__;
@@ -3670,11 +3670,11 @@ GS8 Gh3x2xEcgCascadeCommunicationTest(void)
     GU16 usChipReadyCode = GH3X2X_ReadReg(0x36);
     if (0xaa55 == usChipReadyCode)
     {
-        EXAMPLE_LOG("Master Communication success!!! 0x36:0x%04x\r\n",usChipReadyCode);
+        EXAMPLE_LOG("Master Communication success!!! 0x36:%#.4x\r\n",usChipReadyCode);
     }
     else
     {
-        EXAMPLE_LOG("Master Communication FAIL!!! 0x36:0x%04x\r\n",usChipReadyCode);
+        EXAMPLE_LOG("Master Communication FAIL!!! 0x36:%#.4x\r\n",usChipReadyCode);
         chRet = GH3X2X_RET_COMM_ERROR;
     }
     
@@ -3683,11 +3683,11 @@ GS8 Gh3x2xEcgCascadeCommunicationTest(void)
     usChipReadyCode = GH3X2X_ReadReg(0x36);
     if (0xaa55 == usChipReadyCode)
     {
-        EXAMPLE_LOG("Slaver Communication success!!! 0x36:0x%04x\r\n",usChipReadyCode);
+        EXAMPLE_LOG("Slaver Communication success!!! 0x36:%#.4x\r\n",usChipReadyCode);
     }
     else
     {
-        EXAMPLE_LOG("Slaver Communication FAIL!!! 0x36:0x%04x\r\n",usChipReadyCode);
+        EXAMPLE_LOG("Slaver Communication FAIL!!! 0x36:%#.4x\r\n",usChipReadyCode);
         chRet = GH3X2X_RET_COMM_ERROR;
     }
     GH3X2X_CascadeOperationMasterChip();

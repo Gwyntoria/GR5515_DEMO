@@ -164,7 +164,7 @@ void gh3x2x_algorithm_get_io_data_hook_func(const STGh3x2xFrameInfo * const pstF
     GH3X2X_SEND_MSG_ALGO_CAL(pstFrameInfo->unFunctionID);
     
 #endif
-    EXAMPLE_LOG("[IO_DATA]Function ID: 0x%X, channel num = %d, frame cnt = %d\r\n",(int)(pstFrameInfo->unFunctionID),(int)(pstFrameInfo->pstFunctionInfo->uchChnlNum),(int)(pstFrameInfo->punFrameCnt[0]));
+    // EXAMPLE_LOG("[IO_DATA]Function ID: 0x%X, channel num = %d, frame cnt = %d\r\n",(int)(pstFrameInfo->unFunctionID),(int)(pstFrameInfo->pstFunctionInfo->uchChnlNum),(int)(pstFrameInfo->punFrameCnt[0]));
 #if (__SUPPORT_ALGO_INPUT_OUTPUT_DATA_HOOK_CONFIG__)
     /****************** FOLLOWING CODE IS EXAMPLE **********************************/
 #if 0

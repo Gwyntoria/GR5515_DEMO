@@ -56,9 +56,18 @@
 #include "gh3x2x_demo_config.h"
 
 #include "user_common.h"
+#include "user_file_sys.h"
 #include "user_func_ctrl.h"
 #include "user_rtc.h"
 #include "user_timer.h"
+#include "user_i2c.h"
+#include "user_lsm6dso.h"
+#include "user_nfc.h"
+#include "user_data_center.h"
+
+#include "GD25LE128E/Flash_Spi.h"
+#include "NST112/nst112x.h"
+#include "STNS01/stns01.h"
 
 /*
  * GLOBAL VARIABLE DEFINITIONS
@@ -70,6 +79,8 @@ extern gattc_cb_fun_t       app_gattc_callback;
 extern sec_cb_fun_t         app_sec_callback;
 
 extern GU8 g_uchGh3x2xIntCallBackIsCalled;
+
+char APP_VERSION[32];
 
 /*
  * LOCAL VARIABLE DEFINITIONS
@@ -87,38 +98,62 @@ static app_callback_t s_app_ble_callback = {
     .app_sec_callback          = &app_sec_callback,
 };
 
-static char APP_VERSION[16];
+int main(void) {
+    memset(APP_VERSION, 0, sizeof(APP_VERSION));
+    sprintf(APP_VERSION, "%u.%u.%u.%lu", VER_MAJOR, VER_MINOR, VER_BUILD, VER_EXTEN);
 
-int main(void)
-{
-    // Initialize user peripherals.
-    app_periph_init();
+    user_rtc_init();   // RTC init
+    app_periph_init(); // Initialize user peripherals.
 
-    // Initialize ble stack.
-    ble_stack_init(&s_app_ble_callback, &heaps_table); /*< init ble stack*/
+    APP_LOG_INFO("Firmware Version: %s", APP_VERSION);
 
-    sprintf(APP_VERSION, "%d.%d.%d", VER_MAJOR, VER_MINOR, VER_BUILD);
-    APP_LOG_INFO("App Version: %s\r\n", APP_VERSION);
+    ble_stack_init(&s_app_ble_callback, &heaps_table); // Initialize ble stack.
 
-    Gh3x2xDemoInit();
-    
-    user_rtc_init();
-    rtc_set_tick_alarm(DETECTION_INTERVAL);
+    user_i2c_init(); // I2C init
 
-    func_ctrl_init();
+    //* i2c
+    lsm6dso_init(); // 六轴 LSM6DSO
+    nst112_init();  // 测温芯片初始化
+    user_nfc_init(); // NFC tag 初始化
 
-    
+    //* spi
+    // ufs_reinit();
+    ufs_init();       // 文件系统初始化
+    Gh3x2xDemoInit(); // Gh3x2x init
+
+    //* adc
+    stns01_init(); // 电池测量初始化
+
+    func_ctrl_init(); // 功能控制模块初始化
+    udm_init();       // 数据管理模块初始化
+
+    // ufs_test(); // 文件系统测试
+    // udm_test(); // 数据管理模块测试
+    // nst112x_test(); // 温度读取test
+    // lsm6dso_test(); // 6轴传感器读取test
+    // stns01_test();  // 电量读取test
+    // user_nfc_test(); // NFC测试
+
+    // delay_ms(500);
+
+    // flash_func_test();
+
     while (1) {
+
         if (g_uchGh3x2xIntCallBackIsCalled) {
             Gh3x2xDemoInterruptProcess();
         }
 
-        // func_ctrl_run();
+        // func_ctrl_handler(); // 功能控制模块处理
+        // func_ctrl_test(); // 功能控制模块测试
 
-        app_log_flush();     // 刷新log缓存
+        // lsm6dso_get_event_status();
+
+        app_log_flush(); // 刷新log缓存
+        app_log_store_schedule();
         pwr_mgmt_schedule(); // 电源管理调度，负责管理查询是否可以进入睡眠
         dfu_schedule();
 
-        delay_ms(100);
+        delay_ms(150);
     }
 }

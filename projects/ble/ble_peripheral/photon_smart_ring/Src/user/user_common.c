@@ -63,3 +63,166 @@ void data_stream_hex(const uint8_t* data, unsigned long len)
 
     printf("%s\n", line);
 }
+
+uint8_t get_checksum_crc8(uint8_t* data, size_t length) {
+    const uint8_t kPoly = 0x8C;
+    uint8_t       crc   = 0x00;
+    while (length--) {
+        crc ^= *data++;
+        for (int i = 0; i < 8; i++) {
+            if (crc & 0x01) {
+                crc = (crc >> 1) ^ kPoly; // 多项式：x^8 + x^5 + x^4 + 1
+            } else {
+                crc >>= 1;
+            }
+        }
+    }
+    return crc;
+}
+
+uint16_t get_checksum_crc16(uint8_t* data, size_t length) {
+    const uint16_t kPoly = 0x1021;
+    uint16_t       crc16 = 0x0000;
+
+    for (size_t i = 0; i < length; ++i) {
+        crc16 ^= ((uint16_t)data[i] << 8);
+        for (size_t j = 0; j < 8; ++j) {
+            if (crc16 & 0x8000) {
+                crc16 = (crc16 << 1) ^ kPoly;
+            } else {
+                crc16 <<= 1;
+            }
+        }
+    }
+
+    return crc16;
+}
+
+uint32_t get_checksum_crc32(uint8_t* data, size_t length) {
+    const uint32_t kPoly = 0x04C11DB7;
+    uint32_t       crc32 = 0xFFFFFFFF;
+
+    for (size_t i = 0; i < length; ++i) {
+        crc32 ^= ((uint32_t)data[i] << 24);
+        for (size_t j = 0; j < 8; ++j) {
+            if (crc32 & 0x80000000) {
+                crc32 = (crc32 << 1) ^ kPoly;
+            } else {
+                crc32 <<= 1;
+            }
+        }
+    }
+
+    return crc32;
+}
+
+// 写入2字节数据到缓冲区
+void write_big_endian_2(uint8_t *buffer, uint16_t data) {
+    buffer[0] = (data >> 8) & 0xFF; // 高字节
+    buffer[1] = data & 0xFF;        // 低字节
+}
+
+// 从缓冲区读取2字节数据
+uint16_t read_big_endian_2(const uint8_t *buffer) {
+    return (buffer[0] << 8) | buffer[1];
+}
+
+// 写入4字节数据到缓冲区
+void write_big_endian_4(uint8_t *buffer, uint32_t data) {
+    buffer[0] = (data >> 24) & 0xFF; // 最高字节
+    buffer[1] = (data >> 16) & 0xFF; // 次高字节
+    buffer[2] = (data >> 8) & 0xFF;  // 次低字节
+    buffer[3] = data & 0xFF;         // 最低字节
+}
+
+// 从缓冲区读取4字节数据
+uint32_t read_big_endian_4(const uint8_t *buffer) {
+    return (buffer[0] << 24) | (buffer[1] << 16) | (buffer[2] << 8) | buffer[3];
+}
+
+// 写入8字节数据到缓冲区
+void write_big_endian_8(uint8_t *buffer, uint64_t data) {
+    buffer[0] = (data >> 56) & 0xFF; // 最高字节
+    buffer[1] = (data >> 48) & 0xFF; // 次高字节
+    buffer[2] = (data >> 40) & 0xFF; // ...
+    buffer[3] = (data >> 32) & 0xFF;
+    buffer[4] = (data >> 24) & 0xFF;
+    buffer[5] = (data >> 16) & 0xFF;
+    buffer[6] = (data >> 8) & 0xFF;
+    buffer[7] = data & 0xFF;         // 最低字节
+}
+
+// 从缓冲区读取8字节数据
+uint64_t read_big_endian_8(const uint8_t *buffer) {
+    return ((uint64_t)buffer[0] << 56) | ((uint64_t)buffer[1] << 48) | ((uint64_t)buffer[2] << 40) | ((uint64_t)buffer[3] << 32) | ((uint64_t)buffer[4] << 24) | ((uint64_t)buffer[5] << 16) | ((uint64_t)buffer[6] << 8) | (uint64_t)buffer[7];
+}
+
+
+// 写入2字节数据到缓冲区
+void write_little_endian_2(uint8_t *buffer, uint16_t data) {
+    buffer[0] = data & 0xFF;        // 低字节
+    buffer[1] = (data >> 8) & 0xFF; // 高字节
+}
+
+// 从缓冲区读取2字节数据
+uint16_t read_little_endian_2(const uint8_t *buffer) {
+    return buffer[0] | (buffer[1] << 8);
+}
+
+// 写入4字节数据到缓冲区
+void write_little_endian_4(uint8_t *buffer, uint32_t data) {
+    buffer[0] = data & 0xFF;         // 最低字节
+    buffer[1] = (data >> 8) & 0xFF;  // 次低字节
+    buffer[2] = (data >> 16) & 0xFF; // 次高字节
+    buffer[3] = (data >> 24) & 0xFF; // 最高字节
+}
+
+// 从缓冲区读取4字节数据
+uint32_t read_little_endian_4(const uint8_t *buffer) {
+    return buffer[0] | (buffer[1] << 8) | (buffer[2] << 16) | (buffer[3] << 24);
+}
+
+// 写入8字节数据到缓冲区
+void write_little_endian_8(uint8_t *buffer, uint64_t data) {
+    buffer[0] = data & 0xFF;         // 最低字节
+    buffer[1] = (data >> 8) & 0xFF;  // ...
+    buffer[2] = (data >> 16) & 0xFF;
+    buffer[3] = (data >> 24) & 0xFF;
+    buffer[4] = (data >> 32) & 0xFF;
+    buffer[5] = (data >> 40) & 0xFF;
+    buffer[6] = (data >> 48) & 0xFF;
+    buffer[7] = (data >> 56) & 0xFF; // 最高字节
+}
+
+// 从缓冲区读取8字节数据
+uint64_t read_little_endian_8(const uint8_t *buffer) {
+    return (uint64_t)buffer[0] | ((uint64_t)buffer[1] << 8) | ((uint64_t)buffer[2] << 16) | ((uint64_t)buffer[3] << 24) | ((uint64_t)buffer[4] << 32) | ((uint64_t)buffer[5] << 40) | ((uint64_t)buffer[6] << 48) | ((uint64_t)buffer[7] << 56);
+}
+
+/**
+ * 计算特定字节序列在给定缓冲区中出现的次数。
+ * 
+ * @param buffer 指向要搜索的缓冲区的指针。
+ * @param buffer_size 缓冲区的大小（字节为单位）。
+ * @param sequence 要查找的字节序列。
+ * @param sequence_size 字节序列的大小。
+ * @return 出现的次数。
+ */
+int count_sequence_in_buffer(const uint8_t* buffer, size_t buffer_size,
+                             const uint8_t* sequence, size_t sequence_size) {
+    int count = 0;
+    if (sequence_size > buffer_size) {
+        return GUNTER_ERR_INVALID_PARAM; // 序列比缓冲区还大，无法匹配
+    }
+    
+    // 遍历缓冲区查找序列
+    for (size_t i = 0; i <= buffer_size - sequence_size; i++) {
+        // 比较当前位置开始的sequence_size长度的数据
+        if (memcmp(buffer + i, sequence, sequence_size) == 0) {
+            count++; // 发现匹配
+            i += sequence_size - 1; // 移动索引到匹配序列的末尾的前一个位置，因为循环会自动加1
+        }
+    }
+    
+    return count;
+}
