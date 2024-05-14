@@ -9,6 +9,8 @@
 #include "user_app.h"
 #include "user_common.h"
 
+#define DATA_STREAM_OUTPUT 0
+
 static uint8_t s_flash_usage_status = FS_USAGE_STATUS_OFF;
 
 static FlashZoneConfig s_flash_zone_config;
@@ -637,8 +639,10 @@ int _write_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* data,
                 break;
             }
 
+#if DATA_STREAM_OUTPUT
             APP_LOG_DEBUG("wtite addr: %u", wt_addr);
             data_stream_hex(data + data_offset, len);
+#endif
 
             wt_addr += len;
             data_offset += len;
@@ -672,6 +676,9 @@ int _read_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* buffer
     uint32_t rd_addr             = *addr; // 读取地址
     uint32_t rd_addr_page_offset = FS_PAGE_OFFSET(rd_addr);
     uint32_t page_left           = FS_PAGE_SIZE - rd_addr_page_offset;
+
+    APP_LOG_DEBUG("page_left: %u", page_left);
+    APP_LOG_DEBUG("whole_data_len: %u", whole_data_len);
 
     if (rd_addr + whole_data_len <= range_addr_ed) {
         rd_len[0] = whole_data_len;
@@ -716,9 +723,10 @@ int _read_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* buffer
                 break;
             }
 
+#if DATA_STREAM_OUTPUT
             APP_LOG_DEBUG("read addr: %u", rd_addr);
             data_stream_hex(buffer + buffer_offset, len);
-
+#endif
             rd_addr += len;
             buffer_offset += len;
             rd_len[i] -= len;
