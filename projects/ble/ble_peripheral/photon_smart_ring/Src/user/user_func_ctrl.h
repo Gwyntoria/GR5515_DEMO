@@ -3,9 +3,10 @@
 
 #include "user_common.h"
 
-#define DETECTION_INTERVAL          (SEC_TO_MS * 60 * 2)
-#define DETECTION_CONTIOUS_TIME     (SEC_TO_MS * 60)
-#define DETECTION_CONTIOUS_TIME_ADT (SEC_TO_MS * 30)
+#define INIT_DURATION          (SEC_TO_MS * 10)
+#define DETECTION_INTERVAL     (SEC_TO_MS * 60)
+#define DETECTION_DURATION     (SEC_TO_MS * 40)
+#define DETECTION_DURATION_ADT (SEC_TO_MS * 30)
 
 #define LSM6DSO_RELAX_THRESHOLD (SEC_TO_MS * 30)
 #define LSM6DSO_SLEEP_THRESHOLD (SEC_TO_MS * 90)
@@ -55,19 +56,24 @@ extern "C" {
 uint16_t func_ctrl_init(void);
 uint16_t func_ctrl_deinit(void);
 
-void func_ctrl_set_switch_fct(FuncSwitch func_switch);
+void func_ctrl_set_switch_func(FuncSwitch func_switch);
+void func_ctrl_set_switch_init(FuncSwitch func_switch);
 void func_ctrl_set_switch_adt(FuncSwitch func_switch);
+void func_ctrl_set_switch_hr(FuncSwitch func_switch);
+void func_ctrl_set_switch_hrv(FuncSwitch func_switch);
+void func_ctrl_set_switch_spo2(FuncSwitch func_switch);
+void func_ctrl_set_switch_rr(FuncSwitch func_switch);
 void func_ctrl_set_switch_bms(FuncSwitch func_switch);
 void func_ctrl_set_switch_tmp(FuncSwitch func_switch);
+void func_ctrl_set_switch_stp(FuncSwitch func_switch);
 void func_ctrl_set_switch_rst(FuncSwitch func_switch);
+void func_ctrl_set_switch_act(FuncSwitch func_switch);
+void func_ctrl_set_switch_slp(FuncSwitch func_switch);
 
 void func_ctrl_set_result_adt(FuncResult func_result);
 void func_ctrl_set_result_act(FuncResult func_result);
 void func_ctrl_set_result_chg(FuncResult func_result);
 void func_ctrl_set_result_slp(FuncResult func_result);
-
-void func_ctrl_start(FuncOption func_option);
-void func_ctrl_stop(FuncOption func_option);
 
 void func_ctrl_handler(void);
 

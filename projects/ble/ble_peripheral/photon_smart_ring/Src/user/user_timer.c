@@ -28,27 +28,34 @@ static app_timer_id_t s_spo2_meas_timer_id;
 static app_timer_id_t s_rr_meas_timer_id;
 
 void init_dev_timeout_handler(void* args) {
-    func_ctrl_stop(kFuncOptHr);
+    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_init(kFuncSwitchOff);
 }
 
 void adt_meas_timeout_handler(void* args) {
-    func_ctrl_stop(kFuncOptAdt);
+    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_adt(kFuncSwitchOff);
 }
 
 void hr_meas_timeout_handler(void* args) {
-    func_ctrl_stop(kFuncOptHr);
+    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_hr(kFuncSwitchOff);
+
 }
 
 void hrv_meas_timeout_handler(void* args) {
-    func_ctrl_stop(kFuncOptHrv);
+    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_hrv(kFuncSwitchOff);
 }
 
 void spo2_meas_timeout_handler(void* args) {
-    func_ctrl_stop(kFuncOptSpo2);
+    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_spo2(kFuncSwitchOff);
 }
 
 void rr_meas_timeout_handler(void* args) {
-    // TODO: 结束呼吸频率检测
+    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_rr(kFuncSwitchOff);
 }
 
 void user_timer_init(void) {
@@ -78,33 +85,33 @@ void user_timer_start(FuncOption func_option) {
 
     switch (func_option) {
         case kFuncOptInitDev:
-            error_code = app_timer_start(s_init_dev_timer_id, SEC_TO_MS * 5, NULL);
+            error_code = app_timer_start(s_init_dev_timer_id, INIT_DURATION, NULL);
             APP_ERROR_CHECK(error_code);
             break;
 
         case kFuncOptAdt:
-            error_code = app_timer_start(s_adt_timer_id, DETECTION_CONTIOUS_TIME_ADT, NULL);
+            error_code = app_timer_start(s_adt_timer_id, DETECTION_DURATION_ADT, NULL);
             APP_ERROR_CHECK(error_code);
             break;
 
         case kFuncOptHr:
-            error_code = app_timer_start(s_hr_meas_timer_id, DETECTION_CONTIOUS_TIME, NULL);
+            error_code = app_timer_start(s_hr_meas_timer_id, DETECTION_DURATION, NULL);
             APP_ERROR_CHECK(error_code);
             break;
 
         case kFuncOptHrv:
-            error_code = app_timer_start(s_hrv_meas_timer_id, DETECTION_CONTIOUS_TIME, NULL);
+            error_code = app_timer_start(s_hrv_meas_timer_id, DETECTION_DURATION, NULL);
             APP_ERROR_CHECK(error_code);
             break;
 
         case kFuncOptSpo2:
-            error_code = app_timer_start(s_spo2_meas_timer_id, DETECTION_CONTIOUS_TIME, NULL);
+            error_code = app_timer_start(s_spo2_meas_timer_id, DETECTION_DURATION, NULL);
             APP_ERROR_CHECK(error_code);
             break;
 
         case kFuncOptRr:
             // TODO: Respiratory rate
-            error_code = app_timer_start(s_rr_meas_timer_id, DETECTION_CONTIOUS_TIME, NULL);
+            error_code = app_timer_start(s_rr_meas_timer_id, DETECTION_DURATION, NULL);
             APP_ERROR_CHECK(error_code);
             break;
 

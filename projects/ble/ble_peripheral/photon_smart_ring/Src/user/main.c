@@ -144,10 +144,10 @@ int main(void) {
             Gh3x2xDemoInterruptProcess();
         }
 
-        // func_ctrl_handler(); // 功能控制模块处理
+        func_ctrl_handler(); // 功能控制模块处理
         // func_ctrl_test(); // 功能控制模块测试
 
-        // lsm6dso_get_event_status();
+        lsm6dso_get_event_status();
 
         app_log_flush(); // 刷新log缓存
         app_log_store_schedule();

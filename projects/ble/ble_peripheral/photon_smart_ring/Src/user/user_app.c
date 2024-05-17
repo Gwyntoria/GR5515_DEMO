@@ -289,35 +289,51 @@ static void health_service_process_event(health_evt_t* p_evt) {
         //     break;
 
         case HEALTH_EVT_HR_PORT_OPENED:
-            func_ctrl_start(kFuncOptHr);
+            APP_LOG_INFO("HEALTH_EVT_HR_PORT_OPENED\n");
+            func_ctrl_set_switch_func(kFuncSwitchOn);
+            func_ctrl_set_switch_hr(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_HR_PORT_CLOSED:
-            func_ctrl_stop(kFuncOptHr);
+            APP_LOG_INFO("HEALTH_EVT_HR_PORT_CLOSED\n");
+            func_ctrl_set_switch_func(kFuncSwitchOff);
+            func_ctrl_set_switch_hr(kFuncSwitchOff);
             break;
 
         case HEALTH_EVT_HRV_PORT_OPENED:
-            func_ctrl_start(kFuncOptHrv);
+            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_OPENED\n");
+            func_ctrl_set_switch_func(kFuncSwitchOn);
+            func_ctrl_set_switch_hrv(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_HRV_PORT_CLOSED:
-            func_ctrl_stop(kFuncOptHrv);
+            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_CLOSED\n");
+            func_ctrl_set_switch_func(kFuncSwitchOff);
+            func_ctrl_set_switch_hrv(kFuncSwitchOff);
             break;
 
         case HEALTH_EVT_SPO2_PORT_OPENED:
-            func_ctrl_start(kFuncOptSpo2);
+            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_OPENED\n");
+            func_ctrl_set_switch_func(kFuncSwitchOn);
+            func_ctrl_set_switch_spo2(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_SPO2_PORT_CLOSED:
-            func_ctrl_stop(kFuncOptSpo2);
+            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_CLOSED\n");
+            func_ctrl_set_switch_func(kFuncSwitchOff);
+            func_ctrl_set_switch_spo2(kFuncSwitchOff);
             break;
 
         case HEALTH_EVT_RR_PORT_OPENED:
-            func_ctrl_start(kFuncOptRr);
+            APP_LOG_INFO("HEALTH_EVT_RR_PORT_OPENED\n");
+            func_ctrl_set_switch_func(kFuncSwitchOn);
+            func_ctrl_set_switch_rr(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_RR_PORT_CLOSED:
-            func_ctrl_stop(kFuncOptRr);
+            APP_LOG_INFO("HEALTH_EVT_RR_PORT_CLOSED\n");
+            func_ctrl_set_switch_func(kFuncSwitchOff);
+            func_ctrl_set_switch_rr(kFuncSwitchOff);
             break;
 
         // case HEALTH_EVT_TX_DATA_SENT:
@@ -344,9 +360,9 @@ static void health_service_process_event(health_evt_t* p_evt) {
 // #if (__SUPPORT_PROTOCOL_ANALYZE__)
 //             Gh3x2xDemoProtocolProcess(p_evt->p_data, p_evt->length);
 // #endif
-            printf("recv: ");
+            APP_LOG_INFO("HEALTH_EVT_RX_DATA_RECEIVED:");
             for (uint16_t i = 0; i < p_evt->length; i++) {
-                printf("%c", p_evt->p_data[i]);
+                printf("    %c", p_evt->p_data[i]);
             }
             printf("\r\n");
             delay_ms(10);
@@ -421,6 +437,7 @@ static void services_init(void) {
     dfu_port_init(NULL, &dfu_pro_call);
     dfu_service_init(NULL);
     
+    /* Log Service */
     app_log_dump_service_init();
 }
 
