@@ -97,6 +97,9 @@ uint64_t read_little_endian_8(const uint8_t* buffer);
 int count_sequence_in_buffer(const uint8_t* buffer, size_t buffer_size,
                              const uint8_t* sequence, size_t sequence_size);
 
+uint32_t float_to_fixed_point(float input, int min, int max, int scale);
+float    fixed_point_to_float(uint32_t input, int min, int max, int scale);
+
 #ifdef __cplusplus
 }
 #endif

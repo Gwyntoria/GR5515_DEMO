@@ -226,3 +226,41 @@ int count_sequence_in_buffer(const uint8_t* buffer, size_t buffer_size,
     
     return count;
 }
+
+/**
+ * Converts a floating-point number to a fixed-point number within a specified range.
+ *
+ * @param input The input floating-point number to be converted.
+ * @param min The minimum value of the input range.
+ * @param max The maximum value of the input range.
+ * @param scale The scaling factor to convert the input to a fixed-point number.
+ * @return The converted fixed-point number.
+ */
+uint32_t float_to_fixed_point(float input, int min, int max, int scale) {
+    // Check input range
+    if (input < min || input > max) {
+        APP_LOG_ERROR("Input value out of range: %f", input);
+        return 0;
+    }
+
+    // Multiply the floating-point number by 100 and convert it to a fixed-point number
+    uint32_t scaledInput = (uint32_t)((input - min) * scale);
+    
+    return scaledInput;
+}
+
+/**
+ * Converts a fixed-point number to a floating-point number.
+ *
+ * @param input The fixed-point number to be converted.
+ * @param min The minimum value of the converted floating-point number.
+ * @param max The maximum value of the converted floating-point number.
+ * @param scale The scaling factor to divide the fixed-point number by.
+ * @return The converted floating-point number.
+ */
+float fixed_point_to_float(uint32_t input, int min, int max, int scale) {
+    // Divide the fixed-point number by the scaling factor and add the minimum value
+    float scaledInput = (float)input / scale + min;
+    
+    return scaledInput;
+}
