@@ -308,17 +308,16 @@ int16_t _nst112x_fifo_get_average_sensor_value(void) {
     return average;
 }
 
-/**
- * @brief Get the temperature value from the NST112x device.
- *
- * This function reads the temperature value from the NST112x device at the specified I2C address.
- *
- * @param nst_addr The I2C address of the NST112x device.
- * @return The temperature.
- */
 float nst112x_get_temperature() {
     int16_t value       = 0;
     float   temperature = 0.0;
+    uint8_t cnt         = 0;
+
+    while (cnt < NST_STATS_SET_SIZE) {
+        nst112x_fifo_add_sensor_value();
+        cnt++;
+        delay_ms(10);
+    }
 
     value = _nst112x_fifo_get_average_sensor_value();
     if (value == NST112X_VALUE_ERROR) {

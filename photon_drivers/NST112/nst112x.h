@@ -39,6 +39,9 @@
 #define NST_STATS_SET_SIZE (5)
 #define NST_STATS_DATA_NUM (NST_DATA_SET_SIZE * NST_STATS_SET_SIZE)
 
+#define NST112_TEMPERATURE_RANFE_MIN (-40)
+#define NST112_TEMPERATURE_RANFE_MAX (125)
+
 /* Configuring Registers Using Unions & Bit Fields */
 // You can refer to the website: http://www.stmcu.org.cn/module/forum/forum.php?mod=viewthread&tid=610197
 // Because the memory accumulation of bitfields starts at the low end,
