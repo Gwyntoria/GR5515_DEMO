@@ -5,13 +5,14 @@
 #include "gh3x2x_demo_algo_hook.h"
 
 #include "gh3x2x_demo.h"
+#include "app_log.h"
 
+#include "user_common.h"
 #include "hrs.h"
 #include "health.h"
-
-#include "app_log.h"
 #include "user_func_ctrl.h"
 #include "user_rtc.h"
+#include "user_data_center.h"
 
 #if (__GOODIX_ALGO_CALL_MODE__)
 
@@ -98,26 +99,25 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
                                  pstAlgoResult->snResult[0],
                                  pstAlgoResult->snResult[1]);
 
-    char* ts = rtc_get_current_timestamp();
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("timestamp: %s\n", ts);
-
-    uint8_t data = pstAlgoResult->snResult[0];
+    uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     health_hr_data_send(0, &data, 1);
 
 
-    if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD) {
+    if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_HR) {
         low_confidence_cnt_hr++;
     } else {
         low_confidence_cnt_hr = 0;
+
+        DataCenterS2f* data_center_s2f = get_data_center_s2f();
+        if (data_center_s2f->recv_sensor) {
+            int ret = data_center_s2f->recv_sensor(data_center_s2f, kDataTypeHr, (uint16_t)data);
+            if (ret != GUNTER_SUCCESS) {
+                GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor error: %d\n", ret);
+            }
+        }
     }
 
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_hr: %d\n", low_confidence_cnt_hr);
-
-
-    if (low_confidence_cnt_hr > LOWER_CONFIDENCE_THRESHOLD_CNT) {
-        func_ctrl_set_result_adt(kFuncResultOff);
-        low_confidence_cnt_hr = 0;
-    }
 
     // extern GU32 g_unDemoFuncMode;
     // if ((g_unDemoFuncMode & GH3X2X_FUNCTION_SOFT_ADT_GREEN) != GH3X2X_FUNCTION_SOFT_ADT_GREEN) {
@@ -158,19 +158,22 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
     health_spo2_data_send(0, &data, 1);
 
 
-    if (pstAlgoResult->snResult[2] < CONFIDENCE_THRESHOLD) {
+    if (pstAlgoResult->snResult[3] < CONFIDENCE_THRESHOLD_SPO2) {
         low_confidence_cnt_spo2++;
     } else {
         low_confidence_cnt_spo2 = 0;
+
+        DataCenterS2f* data_center_s2f = get_data_center_s2f();
+        if (data_center_s2f->recv_sensor) {
+            int ret = data_center_s2f->recv_sensor(data_center_s2f, kDataTypeSpo2, (uint16_t)data);
+            if (ret != GUNTER_SUCCESS) {
+                GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor error: %d\n", ret);
+            }
+        }
     }
 
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_spo2: %d\n", low_confidence_cnt_spo2);
 
-
-    if (low_confidence_cnt_spo2 > LOWER_CONFIDENCE_THRESHOLD_CNT) {
-        func_ctrl_set_result_adt(kFuncResultOff);
-        low_confidence_cnt_spo2 = 0;
-    }
 #endif
 }
 
@@ -207,19 +210,15 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     health_hrv_data_send(0, &data, 1);
 
-    if (pstAlgoResult->snResult[4] < CONFIDENCE_THRESHOLD) {
+    if (pstAlgoResult->snResult[4] < CONFIDENCE_THRESHOLD_HRV) {
         low_confidence_cnt_hrv++;
     } else {
         low_confidence_cnt_hrv = 0;
     }
 
+    // TODO: send hrv data to data center
+
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_hrv: %d\n", low_confidence_cnt_hrv);
-
-
-    if (low_confidence_cnt_hrv > LOWER_CONFIDENCE_THRESHOLD_CNT) {
-        func_ctrl_set_result_adt(kFuncResultOff);
-        low_confidence_cnt_hrv = 0;
-    }
 }
 
 /**

@@ -11,8 +11,11 @@
 #define LSM6DSO_RELAX_THRESHOLD (SEC_TO_MS * 30)
 #define LSM6DSO_SLEEP_THRESHOLD (SEC_TO_MS * 90)
 
-#define CONFIDENCE_THRESHOLD            (60)
-#define CONFIDENCE_THRESHOLD_NADT_GREEN (55)
+#define CONFIDENCE_THRESHOLD_BASE       (60)
+#define CONFIDENCE_THRESHOLD_NADT_GREEN (80)
+#define CONFIDENCE_THRESHOLD_HR         (90)
+#define CONFIDENCE_THRESHOLD_HRV        (75)
+#define CONFIDENCE_THRESHOLD_SPO2       (4)
 
 #define LOWER_CONFIDENCE_THRESHOLD_CNT (30)
 
@@ -74,6 +77,10 @@ void func_ctrl_set_result_adt(FuncResult func_result);
 void func_ctrl_set_result_act(FuncResult func_result);
 void func_ctrl_set_result_chg(FuncResult func_result);
 void func_ctrl_set_result_slp(FuncResult func_result);
+
+void func_ctrl_set_status_3x2x_off();
+
+bool func_ctrl_is_sampling(void);
 
 void func_ctrl_handler(void);
 

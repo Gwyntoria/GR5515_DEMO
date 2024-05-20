@@ -10,6 +10,8 @@
 #include "user_lsm6dso.h"
 #include "user_rtc.h"
 #include "user_timer.h"
+#include "user_data_center.h"
+#include "user_file_sys.h"
 
 // 功能开关, 默认为NULL，ON时为开启，OFF时为关闭
 static FuncSwitch s_switch_func = kFuncSwitchNull; // 功能总开关
@@ -41,6 +43,7 @@ static FuncStatus s_status_hr   = kFuncStatusNull;
 static FuncStatus s_status_hrv  = kFuncStatusNull;
 static FuncStatus s_status_spo2 = kFuncStatusNull;
 static FuncStatus s_status_rr   = kFuncStatusNull;
+static FuncStatus s_status_3x2x = kFuncStatusNull;
 
 // switch
 
@@ -114,6 +117,88 @@ void func_ctrl_set_result_slp(FuncResult func_result) {
     s_result_slp = func_result;
 }
 
+// status
+
+void func_ctrl_set_status_3x2x_off() {
+    s_status_3x2x = kFuncStatusOff;
+}
+
+void func_ctrl_uninit_3x2x() {
+    if (!func_ctrl_is_sampling() && s_status_3x2x == kFuncStatusOn) {
+        s_status_3x2x = kFuncStatusOff;
+    }
+}
+
+
+/**
+ * Checks if the sampling is in progress.
+ *
+ * @return true if any of the sampling statuses (init, adt, hr, hrv, spo2, rr) is true, 
+ * @return false otherwise.
+ */
+bool func_ctrl_is_sampling(void) {
+    return s_status_init || s_status_adt || s_status_hr || s_status_hrv || s_status_spo2 || s_status_rr;
+}
+
+/**
+ * @brief Caches the given data in the data center.
+ *
+ * This function caches the provided data in the data center for the specified data type.
+ *
+ * @param data_type The type of data to be cached.
+ * @param data The data to be cached.
+ * @return Returns GUNTER_SUCCESS if the data is successfully cached, otherwise returns GUNTER_FAILURE.
+ */
+int func_ctrl_cache_data(DataType data_type, uint16_t data) {
+    DataCenterS2f* data_center_s2f = get_data_center_s2f();
+    if (data_center_s2f == NULL) {
+        APP_LOG_ERROR("Get data center f2b failed");
+        return GUNTER_FAILURE;
+    }
+
+    if (data_center_s2f->recv_sensor) {
+        int ret = data_center_s2f->recv_sensor(data_center_s2f, data_type, data);
+        if (ret != GUNTER_SUCCESS) {
+            APP_LOG_ERROR("Recv sensor data failed");
+            return GUNTER_FAILURE;
+        }
+    }
+
+    return GUNTER_SUCCESS;
+}
+
+/**
+ * @brief Saves data to flash memory.
+ *
+ * This function saves data to flash memory if sampling is not in progress.
+ * It retrieves the data center structure and checks if it is valid.
+ * Then, it calls the send_flash() function of the data center to write the data to flash.
+ *
+ * @return GUNTER_SUCCESS if the data is successfully saved to flash, GUNTER_FAILURE otherwise.
+ */
+int func_ctrl_save_data() {
+    if (func_ctrl_is_sampling()) {
+        return GUNTER_SUCCESS;
+    }
+
+    int ret = 0;
+
+    DataCenterS2f* data_center_s2f = get_data_center_s2f();
+    if (data_center_s2f == NULL) {
+        APP_LOG_ERROR("Get data center f2b failed");
+        return GUNTER_FAILURE;
+    }
+
+    // S2F数据中心将数据写入到Flash
+    ret = data_center_s2f->send_flash(data_center_s2f);
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("Send data to flash failed");
+        return GUNTER_FAILURE;
+    }
+
+    return GUNTER_SUCCESS;
+}
+
 uint16_t func_ctrl_init(void) {
     uint16_t ret = GUNTER_SUCCESS;
 
@@ -129,6 +214,7 @@ uint16_t func_ctrl_init(void) {
     s_status_hrv  = kFuncStatusOff;
     s_status_spo2 = kFuncStatusOff;
     s_status_rr   = kFuncStatusOff;
+    s_status_3x2x = kFuncStatusOff;
 
     user_timer_init(); // 定时器初始化
 
@@ -175,7 +261,6 @@ uint16_t func_ctrl_deinit(void) {
 // start & stop
 
 void func_ctrl_start(FuncOption func_option) {
-    hal_gh3x2x_spi_init();
 
     // user_timer_start(func_option);
 
@@ -183,6 +268,11 @@ void func_ctrl_start(FuncOption func_option) {
         case kFuncOptInitDev:
             if (s_status_init == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_handler: InitDev is on!");
+
+                if (s_status_3x2x == kFuncStatusOff) {
+                    hal_gh3x2x_spi_init();
+                    s_status_3x2x = kFuncStatusOn;
+                }
 
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
                 user_timer_start(func_option);
@@ -194,6 +284,11 @@ void func_ctrl_start(FuncOption func_option) {
             if (s_status_adt == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_start: Adt is on!");
 
+                if (s_status_3x2x == kFuncStatusOff) {
+                    hal_gh3x2x_spi_init();
+                    s_status_3x2x = kFuncStatusOn;
+                }
+
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN);
                 user_timer_start(func_option);
                 s_status_adt = kFuncStatusOn;
@@ -203,6 +298,11 @@ void func_ctrl_start(FuncOption func_option) {
         case kFuncOptHr:
             if (s_status_hr == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_start: Hr is on!");
+
+                if (s_status_3x2x == kFuncStatusOff) {
+                    hal_gh3x2x_spi_init();
+                    s_status_3x2x = kFuncStatusOn;
+                }
 
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
                 user_timer_start(func_option);
@@ -214,6 +314,11 @@ void func_ctrl_start(FuncOption func_option) {
             if (s_status_hrv == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_start: Hrv is on!");
 
+                if (s_status_3x2x == kFuncStatusOff) {
+                    hal_gh3x2x_spi_init();
+                    s_status_3x2x = kFuncStatusOn;
+                }
+
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HRV);
                 user_timer_start(func_option);
                 s_status_hrv = kFuncStatusOn;
@@ -224,6 +329,11 @@ void func_ctrl_start(FuncOption func_option) {
             if (s_status_spo2 == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_start: Spo2 is on!");
 
+                if (s_status_3x2x == kFuncStatusOff) {
+                    hal_gh3x2x_spi_init();
+                    s_status_3x2x = kFuncStatusOn;
+                }
+
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SPO2);
                 user_timer_start(func_option);
                 s_status_spo2 = kFuncStatusOn;
@@ -233,6 +343,11 @@ void func_ctrl_start(FuncOption func_option) {
         case kFuncOptRr:
             if (s_status_rr == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_start: Rr is on!");
+
+                if (s_status_3x2x == kFuncStatusOff) {
+                    hal_gh3x2x_spi_init();
+                    s_status_3x2x = kFuncStatusOn;
+                }
 
                 // TODO: Respiratory rate
 
@@ -252,20 +367,24 @@ void func_ctrl_start(FuncOption func_option) {
             }
 
             APP_LOG_DEBUG("Battery percentage: %d%%", percentage);
+
+            if (func_ctrl_cache_data(kDataTypeBattery, percentage) != GUNTER_SUCCESS) {
+                APP_LOG_ERROR("Cache battery data failed");
+            }
+
             break;
 
         case kFuncOptTmp:
             APP_LOG_INFO("func_ctrl_start: Temp is on!");
 
-            uint8_t cnt = 0;
-            while (cnt < NST_STATS_SET_SIZE) {
-                nst112x_fifo_add_sensor_value();
-                cnt++;
-                delay_ms(10);
-            }
-
             float tmp = nst112x_get_temperature();
             APP_LOG_DEBUG("Temperature: %.2f", tmp);
+
+            uint16_t data = (uint16_t)float_to_fixed_point(tmp, NST112_TEMPERATURE_RANGE_MIN, NST112_TEMPERATURE_RANGE_MAX, 100);
+
+            if (func_ctrl_cache_data(kDataTypeTemp, data) != GUNTER_SUCCESS) {
+                APP_LOG_ERROR("Cache temperature data failed");
+            }
             break;
 
         case kFuncOptStp:
@@ -273,6 +392,10 @@ void func_ctrl_start(FuncOption func_option) {
 
             uint16_t step_cnt = lsm6dso_get_step_count();
             APP_LOG_DEBUG("Step Counter: %u", step_cnt);
+
+            if (func_ctrl_cache_data(kDataTypeStep, step_cnt) != GUNTER_SUCCESS) {
+                APP_LOG_ERROR("Cache step counter data failed");
+            }
             break;
 
         default:
@@ -496,6 +619,9 @@ void func_ctrl_handler(void) {
 
         s_switch_func = kFuncSwitchNull;
     }
+
+    func_ctrl_uninit_3x2x();
+    func_ctrl_save_data();
 }
 
 void func_ctrl_test(void) {
