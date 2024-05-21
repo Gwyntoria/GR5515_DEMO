@@ -5,6 +5,9 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/projects/ble/ble_peripheral/photon_smart_ring/Src/config/",
+                "${workspaceFolder}/projects/ble/ble_peripheral/photon_smart_ring/Src/gh3x2x/**/inc",
+                "${workspaceFolder}/projects/ble/ble_peripheral/photon_smart_ring/Src/gunter_ble_services/",
+                "${workspaceFolder}/projects/ble/ble_peripheral/photon_smart_ring/Src/user/",
                 "${workspaceFolder}/components/app_drivers/inc/",
                 "${workspaceFolder}/components/boards/",
                 "${workspaceFolder}/components/libraries/",
