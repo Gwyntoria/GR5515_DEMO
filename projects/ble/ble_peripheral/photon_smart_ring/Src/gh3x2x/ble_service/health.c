@@ -45,11 +45,6 @@
 #include "ble_prf_utils.h"
 #include "utility.h"
 
-/*
- * DEFINES
- *****************************************************************************************
- */
-/**@brief The UUIDs of GUS characteristics. */
 #define HEALTH_SERVER_TX_UUID \
     { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x03, 0x00, 0x00, 0x01 }
 #define HEALTH_SERVER_RX_UUID \
@@ -63,7 +58,6 @@
 #define HEALTH_SERVER_RR_UUID \
     { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x08, 0x00, 0x00, 0x01 }
 
-/**@brief Macros for conversion of 128bit to 16bit UUID. */
 #define ATT_128_PRIMARY_SERVICE BLE_ATT_16_TO_128_ARRAY(BLE_ATT_DECL_PRIMARY_SERVICE)
 #define ATT_128_CHARACTERISTIC  BLE_ATT_16_TO_128_ARRAY(BLE_ATT_DECL_CHARACTERISTIC)
 #define ATT_128_CLIENT_CHAR_CFG BLE_ATT_16_TO_128_ARRAY(BLE_ATT_DESC_CLIENT_CHAR_CFG)
@@ -75,10 +69,6 @@
 /**@brief Goodix UART Service Attributes Indexes. */
 enum health_attr_idx_t {
     HEALTH_IDX_SVC,
-
-    // HEALTH_IDX_TX_CHAR,
-    // HEALTH_IDX_TX_VAL,
-    // HEALTH_IDX_TX_CFG,
 
     HEALTH_IDX_RX_CHAR,
     HEALTH_IDX_RX_VAL,
@@ -102,38 +92,29 @@ enum health_attr_idx_t {
     HEALTH_IDX_NB,
 };
 
-/*
- * STRUCTURES
- *****************************************************************************************
- */
-/**@brief Goodix UART Service environment variable. */
 struct health_env_t {
-    health_init_t health_init;                              /**< Goodix UART Service initialization variables. */
-    uint16_t      start_hdl;                                /**< Start handle of services */
-    uint16_t      tx_ntf_cfg[HEALTH_CONNECTION_MAX];        /**< TX Characteristic Notification configuration of the peers. */
-    uint16_t      flow_ctrl_ntf_cfg[HEALTH_CONNECTION_MAX]; /**< Flow Control Characteristic Notification configuration of
-                                                               the peers. */
+    health_init_t health_init;
+    uint16_t      start_hdl;
+    uint16_t      hr_ntf_cfg[HEALTH_CONNECTION_MAX];
+    uint16_t      hrv_ntf_cfg[HEALTH_CONNECTION_MAX];
+    uint16_t      spo2_ntf_cfg[HEALTH_CONNECTION_MAX];
+    uint16_t      rr_ntf_cfg[HEALTH_CONNECTION_MAX];
 };
 
-/*
- * LOCAL FUNCTION DECLARATION
- *****************************************************************************************
- */
 static sdk_err_t health_init(void);
 static void      health_write_att_cb(uint8_t conn_idx, const gatts_write_req_cb_t* p_param);
 static void      health_read_att_cb(uint8_t conn_idx, const gatts_read_req_cb_t* p_param);
 static void      health_cccd_set_cb(uint8_t conn_idx, uint16_t handle, uint16_t cccd_value);
 static void      health_ntf_ind_cb(uint8_t conn_idx, uint8_t status, const ble_gatts_ntf_ind_t* p_ntf_ind);
 
-/*
- * LOCAL VARIABLE DEFINITIONS
- *****************************************************************************************
- */
 static struct health_env_t s_health_env;
 static const uint16_t      s_char_mask = 0xFFFF;
 static health_evt_type_t s_now_notify_cmp_type = HEALTH_EVT_INVALID;
 
-/**@brief Full GUS Database Description which is used to add attributes into the ATT database. */
+/**
+ * @brief Full Health Database Description which is used to add attributes into the ATT database
+ * 
+ */
 static const attm_desc_128_t health_att_db[HEALTH_IDX_NB] = {
     // health service
     [HEALTH_IDX_SVC] = {
@@ -316,33 +297,27 @@ static void health_read_att_cb(uint8_t conn_idx, const gatts_read_req_cb_t* p_pa
     cfm.status = BLE_SUCCESS;
 
     switch (tab_index) {
-        // case HEALTH_IDX_TX_CFG:
-        //     cfm.length = sizeof(uint16_t);
-        //     cfm.value  = (uint8_t*)&s_health_env.tx_ntf_cfg[conn_idx];
-        //     cfm.status = BLE_SUCCESS;
-        //     break;
-
         case HEALTH_IDX_HR_CFG:
             cfm.length = sizeof(uint16_t);
-            cfm.value  = (uint8_t*)&s_health_env.tx_ntf_cfg[conn_idx];
+            cfm.value  = (uint8_t*)&s_health_env.hr_ntf_cfg[conn_idx];
             cfm.status = BLE_SUCCESS;
             break;
 
         case HEALTH_IDX_HRV_CFG:
             cfm.length = sizeof(uint16_t);
-            cfm.value  = (uint8_t*)&s_health_env.tx_ntf_cfg[conn_idx];
+            cfm.value  = (uint8_t*)&s_health_env.hrv_ntf_cfg[conn_idx];
             cfm.status = BLE_SUCCESS;
             break;
 
         case HEALTH_IDX_SPO2_CFG:
             cfm.length = sizeof(uint16_t);
-            cfm.value  = (uint8_t*)&s_health_env.tx_ntf_cfg[conn_idx];
+            cfm.value  = (uint8_t*)&s_health_env.spo2_ntf_cfg[conn_idx];
             cfm.status = BLE_SUCCESS;
             break;
 
         case HEALTH_IDX_RR_CFG:
             cfm.length = sizeof(uint16_t);
-            cfm.value  = (uint8_t*)&s_health_env.tx_ntf_cfg[conn_idx];
+            cfm.value  = (uint8_t*)&s_health_env.rr_ntf_cfg[conn_idx];
             cfm.status = BLE_SUCCESS;
             break;
 
@@ -377,12 +352,6 @@ static void health_write_att_cb(uint8_t conn_idx, const gatts_write_req_cb_t* p_
     cfm.status     = BLE_SUCCESS;
 
     switch (tab_index) {
-        // case HEALTH_IDX_TX_CFG:
-        //     cccd_value                        = le16toh(&p_param->value[0]);
-        //     event.evt_type                    = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_TX_PORT_OPENED : HEALTH_EVT_TX_PORT_CLOSED;
-        //     s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
-        //     break;
-
         case HEALTH_IDX_RX_VAL:
             event.evt_type = HEALTH_EVT_RX_DATA_RECEIVED;
             event.p_data   = (uint8_t*)p_param->value;
@@ -392,25 +361,25 @@ static void health_write_att_cb(uint8_t conn_idx, const gatts_write_req_cb_t* p_
         case HEALTH_IDX_HR_CFG:
             cccd_value = le16toh(&p_param->value[0]);
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HR_PORT_OPENED : HEALTH_EVT_HR_PORT_CLOSED;
-            s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
+            s_health_env.hr_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_HRV_CFG:
             cccd_value = le16toh(&p_param->value[0]);
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HRV_PORT_OPENED : HEALTH_EVT_HRV_PORT_CLOSED;
-            s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
+            s_health_env.hrv_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_SPO2_CFG:
             cccd_value = le16toh(&p_param->value[0]);
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_SPO2_PORT_OPENED : HEALTH_EVT_SPO2_PORT_CLOSED;
-            s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
+            s_health_env.spo2_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_RR_CFG:
             cccd_value = le16toh(&p_param->value[0]);
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_RR_PORT_OPENED : HEALTH_EVT_RR_PORT_CLOSED;
-            s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
+            s_health_env.rr_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         default:
@@ -447,29 +416,24 @@ static void health_cccd_set_cb(uint8_t conn_idx, uint16_t handle, uint16_t cccd_
     event.evt_type = HEALTH_EVT_INVALID;
 
     switch (tab_index) {
-        // case HEALTH_IDX_TX_CFG:
-        //     event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_TX_PORT_OPENED : HEALTH_EVT_TX_PORT_CLOSED;
-        //     s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
-        //     break;
-
         case HEALTH_IDX_HR_CFG:
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HR_PORT_OPENED : HEALTH_EVT_HR_PORT_CLOSED;
-            s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
+            s_health_env.hr_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_HRV_CFG:
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HRV_PORT_OPENED : HEALTH_EVT_HRV_PORT_CLOSED;
-            s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
+            s_health_env.hrv_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_SPO2_CFG:
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_SPO2_PORT_OPENED : HEALTH_EVT_SPO2_PORT_CLOSED;
-            s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
+            s_health_env.spo2_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_RR_CFG:
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_RR_PORT_OPENED : HEALTH_EVT_RR_PORT_CLOSED;
-            s_health_env.tx_ntf_cfg[conn_idx] = cccd_value;
+            s_health_env.rr_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         default:
@@ -512,7 +476,7 @@ sdk_err_t health_hr_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length
     sdk_err_t        error_code = SDK_ERR_NTF_DISABLED;
     gatts_noti_ind_t send_cmd;
 
-    if (PRF_CLI_START_NTF == s_health_env.tx_ntf_cfg[conn_idx]) {
+    if (PRF_CLI_START_NTF == s_health_env.hr_ntf_cfg[conn_idx]) {
         // Fill in the parameter structure
         send_cmd.type   = BLE_GATT_NOTIFICATION;
         send_cmd.handle = prf_find_handle_by_idx(HEALTH_IDX_HR_VAL, s_health_env.start_hdl, (uint8_t*)&s_char_mask);
@@ -533,7 +497,7 @@ sdk_err_t health_hrv_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t lengt
     sdk_err_t        error_code = SDK_ERR_NTF_DISABLED;
     gatts_noti_ind_t send_cmd;
 
-    if (PRF_CLI_START_NTF == s_health_env.tx_ntf_cfg[conn_idx]) {
+    if (PRF_CLI_START_NTF == s_health_env.hrv_ntf_cfg[conn_idx]) {
         // Fill in the parameter structure
         send_cmd.type   = BLE_GATT_NOTIFICATION;
         send_cmd.handle = prf_find_handle_by_idx(HEALTH_IDX_HRV_VAL, s_health_env.start_hdl, (uint8_t*)&s_char_mask);
@@ -554,7 +518,7 @@ sdk_err_t health_spo2_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t leng
     sdk_err_t        error_code = SDK_ERR_NTF_DISABLED;
     gatts_noti_ind_t send_cmd;
 
-    if (PRF_CLI_START_NTF == s_health_env.tx_ntf_cfg[conn_idx]) {
+    if (PRF_CLI_START_NTF == s_health_env.spo2_ntf_cfg[conn_idx]) {
         // Fill in the parameter structure
         send_cmd.type   = BLE_GATT_NOTIFICATION;
         send_cmd.handle = prf_find_handle_by_idx(HEALTH_IDX_SPO2_VAL, s_health_env.start_hdl, (uint8_t*)&s_char_mask);
@@ -575,7 +539,7 @@ sdk_err_t health_rr_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length
     sdk_err_t        error_code = SDK_ERR_NTF_DISABLED;
     gatts_noti_ind_t send_cmd;
 
-    if (PRF_CLI_START_NTF == s_health_env.tx_ntf_cfg[conn_idx]) {
+    if (PRF_CLI_START_NTF == s_health_env.rr_ntf_cfg[conn_idx]) {
         // Fill in the parameter structure
         send_cmd.type   = BLE_GATT_NOTIFICATION;
         send_cmd.handle = prf_find_handle_by_idx(HEALTH_IDX_RR_VAL, s_health_env.start_hdl, (uint8_t*)&s_char_mask);

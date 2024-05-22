@@ -73,13 +73,8 @@
  * @{
  */
 /**@brief Goodix UART Service event types. */
-typedef enum {
-    HEALTH_EVT_INVALID, /**< Invalid HEALTH event. */
-
-    // HEALTH_EVT_TX_PORT_OPENED,   /**< Tx port has been opened. */
-    // HEALTH_EVT_TX_PORT_CLOSED,   /**< Tx port has been closed. */
-    // HEALTH_EVT_TX_DATA_SENT,     /**< The data from the application has been sent, and the service is ready to accept new
-    //                                 data from the application. */
+typedef enum health_evt_type_t {
+    HEALTH_EVT_INVALID,
 
     HEALTH_EVT_HR_PORT_OPENED,
     HEALTH_EVT_HR_PORT_CLOSED,
@@ -106,7 +101,7 @@ typedef enum {
  * @{
  */
 /**@brief Goodix UART Service event. */
-typedef struct {
+typedef struct health_evt_t {
     health_evt_type_t evt_type; /**< The HEALTH event. */
     uint8_t           conn_idx; /**< The index of the connection for the data transmission. */
     uint8_t*          p_data;   /**< Pointer to the buffer within received data. */
@@ -128,7 +123,7 @@ typedef void (*health_evt_handler_t)(health_evt_t* p_evt);
  */
 /**@brief Goodix UART Service init stucture. This contains all option and data needed for initialization of the service.
  */
-typedef struct {
+typedef struct health_init_t {
     health_evt_handler_t evt_handler; /**< Goodix UART Service event handler which must be provided by the application
                                          to send and receive the data. */
 } health_init_t;
