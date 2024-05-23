@@ -109,10 +109,10 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
         low_confidence_cnt_hr = 0;
 
         DataCenterS2f* data_center_s2f = get_data_center_s2f();
-        if (data_center_s2f->recv_sensor) {
-            int ret = data_center_s2f->recv_sensor(data_center_s2f, kDataTypeHr, (uint16_t)data);
+        if (data_center_s2f->recv_sensor_func) {
+            int ret = data_center_s2f->recv_sensor_func(data_center_s2f, kDataTypeHr, (uint16_t)data);
             if (ret != GUNTER_SUCCESS) {
-                GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor error: %d\n", ret);
+                GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor_func error: %d\n", ret);
             }
         }
     }
@@ -164,10 +164,10 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
         low_confidence_cnt_spo2 = 0;
 
         DataCenterS2f* data_center_s2f = get_data_center_s2f();
-        if (data_center_s2f->recv_sensor) {
-            int ret = data_center_s2f->recv_sensor(data_center_s2f, kDataTypeSpo2, (uint16_t)data);
+        if (data_center_s2f->recv_sensor_func) {
+            int ret = data_center_s2f->recv_sensor_func(data_center_s2f, kDataTypeSpo2, (uint16_t)data);
             if (ret != GUNTER_SUCCESS) {
-                GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor error: %d\n", ret);
+                GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor_func error: %d\n", ret);
             }
         }
     }

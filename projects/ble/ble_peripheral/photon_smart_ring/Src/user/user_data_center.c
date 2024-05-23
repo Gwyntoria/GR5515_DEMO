@@ -8,14 +8,6 @@
 #include "user_file_sys.h"
 #include "user_rtc.h"
 
-#define S2F_BUFFER_SIZE          (1024 * 4)
-#define FRAME_HEADER_SIZE        2
-#define FRAME_DATA_SIZE          12
-#define FRAME_SIZE               (FRAME_HEADER_SIZE + FRAME_DATA_SIZE)
-#define S2F_FRAME_CNT_THRSHD     ((S2F_BUFFER_SIZE / FRAME_SIZE) - 5) // 287
-#define DATA_PACKET_HEADER_SIZE  8
-#define DATA_PACKET_CHEKSUM_SIZE 4
-
 #define INTER_MEM_ADDR_DATA 0x010F0000
 #define INTER_MEM_SIZE_DATA 0x04
 
@@ -502,14 +494,14 @@ int udm_init(void) {
         return GUNTER_FAILURE;
     }
 
-    s_data_center_s2f->recv_sensor = _recv_data_from_sensor;
-    s_data_center_s2f->send_flash  = _send_data_into_flash;
+    s_data_center_s2f->recv_sensor_func = _recv_data_from_sensor;
+    s_data_center_s2f->send_flash_func  = _send_data_into_flash;
 
-    s_data_center_f2b->alloc_mem     = _alloc_data_center_f2b_mem;
-    s_data_center_f2b->free_mem      = _free_data_center_f2b_mem;
-    s_data_center_f2b->recv_flash    = _recv_data_from_flash;
-    s_data_center_f2b->send_ble      = _send_data_to_ble;
-    s_data_center_f2b->get_data_size = _get_center_f2b_data_size;
+    s_data_center_f2b->alloc_mem_func     = _alloc_data_center_f2b_mem;
+    s_data_center_f2b->free_mem_func      = _free_data_center_f2b_mem;
+    s_data_center_f2b->recv_flash_func    = _recv_data_from_flash;
+    s_data_center_f2b->send_ble_func      = _send_data_to_ble;
+    s_data_center_f2b->get_data_size_func = _get_center_f2b_data_size;
 
     APP_LOG_INFO("udm_init success");
     return GUNTER_SUCCESS;
@@ -525,6 +517,7 @@ void udm_deinit(void) {
 int udm_test(void) {
     int ret = 0;
 
+    // * DataCenterS2f
     DataCenterS2f* data_center_s2f = get_data_center_s2f();
     if (data_center_s2f == NULL) {
         APP_LOG_ERROR("Get data center s2f failed");
@@ -533,7 +526,7 @@ int udm_test(void) {
 
     // S2F数据中心接收从传感器发送的数据
     for (int i = 0; i < 100; i++) {
-        ret = data_center_s2f->recv_sensor(data_center_s2f, kDataTypeHr, i);
+        ret = data_center_s2f->recv_sensor_func(data_center_s2f, kDataTypeHr, i);
         if (ret != GUNTER_SUCCESS) {
             APP_LOG_ERROR("Receive sensor data failed");
             return GUNTER_FAILURE;
@@ -541,12 +534,13 @@ int udm_test(void) {
     }
 
     // S2F数据中心将数据写入到Flash
-    ret = data_center_s2f->send_flash(data_center_s2f);
+    ret = data_center_s2f->send_flash_func(data_center_s2f);
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("Send data to flash failed");
         return GUNTER_FAILURE;
     }
 
+    // * DataCenterF2b
     DataCenterF2b* data_center_f2b = get_data_center_f2b();
     if (data_center_f2b == NULL) {
         APP_LOG_ERROR("Get data center f2b failed");
@@ -563,20 +557,20 @@ int udm_test(void) {
     APP_LOG_DEBUG("FLASH: Data length: %d", flash_data_len);
 
     // F2B数据中心分配内存
-    ret = data_center_f2b->alloc_mem(data_center_f2b, (uint16_t)flash_data_len);
+    ret = data_center_f2b->alloc_mem_func(data_center_f2b, (uint16_t)flash_data_len);
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("Alloc memory failed");
         return GUNTER_FAILURE;
     }
 
     // F2B数据中心从Flash中读取数据
-    ret = data_center_f2b->recv_flash(data_center_f2b, (uint16_t)flash_data_len, false);
+    ret = data_center_f2b->recv_flash_func(data_center_f2b, (uint16_t)flash_data_len, false);
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("Receive data from flash failed with %d", ret);
         return GUNTER_FAILURE;
     }
 
-    uint32_t center_data_len = data_center_f2b->get_data_size(data_center_f2b);
+    uint32_t center_data_len = data_center_f2b->get_data_size_func(data_center_f2b);
     APP_LOG_DEBUG("CEENTER: Data length: %d", center_data_len);
 
     uint32_t pack_len = FRAME_SIZE * 10 + DATA_PACKET_HEADER_SIZE + DATA_PACKET_CHEKSUM_SIZE;
@@ -588,7 +582,7 @@ int udm_test(void) {
 
     // F2B数据中心发送数据到蓝牙
     for (int i = 0; i < 10; i++) {
-        ret = data_center_f2b->send_ble(data_center_f2b, buffer, FRAME_SIZE * 10);
+        ret = data_center_f2b->send_ble_func(data_center_f2b, buffer, FRAME_SIZE * 10);
         if (ret != GUNTER_SUCCESS) {
             APP_LOG_ERROR("Send data to bluetooth failed");
             return GUNTER_FAILURE;
@@ -604,7 +598,7 @@ int udm_test(void) {
     buffer = NULL;
 
     // F2B数据中心释放内存
-    ret = data_center_f2b->free_mem(data_center_f2b);
+    ret = data_center_f2b->free_mem_func(data_center_f2b);
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("Free memory failed");
         return GUNTER_FAILURE;
