@@ -48,6 +48,9 @@ static FuncStatus s_status_spo2 = kFuncStatusNull;
 static FuncStatus s_status_rr   = kFuncStatusNull;
 static FuncStatus s_status_3x2x = kFuncStatusNull; // 3x2x spi 初始化状态
 
+// wear off
+static int s_wear_off_cnt = 0;
+
 // switch
 
 void func_ctrl_set_switch_func(FuncSwitch func_switch) {
@@ -124,6 +127,10 @@ void func_ctrl_set_result_slp(FuncResult func_result) {
     s_result_slp = func_result;
 }
 
+FuncResult func_ctrl_get_result_slp(void) {
+    return s_result_slp;
+}
+
 // status
 
 void func_ctrl_set_status_3x2x_off(void) {
@@ -133,6 +140,18 @@ void func_ctrl_set_status_3x2x_off(void) {
 void func_ctrl_uninit_3x2x(void) {
     if (!func_ctrl_is_sampling() && s_status_3x2x == kFuncStatusOn) {
         s_status_3x2x = kFuncStatusOff;
+    }
+}
+
+// wear off
+
+void wear_off_cnt_reset(void) {
+    s_wear_off_cnt = 0;
+}
+
+void wear_off_cnt_condition_increase(void) {
+    if (s_result_act == kFuncResultOff) {
+        s_wear_off_cnt++;
     }
 }
 
@@ -242,7 +261,7 @@ int func_ctrl_ble_send_data() {
 
     if (flash_data_len == 0) {
         APP_LOG_INFO("No data in flash");
-        s_switch_ble = kFuncSwitchNull;
+        s_switch_ble = kFuncSwitchOff;
         return GUNTER_SUCCESS;
 
     } else if (flash_data_len > SINGLE_PACKET_MAX_DATA_LEN) {
@@ -309,16 +328,6 @@ int func_ctrl_ble_send_data() {
         return GUNTER_FAILURE;
     }
 
-
-    if (flash_data_len - data_len > 0) {
-        s_switch_ble = kFuncSwitchOn;
-        sequence++;
-
-    } else {
-        s_switch_ble = kFuncSwitchNull;
-        sequence = 0;
-    }
-
     data_stream_hex(buffer, pack_len);
 
     ret = gbc_loc_data_send(0, buffer, (uint16_t)pack_len);
@@ -333,10 +342,29 @@ int func_ctrl_ble_send_data() {
         return GUNTER_FAILURE;
     }
 
+    int left_data_len = flash_data_len - (int)data_len;
+    if (left_data_len > 0) {
+        s_switch_ble = kFuncSwitchOn;
+        sequence++;
+
+    } else if (left_data_len == 0) {
+        s_switch_ble = kFuncSwitchOff;
+        sequence = 0;
+
+        ret = ufs_erase_zone_data(kFlashZoneData);
+        if (ret != GUNTER_SUCCESS) {
+            APP_LOG_ERROR("Erase zone data failed");
+            return GUNTER_FAILURE;
+        }
+    }
+
+    return GUNTER_SUCCESS;
 }
 
 uint16_t func_ctrl_init(void) {
     uint16_t ret = GUNTER_SUCCESS;
+
+    s_switch_ble = kFuncSwitchOff;
 
     s_result_adt = kFuncResultOff;
     s_result_act = kFuncResultOff;
@@ -487,7 +515,7 @@ void func_ctrl_start(FuncOption func_option) {
 
                 // TODO: Respiratory rate
 
-                // user_timer_start(func_option);
+                user_timer_start(func_option);
                 s_status_rr = kFuncStatusOn;
             }
             break;
@@ -643,6 +671,15 @@ void func_ctrl_handler(void) {
     // APP_LOG_DEBUG("s_result_act: %d", s_result_act);
     // APP_LOG_DEBUG("s_result_adt: %d", s_result_adt);
 
+    // APP_LOG_DEBUG("s_status_init: %d", s_status_init);
+    // APP_LOG_DEBUG("s_status_adt: %d", s_status_adt);
+    // APP_LOG_DEBUG("s_status_hr: %d", s_status_hr);
+    // APP_LOG_DEBUG("s_status_hrv: %d", s_status_hrv);
+    // APP_LOG_DEBUG("s_status_spo2: %d", s_status_spo2);
+    // APP_LOG_DEBUG("s_status_rr: %d", s_status_rr);
+
+    // APP_LOG_DEBUG("s_status_3x2x: %d", s_status_3x2x);
+
     // 重置部分功能
     if (s_switch_rst == kFuncSwitchOn) {
         func_ctrl_reset_component();
@@ -696,7 +733,16 @@ void func_ctrl_handler(void) {
 
         if (s_switch_adt == kFuncStatusOn &&
             (s_result_act != kFuncResultOn && s_result_adt != kFuncResultOn)) {
-            func_ctrl_start(kFuncOptAdt);
+            do {
+                // Wear off detected
+                if (s_wear_off_cnt > WEAR_OFF_CNT_THRESHOLD) {
+                    APP_LOG_INFO("Wear off detected, stop adt!");
+                    break;
+                }
+
+                func_ctrl_start(kFuncOptAdt);
+
+            } while (0);
             s_switch_adt = kFuncSwitchNull;
         }
 

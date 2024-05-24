@@ -291,6 +291,7 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
         func_ctrl_set_result_adt(kFuncResultOn);
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_adt(kFuncSwitchOff);
+        wear_off_cnt_reset();
     }
     // non live object
     // TODO: Further improvement is needed
@@ -307,6 +308,7 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
         func_ctrl_set_result_adt(kFuncResultOff);
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_adt(kFuncSwitchOff);
+        wear_off_cnt_condition_increase();
     }
     GOODIX_PLANFROM_NADT_RESULT_HANDLE_ENTITY();
 #endif

@@ -154,6 +154,6 @@ int main(void) {
         pwr_mgmt_schedule(); // 电源管理调度，负责管理查询是否可以进入睡眠
         dfu_schedule();
 
-        delay_ms(150);
+        delay_ms(20);
     }
 }

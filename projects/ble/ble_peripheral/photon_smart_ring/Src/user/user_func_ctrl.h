@@ -10,8 +10,8 @@
 #define DETECTION_DURATION     (SEC_TO_MS * 40)
 #define DETECTION_DURATION_ADT (SEC_TO_MS * 30)
 
-#define LSM6DSO_RELAX_THRESHOLD (SEC_TO_MS * 30)
-#define LSM6DSO_SLEEP_THRESHOLD (SEC_TO_MS * 90)
+#define LSM6DSO_RELAX_THRESHOLD (SEC_TO_MS * 60 * 2)
+#define LSM6DSO_SLEEP_THRESHOLD (SEC_TO_MS * 60 * 5)
 
 #define CONFIDENCE_THRESHOLD_BASE       (60)
 #define CONFIDENCE_THRESHOLD_NADT_GREEN (80)
@@ -20,6 +20,8 @@
 #define CONFIDENCE_THRESHOLD_SPO2       (4)
 
 #define LOWER_CONFIDENCE_THRESHOLD_CNT (30)
+
+#define WEAR_OFF_CNT_THRESHOLD (2)
 
 #define SINGLE_PACKET_MAX_DATA_LEN (((GBC_MAX_DATA_LEN - DATA_PACKET_HEADER_SIZE - DATA_PACKET_CHEKSUM_SIZE) / FRAME_SIZE) *  FRAME_SIZE) // 224
 // #define SINGLE_TRANS_MAX_DATA_LEN (SINGLE_PACKET_MAX_LEN * 3) // 672
@@ -83,6 +85,9 @@ void func_ctrl_set_result_adt(FuncResult func_result);
 void func_ctrl_set_result_act(FuncResult func_result);
 void func_ctrl_set_result_chg(FuncResult func_result);
 void func_ctrl_set_result_slp(FuncResult func_result);
+
+void wear_off_cnt_reset(void);
+void wear_off_cnt_condition_increase(void);
 
 void func_ctrl_set_status_3x2x_off(void);
 

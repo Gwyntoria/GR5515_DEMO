@@ -201,11 +201,11 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
 
     ring_ret = ring_buffer_read(&data_center_s2f->data_center.ring_t, buffer, data_center_s2f->data_center.length);
     if (ring_ret != data_center_s2f->data_center.length) {
-        APP_LOG_ERROR("Read data from ring_t buffer failed with %d", ring_ret);
+        APP_LOG_ERROR("Read data from ring_t buffer failed with %d, whole_len", ring_ret, data_center_s2f->data_center.length);
         return GUNTER_FAILURE;
     }
 
-    APP_LOG_DEBUG("write data to flash: %d", data_center_s2f->data_center.length);
+    APP_LOG_INFO("Write data to flash: %d", data_center_s2f->data_center.length);
 
     if (data_center_s2f->data_center.length <= 0x1000) {
         ret = ufs_write_zone_data(kFlashZoneData, buffer, data_center_s2f->data_center.length);
@@ -284,8 +284,6 @@ int _free_data_center_f2b_mem(DataCenterF2b* data_center_f2b) {
 }
 
 int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool whole, bool erase) {
-    APP_LOG_DEBUG("len: %d", len);
-
     if (data_center_f2b == NULL) {
         APP_LOG_ERROR("Invalid data center f2b");
         return GUNTER_ERR_NULL_POINTER;
@@ -305,7 +303,7 @@ int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool who
         return GUNTER_ERR_NULL_POINTER;
     }
 
-    APP_LOG_DEBUG("Read data from flash: %d", len);
+    APP_LOG_INFO("Read data from flash: %d", len);
 
     ret = ufs_read_zone_data(kFlashZoneData, buffer, (uint32_t*)&len, whole, erase);
     if (ret != len) {
