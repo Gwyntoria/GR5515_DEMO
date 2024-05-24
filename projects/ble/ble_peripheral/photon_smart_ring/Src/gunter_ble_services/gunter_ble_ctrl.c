@@ -14,8 +14,6 @@
 #include "ble_prf_utils.h"
 #include "utility.h"
 
-#define GBC_CHAR_SETTINGS_VALUE_LEN (20)
-
 #define GBC_CHAR_TX_UUID \
     { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x09, 0x00, 0x00, 0x01 }
 #define GBC_CHAR_RX_UUID \
@@ -407,10 +405,10 @@ sdk_err_t gbc_setting_notify(uint8_t conn_idx, uint8_t* p_data, uint16_t length)
 }
 
 sdk_err_t gbc_loc_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length) {
-    sdk_err_t        error_code = SDK_ERR_NTF_DISABLED;
+    sdk_err_t        error_code = SDK_ERR_IND_DISABLED;
     gatts_noti_ind_t send_cmd;
 
-    if (PRF_CLI_START_NTF == s_gbc_env.data_idc_cfg[conn_idx]) {
+    if (PRF_CLI_START_IND == s_gbc_env.data_idc_cfg[conn_idx]) {
             // Fill in the parameter structure
             send_cmd.type = BLE_GATT_INDICATION;
             send_cmd.handle = prf_find_handle_by_idx(GBC_IDX_DATA_VAL, s_gbc_env.start_hdl, (uint8_t*)&s_gbc_features);
