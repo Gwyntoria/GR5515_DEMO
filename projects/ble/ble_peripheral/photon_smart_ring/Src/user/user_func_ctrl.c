@@ -1,6 +1,7 @@
 #include "user_func_ctrl.h"
 
 #include "app_log.h"
+#include "app_error.h"
 #include "gh3x2x_demo.h"
 
 #include "NST112/nst112x.h"
@@ -12,6 +13,7 @@
 #include "user_timer.h"
 #include "user_data_center.h"
 #include "user_file_sys.h"
+#include "gunter_ble_ctrl.h"
 
 // 功能开关, 默认为NULL，ON时为开启，OFF时为关闭
 static FuncSwitch s_switch_func = kFuncSwitchNull; // 功能总开关
@@ -29,6 +31,7 @@ static FuncSwitch s_switch_stp = kFuncSwitchNull; // 步数检测开关
 static FuncSwitch s_switch_rst = kFuncSwitchNull; // 重置功能开关
 static FuncSwitch s_switch_act = kFuncSwitchNull; // 活动检测开关
 static FuncSwitch s_switch_slp = kFuncSwitchNull; // 睡眠检测开关
+static FuncSwitch s_switch_ble = kFuncSwitchNull; // BLE发送数据开关
 
 static FuncResult s_result_adt = kFuncResultNull; // 活体检测结果
 static FuncResult s_result_act = kFuncResultNull; // 活动检测结果
@@ -43,7 +46,7 @@ static FuncStatus s_status_hr   = kFuncStatusNull;
 static FuncStatus s_status_hrv  = kFuncStatusNull;
 static FuncStatus s_status_spo2 = kFuncStatusNull;
 static FuncStatus s_status_rr   = kFuncStatusNull;
-static FuncStatus s_status_3x2x = kFuncStatusNull;
+static FuncStatus s_status_3x2x = kFuncStatusNull; // 3x2x spi 初始化状态
 
 // switch
 
@@ -99,6 +102,10 @@ void func_ctrl_set_switch_slp(FuncSwitch func_switch) {
     s_switch_slp = func_switch;
 }
 
+void func_ctrl_set_switch_ble(FuncSwitch func_switch) {
+    s_switch_ble = func_switch;
+}
+
 // result
 
 void func_ctrl_set_result_adt(FuncResult func_result) {
@@ -119,11 +126,11 @@ void func_ctrl_set_result_slp(FuncResult func_result) {
 
 // status
 
-void func_ctrl_set_status_3x2x_off() {
+void func_ctrl_set_status_3x2x_off(void) {
     s_status_3x2x = kFuncStatusOff;
 }
 
-void func_ctrl_uninit_3x2x() {
+void func_ctrl_uninit_3x2x(void) {
     if (!func_ctrl_is_sampling() && s_status_3x2x == kFuncStatusOn) {
         s_status_3x2x = kFuncStatusOff;
     }
@@ -156,8 +163,8 @@ int func_ctrl_cache_data(DataType data_type, uint16_t data) {
         return GUNTER_FAILURE;
     }
 
-    if (data_center_s2f->recv_sensor) {
-        int ret = data_center_s2f->recv_sensor(data_center_s2f, data_type, data);
+    if (data_center_s2f->recv_sensor_func) {
+        int ret = data_center_s2f->recv_sensor_func(data_center_s2f, data_type, data);
         if (ret != GUNTER_SUCCESS) {
             APP_LOG_ERROR("Recv sensor data failed");
             return GUNTER_FAILURE;
@@ -172,16 +179,16 @@ int func_ctrl_cache_data(DataType data_type, uint16_t data) {
  *
  * This function saves data to flash memory if sampling is not in progress.
  * It retrieves the data center structure and checks if it is valid.
- * Then, it calls the send_flash() function of the data center to write the data to flash.
+ * Then, it calls the send_flash_func() function of the data center to write the data to flash.
  *
  * @return GUNTER_SUCCESS if the data is successfully saved to flash, GUNTER_FAILURE otherwise.
  */
 int func_ctrl_save_data() {
-    if (func_ctrl_is_sampling()) {
+    if (func_ctrl_is_sampling() || s_status_3x2x) {
         return GUNTER_SUCCESS;
     }
 
-    int ret = 0;
+    // APP_LOG_INFO("func_ctrl_save_data");
 
     DataCenterS2f* data_center_s2f = get_data_center_s2f();
     if (data_center_s2f == NULL) {
@@ -190,13 +197,142 @@ int func_ctrl_save_data() {
     }
 
     // S2F数据中心将数据写入到Flash
-    ret = data_center_s2f->send_flash(data_center_s2f);
+    int ret = data_center_s2f->send_flash_func(data_center_s2f);
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("Send data to flash failed");
         return GUNTER_FAILURE;
     }
 
     return GUNTER_SUCCESS;
+}
+
+int func_ctrl_ble_send_data() {
+    // APP_LOG_DEBUG("s_switch_ble: %d", s_switch_ble);
+
+    if (s_switch_ble != kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
+    if (func_ctrl_is_sampling() || s_status_3x2x) {
+        return GUNTER_SUCCESS;
+    }
+
+    APP_LOG_INFO("func_ctrl_ble_send_data");
+
+    int ret = 0;
+
+    DataCenterF2b* data_center_f2b = get_data_center_f2b();
+    if (data_center_f2b == NULL) {
+        APP_LOG_ERROR("Get data center f2b failed");
+        return GUNTER_FAILURE;
+    }
+
+    // 获取Flash中可读取数据的大小
+    int flash_data_len = ufs_get_readable_zone_data_size(kFlashZoneData);
+    if (flash_data_len < 0) {
+        APP_LOG_ERROR("Get readable zone data size failed");
+        return GUNTER_FAILURE;
+    }
+
+    APP_LOG_DEBUG("FLASH: Data length: %d", flash_data_len);
+
+    uint16_t data_len = 0;
+    bool is_last_packet = false;
+    static uint8_t sequence = 0;
+
+    if (flash_data_len == 0) {
+        APP_LOG_INFO("No data in flash");
+        s_switch_ble = kFuncSwitchNull;
+        return GUNTER_SUCCESS;
+
+    } else if (flash_data_len > SINGLE_PACKET_MAX_DATA_LEN) {
+        data_len = SINGLE_PACKET_MAX_DATA_LEN;
+        is_last_packet = false;
+
+    } else {
+        data_len = flash_data_len;
+        is_last_packet = true;
+    }
+
+    // F2B数据中心分配内存
+    ret = data_center_f2b->alloc_mem_func(data_center_f2b, data_len);
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("Alloc memory failed");
+        return GUNTER_FAILURE;
+    }
+
+    // F2B数据中心从Flash中读取数据
+    ret = data_center_f2b->recv_flash_func(data_center_f2b, data_len, false, true);
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("Receive data from flash failed with %d", ret);
+
+        // F2B数据中心释放内存
+        ret = data_center_f2b->free_mem_func(data_center_f2b);
+        if (ret != GUNTER_SUCCESS) {
+            APP_LOG_ERROR("Free memory failed");
+        }
+
+        return GUNTER_FAILURE;
+    }
+
+    uint32_t center_data_len = data_center_f2b->get_data_size_func(data_center_f2b);
+    APP_LOG_DEBUG("CENTER: Data length: %d", center_data_len);
+
+    // BLE发送数据
+    uint32_t pack_len = center_data_len + DATA_PACKET_HEADER_SIZE + DATA_PACKET_CHEKSUM_SIZE;
+    uint8_t* buffer   = (uint8_t*)sys_malloc(pack_len);
+    if (buffer == NULL) {
+        APP_LOG_ERROR("Memory allocation failed");
+
+        // F2B数据中心释放内存
+        ret = data_center_f2b->free_mem_func(data_center_f2b);
+        if (ret != GUNTER_SUCCESS) {
+            APP_LOG_ERROR("Free memory failed");
+        }
+
+        return GUNTER_ERR_NULL_POINTER;
+    }
+
+    memset(buffer, 0, pack_len);
+
+    ret = data_center_f2b->send_ble_func(data_center_f2b, buffer, (uint16_t)center_data_len, sequence, is_last_packet);
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("Send data to BLE failed");
+        sys_free(buffer);
+
+        // F2B数据中心释放内存
+        ret = data_center_f2b->free_mem_func(data_center_f2b);
+        if (ret != GUNTER_SUCCESS) {
+            APP_LOG_ERROR("Free memory failed");
+        }
+
+        return GUNTER_FAILURE;
+    }
+
+
+    if (flash_data_len - data_len > 0) {
+        s_switch_ble = kFuncSwitchOn;
+        sequence++;
+
+    } else {
+        s_switch_ble = kFuncSwitchNull;
+        sequence = 0;
+    }
+
+    data_stream_hex(buffer, pack_len);
+
+    ret = gbc_loc_data_send(0, buffer, (uint16_t)pack_len);
+    APP_ERROR_CHECK(ret);
+
+    sys_free(buffer);
+
+    // F2B数据中心释放内存
+    ret = data_center_f2b->free_mem_func(data_center_f2b);
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("Free memory failed");
+        return GUNTER_FAILURE;
+    }
+
 }
 
 uint16_t func_ctrl_init(void) {
@@ -488,6 +624,8 @@ int func_ctrl_reset_component() {
 }
 
 void func_ctrl_handler(void) {
+    int ret = 0;
+
     // static uint32_t count = 0;
     // APP_LOG_DEBUG("func_ctrl_handler: %u", count++);
 
@@ -517,6 +655,18 @@ void func_ctrl_handler(void) {
         return;
     }
 
+    func_ctrl_uninit_3x2x();
+
+    ret = func_ctrl_save_data();
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("func_ctrl_save_data failed");
+    }
+
+    ret = func_ctrl_ble_send_data();
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("func_ctrl_ble_send_data failed");
+    }
+
     // 功能总开关未指定时，后续功能不执行
     if (s_switch_func == kFuncSwitchNull) {
         // APP_LOG_DEBUG("func_ctrl_handler: func_switch is off!");
@@ -537,22 +687,6 @@ void func_ctrl_handler(void) {
         func_ctrl_start(kFuncOptStp);
         s_switch_stp = kFuncSwitchNull;
     }
-
-    // if (s_switch_func == kFuncSwitchOn &&
-    //     s_switch_adt == kFuncSwitchOn &&
-    //     s_result_act == kFuncResultOff) {
-    //     func_ctrl_start(kFuncOptAdt);
-    // }
-
-    // if ((s_switch_func == kFuncSwitchOn && s_status_adt == kFuncStatusOff) &&
-    //     (s_result_adt == kFuncResultOn || s_result_act == kFuncResultOn)) {
-    //
-    //     func_ctrl_start(kFuncOptHr);
-    //     func_ctrl_start(kFuncOptHrv);
-    //     func_ctrl_start(kFuncOptSpo2);
-
-    //     s_switch_func = kFuncSwitchOff;
-    // }
 
     if (s_switch_func == kFuncSwitchOn) {
         if (s_switch_init == kFuncSwitchOn) {
@@ -620,8 +754,6 @@ void func_ctrl_handler(void) {
         s_switch_func = kFuncSwitchNull;
     }
 
-    func_ctrl_uninit_3x2x();
-    func_ctrl_save_data();
 }
 
 void func_ctrl_test(void) {

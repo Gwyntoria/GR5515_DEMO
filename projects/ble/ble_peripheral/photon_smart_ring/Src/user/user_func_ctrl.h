@@ -2,6 +2,8 @@
 #define USER_FUNC_CTRL_H
 
 #include "user_common.h"
+#include "gunter_ble_ctrl.h"
+#include "user_data_center.h"
 
 #define INIT_DURATION          (SEC_TO_MS * 10)
 #define DETECTION_INTERVAL     (SEC_TO_MS * 60)
@@ -18,6 +20,9 @@
 #define CONFIDENCE_THRESHOLD_SPO2       (4)
 
 #define LOWER_CONFIDENCE_THRESHOLD_CNT (30)
+
+#define SINGLE_PACKET_MAX_DATA_LEN (((GBC_MAX_DATA_LEN - DATA_PACKET_HEADER_SIZE - DATA_PACKET_CHEKSUM_SIZE) / FRAME_SIZE) *  FRAME_SIZE) // 224
+// #define SINGLE_TRANS_MAX_DATA_LEN (SINGLE_PACKET_MAX_LEN * 3) // 672
 
 // #define BASE_OPTION (0x01)
 
@@ -72,13 +77,14 @@ void func_ctrl_set_switch_stp(FuncSwitch func_switch);
 void func_ctrl_set_switch_rst(FuncSwitch func_switch);
 void func_ctrl_set_switch_act(FuncSwitch func_switch);
 void func_ctrl_set_switch_slp(FuncSwitch func_switch);
+void func_ctrl_set_switch_ble(FuncSwitch func_switch);
 
 void func_ctrl_set_result_adt(FuncResult func_result);
 void func_ctrl_set_result_act(FuncResult func_result);
 void func_ctrl_set_result_chg(FuncResult func_result);
 void func_ctrl_set_result_slp(FuncResult func_result);
 
-void func_ctrl_set_status_3x2x_off();
+void func_ctrl_set_status_3x2x_off(void);
 
 bool func_ctrl_is_sampling(void);
 
