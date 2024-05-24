@@ -189,7 +189,7 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
 
     ring_ret = ring_buffer_items_count_get(&data_center_s2f->data_center.ring_t);
     if (ring_ret == 0) {
-        APP_LOG_INFO("No data to write");
+        // APP_LOG_INFO("No data to write");
         return GUNTER_SUCCESS;
     }
 
@@ -204,6 +204,8 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
         APP_LOG_ERROR("Read data from ring_t buffer failed with %d", ring_ret);
         return GUNTER_FAILURE;
     }
+
+    APP_LOG_DEBUG("write data to flash: %d", data_center_s2f->data_center.length);
 
     if (data_center_s2f->data_center.length <= 0x1000) {
         ret = ufs_write_zone_data(kFlashZoneData, buffer, data_center_s2f->data_center.length);
@@ -232,7 +234,7 @@ int _alloc_data_center_f2b_mem(DataCenterF2b* data_center_f2b, uint16_t len) {
 
     if (data_center_f2b->data_center.ring_t.p_buffer != NULL) {
         APP_LOG_ERROR("Data center f2b buffer is not NULL");
-        return GUNTER_ERR_NULL_POINTER;
+        return GUNTER_ERR_INVALID_PARAM;
     }
 
     uint32_t mem_size = (uint32_t)len + 1;
@@ -281,7 +283,7 @@ int _free_data_center_f2b_mem(DataCenterF2b* data_center_f2b) {
     return GUNTER_SUCCESS;
 }
 
-int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool erase) {
+int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool whole, bool erase) {
     APP_LOG_DEBUG("len: %d", len);
 
     if (data_center_f2b == NULL) {
@@ -303,7 +305,9 @@ int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool era
         return GUNTER_ERR_NULL_POINTER;
     }
 
-    ret = ufs_read_zone_data(kFlashZoneData, buffer, (uint32_t*)&len, true, erase);
+    APP_LOG_DEBUG("Read data from flash: %d", len);
+
+    ret = ufs_read_zone_data(kFlashZoneData, buffer, (uint32_t*)&len, whole, erase);
     if (ret != len) {
         APP_LOG_ERROR("Read data from flash failed with %d", ret);
         return GUNTER_FAILURE;
@@ -332,7 +336,7 @@ int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool era
     return GUNTER_SUCCESS;
 }
 
-int _send_data_to_ble(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint16_t len) {
+int _send_data_to_ble(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint16_t len, uint8_t sequence, bool is_last_packet) {
     if (data_center_f2b == NULL) {
         APP_LOG_ERROR("Invalid data center f2b");
         return GUNTER_ERR_NULL_POINTER;
@@ -367,9 +371,8 @@ int _send_data_to_ble(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint16_t 
         return GUNTER_FAILURE;
     }
 
-    uint16_t       frame_cnt = (uint16_t)_calculate_frame_cnt_in_buffer(data_buffer, len);
-    static uint8_t sequence  = 0;
-    uint8_t        loc_state = data_center_f2b->data_center.length - len == 0 ? 0x10 : 0x11;
+    uint16_t frame_cnt = (uint16_t)_calculate_frame_cnt_in_buffer(data_buffer, len);
+    uint8_t  loc_state = is_last_packet ? 0x10 : 0x11;
 
     DataPacketHeader data_packet_header;
     memset(&data_packet_header, 0, sizeof(DataPacketHeader));
@@ -394,12 +397,6 @@ int _send_data_to_ble(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint16_t 
 
     data_center_f2b->data_center.length -= len;
     data_center_f2b->data_center.frame_cnt -= frame_cnt;
-
-    sequence++;
-
-    if (data_center_f2b->data_center.length == 0) {
-        sequence = 0;
-    }
 
     return GUNTER_SUCCESS;
 }
@@ -564,14 +561,14 @@ int udm_test(void) {
     }
 
     // F2B数据中心从Flash中读取数据
-    ret = data_center_f2b->recv_flash_func(data_center_f2b, (uint16_t)flash_data_len, false);
+    ret = data_center_f2b->recv_flash_func(data_center_f2b, (uint16_t)flash_data_len, true , false);
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("Receive data from flash failed with %d", ret);
         return GUNTER_FAILURE;
     }
 
     uint32_t center_data_len = data_center_f2b->get_data_size_func(data_center_f2b);
-    APP_LOG_DEBUG("CEENTER: Data length: %d", center_data_len);
+    APP_LOG_DEBUG("CENTER: Data length: %d", center_data_len);
 
     uint32_t pack_len = FRAME_SIZE * 10 + DATA_PACKET_HEADER_SIZE + DATA_PACKET_CHEKSUM_SIZE;
     uint8_t* buffer   = (uint8_t*)sys_malloc(pack_len);
@@ -582,7 +579,7 @@ int udm_test(void) {
 
     // F2B数据中心发送数据到蓝牙
     for (int i = 0; i < 10; i++) {
-        ret = data_center_f2b->send_ble_func(data_center_f2b, buffer, FRAME_SIZE * 10);
+        ret = data_center_f2b->send_ble_func(data_center_f2b, buffer, FRAME_SIZE * 10, i, i == 9 ? true : false);
         if (ret != GUNTER_SUCCESS) {
             APP_LOG_ERROR("Send data to bluetooth failed");
             return GUNTER_FAILURE;

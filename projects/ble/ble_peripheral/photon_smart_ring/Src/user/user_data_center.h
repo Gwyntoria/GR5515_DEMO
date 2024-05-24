@@ -95,22 +95,26 @@ struct DataCenterF2b {
      *
      * @param data_center_f2b Pointer to the DataCenterF2b structure.
      * @param len Length of the data to be received.
+     * @param whole Flag indicating whether to receive the whole data.
      * @param erase Flag indicating whether to perform erase operation before receiving data.
      * @return int Returns the status of the receive operation.
      */
-    int (*recv_flash_func)(DataCenterF2b* data_center_f2b, uint16_t len, bool erase);
+    int (*recv_flash_func)(DataCenterF2b* data_center_f2b, uint16_t len, bool whole, bool erase);
 
     /**
      * @brief Function pointer for sending BLE data.
      *
-     * This function pointer is used to send BLE data using the provided buffer and length.
+     * This function pointer is used to send BLE data using the provided buffer and length of flash data.
+     * In function, the data will be added packet header and checksum.
      *
      * @param data_center_f2b Pointer to the DataCenterF2b structure.
      * @param buffer Pointer to the data buffer.
-     * @param len Length of the data buffer.
+     * @param len Length of the data to be sent.
+     * @param sequence Sequence number of the packet.
+     * @param is_last_packet Flag indicating whether the packet is the last one.
      * @return int Returns the status of the send operation.
      */
-    int (*send_ble_func)(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint16_t len);
+    int (*send_ble_func)(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint16_t len, uint8_t sequence, bool is_last_packet);
 
     /**
      * @brief Function pointer to retrieve the size of data in the DataCenterF2b structure.
