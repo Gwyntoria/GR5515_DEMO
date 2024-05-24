@@ -57,6 +57,7 @@
 #include "health.h"
 #include "user_func_ctrl.h"
 #include "user_timer.h"
+#include "user_ble.h"
 
 /*
  * DEFINES
@@ -169,10 +170,6 @@ static const uint8_t s_adv_rsp_data_set[] = /**< Scan responce data. */
         0x03,
 };
 
-/*
- * LOCAL FUNCTION DEFINITIONS
- *****************************************************************************************
- */
 /**
  *****************************************************************************************
  * @brief Initialize gap parameters.
@@ -233,146 +230,6 @@ static void gap_params_init(void) {
     APP_LOG_DEBUG("Permanent Advertising starting.");
 }
 
-GU8         hrs_notify_flag = 0;
-static void heartrate_service_process_event(hrs_evt_t* p_hrs_evt) {
-    //    sdk_err_t error_code;
-
-    switch (p_hrs_evt->evt_type) {
-        case HRS_EVT_NOTIFICATION_ENABLED:
-            hrs_notify_flag = 1;
-            //            error_code = app_timer_start(s_hr_meas_timer_id, HEART_RATE_MEAS_INTERVAL, NULL);
-            //            APP_ERROR_CHECK(error_code);
-
-            //            error_code = app_timer_start(s_rr_meas_timer_id, RR_INTERVAL_INTERVAL, NULL);
-            //            APP_ERROR_CHECK(error_code);
-            APP_LOG_DEBUG("Heart Rate Notification Enabled.");
-            break;
-
-        case HRS_EVT_NOTIFICATION_DISABLED:
-            hrs_notify_flag = 0;
-            //            app_timer_stop(s_hr_meas_timer_id);
-            //            app_timer_stop(s_rr_meas_timer_id);
-            APP_LOG_DEBUG("Heart Rate Notification Disabled.");
-            break;
-
-        case HRS_EVT_RESET_ENERGY_EXPENDED:
-            //            s_energy_expended = 0;
-            //            s_energy_cnt      = 10;    // trigger sending m_energy_expended=0
-            //            hrs_energy_update(0);
-            APP_LOG_DEBUG("Heart Energy Expended Reset.");
-            break;
-
-        case HRS_EVT_READ_BODY_SEN_LOCATION:
-            // Output log for PTS Automation.
-            // The log must be same with the HRS/SEN/CR/BV-01-C's condition defined in hrs_config.xml.
-            APP_LOG_DEBUG("Body Sensor Location: %#.2x.", HRS_SENS_LOC_FINGER);
-            break;
-
-        default:
-            break;
-    }
-}
-
-/**
- *****************************************************************************************
- * @brief Function for process gus service event
- *
- * @param[in] p_evt: Pointer to gus event stucture.
- *****************************************************************************************
- */
-static void health_service_process_event(health_evt_t* p_evt) {
-    switch (p_evt->evt_type) {
-        // case HEALTH_EVT_TX_PORT_OPENED:
-        //     break;
-
-        // case HEALTH_EVT_TX_PORT_CLOSED:
-        //     break;
-
-        case HEALTH_EVT_HR_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_HR_PORT_OPENED\n");
-            func_ctrl_set_switch_func(kFuncSwitchOn);
-            func_ctrl_set_switch_hr(kFuncSwitchOn);
-            break;
-
-        case HEALTH_EVT_HR_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_HR_PORT_CLOSED\n");
-            func_ctrl_set_switch_func(kFuncSwitchOff);
-            func_ctrl_set_switch_hr(kFuncSwitchOff);
-            break;
-
-        case HEALTH_EVT_HRV_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_OPENED\n");
-            func_ctrl_set_switch_func(kFuncSwitchOn);
-            func_ctrl_set_switch_hrv(kFuncSwitchOn);
-            break;
-
-        case HEALTH_EVT_HRV_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_CLOSED\n");
-            func_ctrl_set_switch_func(kFuncSwitchOff);
-            func_ctrl_set_switch_hrv(kFuncSwitchOff);
-            break;
-
-        case HEALTH_EVT_SPO2_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_OPENED\n");
-            func_ctrl_set_switch_func(kFuncSwitchOn);
-            func_ctrl_set_switch_spo2(kFuncSwitchOn);
-            break;
-
-        case HEALTH_EVT_SPO2_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_CLOSED\n");
-            func_ctrl_set_switch_func(kFuncSwitchOff);
-            func_ctrl_set_switch_spo2(kFuncSwitchOff);
-            break;
-
-        case HEALTH_EVT_RR_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_RR_PORT_OPENED\n");
-            func_ctrl_set_switch_func(kFuncSwitchOn);
-            func_ctrl_set_switch_rr(kFuncSwitchOn);
-            break;
-
-        case HEALTH_EVT_RR_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_RR_PORT_CLOSED\n");
-            func_ctrl_set_switch_func(kFuncSwitchOff);
-            func_ctrl_set_switch_rr(kFuncSwitchOff);
-            break;
-
-        // case HEALTH_EVT_TX_DATA_SENT:
-        //     APP_LOG_INFO("HEALTH_EVT_TX_DATA_SENT\n");
-        //     break;
-
-        case HEALTH_EVT_HR_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_HR_DATA_SENT\n");
-            break;
-
-        case HEALTH_EVT_HRV_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_HRV_DATA_SENT\n");
-            break;
-
-        case HEALTH_EVT_SPO2_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_SPO2_DATA_SENT\n");
-            break;
-
-        case HEALTH_EVT_RR_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_RR_DATA_SENT\n");
-            break;
-
-        case HEALTH_EVT_RX_DATA_RECEIVED:
-// #if (__SUPPORT_PROTOCOL_ANALYZE__)
-//             Gh3x2xDemoProtocolProcess(p_evt->p_data, p_evt->length);
-// #endif
-            APP_LOG_INFO("HEALTH_EVT_RX_DATA_RECEIVED:");
-            for (uint16_t i = 0; i < p_evt->length; i++) {
-                printf("    %c", p_evt->p_data[i]);
-            }
-            printf("\r\n");
-            delay_ms(10);
-            break;
-
-        default:
-            break;
-    }
-}
-
 static void dfu_program_start_callback(void);
 static void dfu_programing_callback(uint8_t pro);
 static void dfu_program_end_callback(uint8_t status);
@@ -431,6 +288,13 @@ static void services_init(void) {
     health_init.evt_handler = health_service_process_event;
 
     error_code = health_service_init(&health_init);
+    APP_ERROR_CHECK(error_code);
+
+    /* GBC service */
+    gbc_init_t gbc_init;
+    gbc_init.evt_handler = gbc_service_process_event;
+
+    error_code = gbc_service_init(&gbc_init);
     APP_ERROR_CHECK(error_code);
 
     /* OTA Service */
