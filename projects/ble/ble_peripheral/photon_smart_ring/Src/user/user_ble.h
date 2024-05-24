@@ -12,6 +12,7 @@ extern "C" {
 
 
 void health_service_process_event(health_evt_t* p_evt);
+void gbc_service_process_event(gbc_evt_t* p_evt);
 
 
 #ifdef __cplusplus

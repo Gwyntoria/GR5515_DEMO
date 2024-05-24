@@ -18,79 +18,120 @@
 void health_service_process_event(health_evt_t* p_evt) {
     switch (p_evt->evt_type) {
         case HEALTH_EVT_HR_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_HR_PORT_OPENED\n");
+            APP_LOG_INFO("HEALTH_EVT_HR_PORT_OPENED");
             func_ctrl_set_switch_func(kFuncSwitchOn);
             func_ctrl_set_switch_hr(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_HR_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_HR_PORT_CLOSED\n");
+            APP_LOG_INFO("HEALTH_EVT_HR_PORT_CLOSED");
             func_ctrl_set_switch_func(kFuncSwitchOff);
             func_ctrl_set_switch_hr(kFuncSwitchOff);
             break;
 
         case HEALTH_EVT_HRV_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_OPENED\n");
+            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_OPENED");
             func_ctrl_set_switch_func(kFuncSwitchOn);
             func_ctrl_set_switch_hrv(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_HRV_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_CLOSED\n");
+            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_CLOSED");
             func_ctrl_set_switch_func(kFuncSwitchOff);
             func_ctrl_set_switch_hrv(kFuncSwitchOff);
             break;
 
         case HEALTH_EVT_SPO2_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_OPENED\n");
+            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_OPENED");
             func_ctrl_set_switch_func(kFuncSwitchOn);
             func_ctrl_set_switch_spo2(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_SPO2_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_CLOSED\n");
+            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_CLOSED");
             func_ctrl_set_switch_func(kFuncSwitchOff);
             func_ctrl_set_switch_spo2(kFuncSwitchOff);
             break;
 
         case HEALTH_EVT_RR_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_RR_PORT_OPENED\n");
+            APP_LOG_INFO("HEALTH_EVT_RR_PORT_OPENED");
             func_ctrl_set_switch_func(kFuncSwitchOn);
             func_ctrl_set_switch_rr(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_RR_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_RR_PORT_CLOSED\n");
+            APP_LOG_INFO("HEALTH_EVT_RR_PORT_CLOSED");
             func_ctrl_set_switch_func(kFuncSwitchOff);
             func_ctrl_set_switch_rr(kFuncSwitchOff);
             break;
 
         case HEALTH_EVT_HR_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_HR_DATA_SENT\n");
+            APP_LOG_INFO("HEALTH_EVT_HR_DATA_SENT");
             break;
 
         case HEALTH_EVT_HRV_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_HRV_DATA_SENT\n");
+            APP_LOG_INFO("HEALTH_EVT_HRV_DATA_SENT");
             break;
 
         case HEALTH_EVT_SPO2_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_SPO2_DATA_SENT\n");
+            APP_LOG_INFO("HEALTH_EVT_SPO2_DATA_SENT");
             break;
 
         case HEALTH_EVT_RR_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_RR_DATA_SENT\n");
+            APP_LOG_INFO("HEALTH_EVT_RR_DATA_SENT");
             break;
 
         case HEALTH_EVT_RX_DATA_RECEIVED:
-// #if (__SUPPORT_PROTOCOL_ANALYZE__)
-//             Gh3x2xDemoProtocolProcess(p_evt->p_data, p_evt->length);
-// #endif
-            APP_LOG_INFO("HEALTH_EVT_RX_DATA_RECEIVED:");
-            for (uint16_t i = 0; i < p_evt->length; i++) {
-                printf("    %c", p_evt->p_data[i]);
-            }
-            printf("\r\n");
+            APP_LOG_INFO("HEALTH_EVT_RX_DATA_RECEIVED");
+            data_stream_hex(p_evt->p_data, p_evt->length);
             delay_ms(10);
+            break;
+
+        default:
+            break;
+    }
+}
+
+void gbc_service_process_event(gbc_evt_t* p_evt) {
+    switch (p_evt->evt_type) {
+        case GBC_EVT_TX_NOTIFICATION_ENABLED:
+            APP_LOG_INFO("GBC_EVT_TX_NOTIFICATION_ENABLED");
+            break;
+
+        case GBC_EVT_TX_NOTIFICATION_DISABLED:
+            APP_LOG_INFO("GBC_EVT_TX_NOTIFICATION_DISABLED");
+            break;
+
+        case GBC_EVT_TX_NOTIFY_COMPLETE:
+            APP_LOG_INFO("GBC_EVT_TX_NOTIFY_COMPLETE");
+            break;
+
+        case GBC_EVT_RX_RECEIVE_DATA:
+            APP_LOG_INFO("GBC_EVT_RX_RECEIVE_DATA");
+
+            data_stream_hex(p_evt->p_data, p_evt->length);
+            break;
+
+        case THS_EVT_SETTINGS_CHANGED:
+            APP_LOG_INFO("THS_EVT_SETTINGS_CHANGED");
+
+            data_stream_hex(p_evt->p_data, p_evt->length);
+            break;
+
+        case GBC_EVT_DATA_INDICATION_ENABLED:
+            APP_LOG_INFO("GBC_EVT_DATA_INDICATION_ENABLED");
+
+            func_ctrl_set_switch_ble(kFuncSwitchOn);
+            break;
+
+        case GBC_EVT_DATA_INDICATION_DISABLED:
+            APP_LOG_INFO("GBC_EVT_DATA_INDICATION_DISABLED");
+
+            func_ctrl_set_switch_ble(kFuncSwitchOff);
+            break;
+
+        case GBC_EVT_DATA_INDICATION_COMPLETE:
+            APP_LOG_INFO("GBC_EVT_DATA_INDICATION_COMPLETE");
             break;
 
         default:
