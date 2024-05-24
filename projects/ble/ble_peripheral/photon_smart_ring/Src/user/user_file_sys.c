@@ -273,10 +273,16 @@ int _serialize_flash_zone_info(uint8_t* buffer, FlashZoneInfo* flash_zone_info) 
     write_big_endian_2(buffer + offset, flash_zone_info->wt_page);
     offset += 2;
     write_big_endian_4(buffer + offset, flash_zone_info->rd_addr);
+
+    APP_LOG_DEBUG("flash_zone_info->rd_addr = %u", flash_zone_info->rd_addr);
+    data_stream_hex(buffer + offset, 4);
+
     offset += 4;
     write_big_endian_4(buffer + offset, flash_zone_info->wt_addr);
+
     APP_LOG_DEBUG("flash_zone_info->wt_addr = %u", flash_zone_info->wt_addr);
     data_stream_hex(buffer + offset, 4);
+
     offset += 4;
     buffer[offset] = flash_zone_info->cycle_state;
     offset++;
@@ -523,12 +529,24 @@ int _get_flash_zone_range_info(FlashZone       flash_zone,
         return GUNTER_ERR_INVALID_TYPE;
     }
 
+    if (flash_zone_info == NULL) {
+        return GUNTER_ERR_NULL_POINTER;
+    }
+
     *range_sector_op = s_flash_zone_data_range_table[flash_zone].data_range_sector_op;
     *range_sector_ed = s_flash_zone_data_range_table[flash_zone].data_range_sector_ed;
     *range_addr_op   = s_flash_zone_data_range_table[flash_zone].data_range_addr_op;
     *range_addr_ed   = s_flash_zone_data_range_table[flash_zone].data_range_addr_ed;
     *flash_zone_info = s_flash_zone_data_range_table[flash_zone].flash_zone_info;
 
+    if (*flash_zone_info == NULL) {
+        return GUNTER_ERR_NULL_POINTER;
+    }
+
+    return GUNTER_SUCCESS;
+}
+
+int _check_flash_zone_info(FlashZone flash_zone, FlashZoneInfo** flash_zone_info, uint32_t range_addr_op, uint32_t range_addr_ed) {
     if (*flash_zone_info == NULL) {
         return GUNTER_ERR_NULL_POINTER;
     }
@@ -542,6 +560,28 @@ int _get_flash_zone_range_info(FlashZone       flash_zone,
     if ((*flash_zone_info)->type != flash_zone) {
         APP_LOG_ERROR("ufs_rd: flash zone[%d] is invalid!", flash_zone);
         return GUNTER_ERR_INVALID_TYPE;
+    }
+
+    if ((*flash_zone_info)->rd_addr < range_addr_op ||
+        (*flash_zone_info)->rd_addr >= range_addr_ed) {
+        APP_LOG_ERROR("ufs_rd: flash zone[%d] read address is invalid!", flash_zone);
+
+        APP_LOG_DEBUG("rd_addr: %u", (*flash_zone_info)->rd_addr);
+        APP_LOG_DEBUG("range_addr_op: %u", range_addr_op);
+        APP_LOG_DEBUG("range_addr_ed: %u", range_addr_ed);
+
+        return GUNTER_ERR_INVALID_ADDR;
+    }
+
+    if ((*flash_zone_info)->wt_addr < range_addr_op ||
+        (*flash_zone_info)->wt_addr >= range_addr_ed) {
+        APP_LOG_ERROR("ufs_rd: flash zone[%d] write address is invalid!", flash_zone);
+
+        APP_LOG_DEBUG("wt_addr: %u", (*flash_zone_info)->wt_addr);
+        APP_LOG_DEBUG("range_addr_op: %u", range_addr_op);
+        APP_LOG_DEBUG("range_addr_ed: %u", range_addr_ed);
+
+        return GUNTER_ERR_INVALID_ADDR;
     }
 
     return GUNTER_SUCCESS;
@@ -576,6 +616,12 @@ int _prepare_operation(FlashZone       flash_zone,
                                      flash_zone_info);
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("ufs: _get_flash_zone_range_info[%d] failed with %d", flash_zone, ret);
+        return ret;
+    }
+
+    ret = _check_flash_zone_info(flash_zone, flash_zone_info, *range_addr_op, *range_addr_ed);
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("ufs: _check_flash_zone_info[%d] failed with %d", flash_zone, ret);
         return ret;
     }
 
@@ -995,7 +1041,7 @@ int ufs_get_readable_zone_data_size(FlashZone flash_zone) {
         whole_data_len = wt_addr - rd_addr;
     }
 
-    return whole_data_len;
+    return (int)whole_data_len;
 }
 
 /**
