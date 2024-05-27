@@ -64,7 +64,7 @@
  *****************************************************************************************
  */
 /**@brief Gapm config data. */
-#define DEVICE_NAME               "SMART RING" /**< Device Name which will be set in GAP. */
+#define DEVICE_NAME               "MOON RING"  /**< Device Name which will be set in GAP. */
 #define APP_ADV_FAST_MIN_INTERVAL 32           /**< The fast advertising min interval (in units of 0.625 ms). */
 #define APP_ADV_FAST_MAX_INTERVAL 48           /**< The fast advertising max interval (in units of 0.625 ms). */
 #define APP_ADV_SLOW_MIN_INTERVAL 160          /**< The slow advertising min interval (in units of 0.625 ms). */
@@ -115,41 +115,32 @@ static dis_pnp_id_t s_devinfo_pnp_id = {
     .product_version  = 0x0110  /* Product version (JJ.M.N) */
 };
 
-static const uint8_t s_adv_data_set[] = /**< Advertising data. */
-    {
-        // Complete Name
-        0x0b,
-        BLE_GAP_AD_TYPE_COMPLETE_NAME,
-        'S',
-        'm',
-        'a',
-        'r',
-        't',
-        ' ',
-        'R',
-        'i',
-        'n',
-        'g',
+// *< Advertising data.
+static const uint8_t s_adv_data_set[] = {
+    // Complete Name
+    0x0A,
+    BLE_GAP_AD_TYPE_COMPLETE_NAME,
+    'M', 'o', 'o', 'n', ' ', 'R', 'i', 'n', 'g',
 
-        // 0x11, // Length of this data
-        // BLE_GAP_AD_TYPE_COMPLETE_LIST_128_BIT_UUID,
-        // HEALTH_SERVICE_UUID,
+    // 0x11, // Length of this data
+    // BLE_GAP_AD_TYPE_COMPLETE_LIST_128_BIT_UUID,
+    // HEALTH_SERVICE_UUID,
 
-        // Device appearance
-        0x03,
-        BLE_GAP_AD_TYPE_APPEARANCE,
-        LO_U16(BLE_APPEARANCE_GENERIC_HEART_RATE_SENSOR),
-        HI_U16(BLE_APPEARANCE_GENERIC_HEART_RATE_SENSOR),
+    // Device appearance
+    0x03,
+    BLE_GAP_AD_TYPE_APPEARANCE,
+    LO_U16(BLE_APPEARANCE_GENERIC_HEART_RATE_SENSOR),
+    HI_U16(BLE_APPEARANCE_GENERIC_HEART_RATE_SENSOR),
 
-        // Device Services uuid
-        0x07,
-        BLE_GAP_AD_TYPE_COMPLETE_LIST_16_BIT_UUID,
-        LO_U16(BLE_ATT_SVC_HEART_RATE),
-        HI_U16(BLE_ATT_SVC_HEART_RATE),
-        LO_U16(BLE_ATT_SVC_DEVICE_INFO),
-        HI_U16(BLE_ATT_SVC_DEVICE_INFO),
-        LO_U16(BLE_ATT_SVC_BATTERY_SERVICE),
-        HI_U16(BLE_ATT_SVC_BATTERY_SERVICE),
+    // Device Services uuid
+    0x07,
+    BLE_GAP_AD_TYPE_COMPLETE_LIST_16_BIT_UUID,
+    LO_U16(BLE_ATT_SVC_HEART_RATE),
+    HI_U16(BLE_ATT_SVC_HEART_RATE),
+    LO_U16(BLE_ATT_SVC_DEVICE_INFO),
+    HI_U16(BLE_ATT_SVC_DEVICE_INFO),
+    LO_U16(BLE_ATT_SVC_BATTERY_SERVICE),
+    HI_U16(BLE_ATT_SVC_BATTERY_SERVICE),
 
 };
 
