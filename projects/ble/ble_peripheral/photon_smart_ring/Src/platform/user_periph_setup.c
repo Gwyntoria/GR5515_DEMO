@@ -59,7 +59,7 @@
 
 #include "user_rtc.h"
 
-#define INTER_MEM_ADDR_LOG 0x010A6800
+#define INTER_MEM_ADDR_LOG 0x010D0000
 #define INTER_MEM_SiZE_LOG 0x20000
 
 // static const uint8_t  s_bd_addr[SYS_BD_ADDR_LEN] = {0x0f, 0x00, 0xcf, 0x3e, 0xcb, 0xea};
