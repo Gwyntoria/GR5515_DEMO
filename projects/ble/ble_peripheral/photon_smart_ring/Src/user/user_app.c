@@ -58,6 +58,7 @@
 #include "user_func_ctrl.h"
 #include "user_timer.h"
 #include "user_ble.h"
+#include "user_dfu.h"
 
 /*
  * DEFINES
@@ -290,7 +291,7 @@ static void services_init(void) {
 
     /* OTA Service */
     dfu_port_init(NULL, &dfu_pro_call);
-    dfu_service_init(NULL);
+    dfu_service_init(dfu_enter);
     
     /* Log Service */
     app_log_dump_service_init();
