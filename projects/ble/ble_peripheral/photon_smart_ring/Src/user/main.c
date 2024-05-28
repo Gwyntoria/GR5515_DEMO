@@ -44,6 +44,8 @@
 #include "app_timer.h"
 #include "custom_config.h"
 #include "flash_scatter_config.h"
+#include "gh3x2x_demo.h"
+#include "gh3x2x_demo_config.h"
 #include "gr55xx_dfu.h"
 #include "gr55xx_pwr.h"
 #include "gr55xx_sys.h"
@@ -52,22 +54,20 @@
 #include "user_app.h"
 #include "user_periph_setup.h"
 
-#include "gh3x2x_demo.h"
-#include "gh3x2x_demo_config.h"
-
-#include "user_common.h"
-#include "user_file_sys.h"
-#include "user_func_ctrl.h"
-#include "user_rtc.h"
-#include "user_timer.h"
-#include "user_i2c.h"
-#include "user_lsm6dso.h"
-#include "user_nfc.h"
-#include "user_data_center.h"
-
 #include "GD25LE128E/Flash_Spi.h"
 #include "NST112/nst112x.h"
 #include "STNS01/stns01.h"
+
+#include "user_common.h"
+#include "user_data_center.h"
+#include "user_file_sys.h"
+#include "user_func_ctrl.h"
+#include "user_hrv.h"
+#include "user_i2c.h"
+#include "user_lsm6dso.h"
+#include "user_nfc.h"
+#include "user_rtc.h"
+#include "user_timer.h"
 
 /*
  * GLOBAL VARIABLE DEFINITIONS
@@ -125,10 +125,11 @@ int main(void) {
     stns01_init(); // 电池测量初始化
 
     func_ctrl_init(); // 功能控制模块初始化
-    udm_init();       // 数据管理模块初始化
+    udc_init();       // 数据管理模块初始化
+    user_hrv_init();  // HRV模块初始化
 
     // ufs_test(); // 文件系统测试
-    // udm_test(); // 数据管理模块测试
+    // udc_test(); // 数据管理模块测试
     // nst112x_test(); // 温度读取test
     // lsm6dso_test(); // 6轴传感器读取test
     // stns01_test();  // 电量读取test
