@@ -86,7 +86,7 @@ int _lsm6dso_i2c_deinit(void) {
 int _lsm6dso_i2c_write_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, uint16_t length) {
     int ret = 0;
 
-    ret = app_i2c_mem_write_sync(LSM_I2C_ID, dev_address, reg, LSM_REG_ADDR_SIZE, data, length, 0x1000);
+    ret = app_i2c_mem_write_sync(LSM_I2C_ID, dev_address, reg, LSM_REG_ADDR_SIZE, data, length, 1000);
     if (ret != 0) {
         APP_LOG_ERROR("lsm6dso i2c write reg [%#.2x] failed", reg);
         return LSM6DSO_ERROR;
@@ -99,7 +99,7 @@ int _lsm6dso_i2c_write_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, ui
 int _lsm6dso_i2c_read_reg(uint16_t dev_address, uint16_t reg, uint8_t* data, uint16_t length) {
     uint16_t  ret = 0;
 
-    ret = app_i2c_mem_read_sync(LSM_I2C_ID, dev_address, reg, LSM_REG_ADDR_SIZE, data, length, 0x1000);
+    ret = app_i2c_mem_read_sync(LSM_I2C_ID, dev_address, reg, LSM_REG_ADDR_SIZE, data, length, 1000);
     if (ret != 0) {
         APP_LOG_ERROR("lsm6dso i2c read reg [%#.2x] failed", reg);
         return LSM6DSO_ERROR;

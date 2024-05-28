@@ -127,7 +127,7 @@ void _nst112x_config_register(app_i2c_id_t i2c_id, uint8_t nst_addr) {
     data[0] = nst112xConfigRegisterH.value;
     data[1] = nst112xConfigRegisterL.value;
 
-    ret = app_i2c_mem_write_sync(i2c_id, nst_addr, CONFIG_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
+    ret = app_i2c_mem_write_sync(i2c_id, nst_addr, CONFIG_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 1000);
     if (ret != 0) {
         APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#.2x] config register failed with %#.4x", i2c_id, nst_addr, ret);
     }
@@ -146,14 +146,14 @@ void _nst112x_comparator_threshold(app_i2c_id_t i2c_id, uint8_t nst_addr, int16_
 
     data[0] = (LowerThreshold >> 8) & 0x00FF;
     data[1] = LowerThreshold & 0x00FF;
-    ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_LOW_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
+    ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_LOW_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 1000);
     if (ret != 0) {
         APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#.2x] LowerThreshold failed with %#.4x", i2c_id, nst_addr, ret);
     }
 
     data[0] = (UpperThreshold >> 8) & 0x00FF;
     data[1] = UpperThreshold & 0x00FF;
-    ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_HIGH_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 0x1000);
+    ret = app_i2c_mem_write_sync(i2c_id, nst_addr, T_HIGH_REG, I2C_MEMADD_SIZE_8BIT, data, 2, 1000);
     if (ret != 0) {
         APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#.2x] UpperThreshold failed with %#.4x", i2c_id, nst_addr, ret);
     }
@@ -171,7 +171,7 @@ uint16_t _nst112x_get_chip_id(app_i2c_id_t i2c_id, uint8_t nst_addr) {
     int ret = 0;
     uint8_t buffer[2];
 
-    ret = app_i2c_mem_read_sync(i2c_id, nst_addr, CHIP_ID_REG, 1, buffer, 2, 0x1000);
+    ret = app_i2c_mem_read_sync(i2c_id, nst_addr, CHIP_ID_REG, 1, buffer, 2, 1000);
     if (ret != 0) {
         APP_LOG_ERROR("nst112x: i2c_id[%d]-addr[%#.2x] get chip id failed with %#.4x", i2c_id, nst_addr, ret);
     }
@@ -246,7 +246,7 @@ int16_t _nst112x_get_sensor_value(app_i2c_id_t i2c_id, uint8_t nst_addr) {
     uint8_t buffer[2];
     int16_t value;
 
-    app_i2c_mem_read_sync(i2c_id, nst_addr, TEMPERATURE_REG, 1, buffer, 2, 0x1000);
+    app_i2c_mem_read_sync(i2c_id, nst_addr, TEMPERATURE_REG, 1, buffer, 2, 1000);
     delay_ms(1);
 
     value = ((int16_t)buffer[0] << 8) | buffer[1];
