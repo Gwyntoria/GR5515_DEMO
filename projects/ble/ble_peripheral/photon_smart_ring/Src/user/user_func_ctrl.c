@@ -621,6 +621,8 @@ void func_ctrl_stop(FuncOption func_option) {
                     APP_LOG_ERROR("Cache rr data failed");
                 }
             }
+
+            user_hrv_clean_data();
             break;
 
         case kFuncOptSpo2:
