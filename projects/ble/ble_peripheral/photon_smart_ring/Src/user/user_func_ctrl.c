@@ -426,7 +426,7 @@ void func_ctrl_start(FuncOption func_option) {
             if (s_status_init == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_handler: InitDev is on!");
 
-                if (s_status_3x2x == kFuncStatusOff) {
+                if (s_status_3x2x != kFuncStatusOn) {
                     hal_gh3x2x_spi_init();
                     s_status_3x2x = kFuncStatusOn;
                 }
@@ -441,7 +441,7 @@ void func_ctrl_start(FuncOption func_option) {
             if (s_status_adt == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_start: Adt is on!");
 
-                if (s_status_3x2x == kFuncStatusOff) {
+                if (s_status_3x2x != kFuncStatusOn) {
                     hal_gh3x2x_spi_init();
                     s_status_3x2x = kFuncStatusOn;
                 }
@@ -456,7 +456,7 @@ void func_ctrl_start(FuncOption func_option) {
             if (s_status_hr == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_start: Hr is on!");
 
-                if (s_status_3x2x == kFuncStatusOff) {
+                if (s_status_3x2x != kFuncStatusOn) {
                     hal_gh3x2x_spi_init();
                     s_status_3x2x = kFuncStatusOn;
                 }
@@ -471,7 +471,7 @@ void func_ctrl_start(FuncOption func_option) {
             if (s_status_hrv == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_start: Hrv is on!");
 
-                if (s_status_3x2x == kFuncStatusOff) {
+                if (s_status_3x2x != kFuncStatusOn) {
                     hal_gh3x2x_spi_init();
                     s_status_3x2x = kFuncStatusOn;
                 }
@@ -486,7 +486,7 @@ void func_ctrl_start(FuncOption func_option) {
             if (s_status_spo2 == kFuncStatusOff) {
                 APP_LOG_INFO("func_ctrl_start: Spo2 is on!");
 
-                if (s_status_3x2x == kFuncStatusOff) {
+                if (s_status_3x2x != kFuncStatusOn) {
                     hal_gh3x2x_spi_init();
                     s_status_3x2x = kFuncStatusOn;
                 }
@@ -695,8 +695,6 @@ void func_ctrl_handler(void) {
         return;
     }
 
-    func_ctrl_uninit_3x2x();
-
     ret = func_ctrl_save_data();
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("func_ctrl_save_data failed");
@@ -792,6 +790,8 @@ void func_ctrl_handler(void) {
 
         s_switch_func = kFuncSwitchNull;
     }
+
+    func_ctrl_uninit_3x2x();
 
 }
 
