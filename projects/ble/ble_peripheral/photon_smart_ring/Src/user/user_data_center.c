@@ -476,7 +476,7 @@ void destroy_data_center_f2b(void) {
     }
 }
 
-int udm_init(void) {
+int udc_init(void) {
     s_data_center_s2f = get_data_center_s2f();
     if (s_data_center_s2f == NULL) {
         APP_LOG_ERROR("Get data center s2f failed");
@@ -498,18 +498,18 @@ int udm_init(void) {
     s_data_center_f2b->send_ble_func      = _send_data_to_ble;
     s_data_center_f2b->get_data_size_func = _get_center_f2b_data_size;
 
-    APP_LOG_INFO("udm_init success");
+    APP_LOG_INFO("udc_init success");
     return GUNTER_SUCCESS;
 }
 
-void udm_deinit(void) {
+void udc_deinit(void) {
     destroy_data_center_s2f();
     destroy_data_center_f2b();
 
-    APP_LOG_INFO("udm_deinit success");
+    APP_LOG_INFO("udc_deinit success");
 }
 
-int udm_test(void) {
+int udc_test(void) {
     int ret = 0;
 
     // * DataCenterS2f
@@ -599,11 +599,11 @@ int udm_test(void) {
         return GUNTER_FAILURE;
     }
 
-    udm_deinit();
+    udc_deinit();
 
     ufs_erase_zone_data(kFlashZoneData);
 
-    APP_LOG_INFO("udm_test success");
+    APP_LOG_INFO("udc_test success");
 
     return GUNTER_SUCCESS;
 }

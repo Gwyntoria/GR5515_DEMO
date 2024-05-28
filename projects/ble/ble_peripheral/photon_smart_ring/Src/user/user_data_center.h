@@ -139,10 +139,10 @@ DataCenterF2b* get_data_center_f2b(void);
 void destroy_data_center_s2f(void);
 void destroy_data_center_f2b(void);
 
-int  udm_init(void);
-void udm_deinit(void);
+int  udc_init(void);
+void udc_deinit(void);
 
-int udm_test(void);
+int udc_test(void);
 
 #ifdef __cplusplus
 #if __cplusplus
