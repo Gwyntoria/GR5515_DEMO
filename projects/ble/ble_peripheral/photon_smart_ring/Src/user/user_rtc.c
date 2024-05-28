@@ -32,7 +32,6 @@ void rtc_evt_tick_alarm_handler(void) {
     func_ctrl_set_switch_hr(kFuncSwitchOn);
     func_ctrl_set_switch_hrv(kFuncSwitchOn);
     func_ctrl_set_switch_spo2(kFuncSwitchOn);
-    func_ctrl_set_switch_rr(kFuncSwitchOn);
 
     func_ctrl_set_switch_bms(kFuncSwitchOn);
     func_ctrl_set_switch_tmp(kFuncSwitchOn);

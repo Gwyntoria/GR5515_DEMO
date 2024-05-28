@@ -1,19 +1,19 @@
 #include "user_func_ctrl.h"
 
-#include "app_log.h"
 #include "app_error.h"
+#include "app_log.h"
 #include "gh3x2x_demo.h"
-
 #include "NST112/nst112x.h"
 
+#include "gunter_ble_ctrl.h"
 #include "user_battery.h"
 #include "user_common.h"
+#include "user_data_center.h"
+#include "user_file_sys.h"
+#include "user_hrv.h"
 #include "user_lsm6dso.h"
 #include "user_rtc.h"
 #include "user_timer.h"
-#include "user_data_center.h"
-#include "user_file_sys.h"
-#include "gunter_ble_ctrl.h"
 
 // 功能开关, 默认为NULL，ON时为开启，OFF时为关闭
 static FuncSwitch s_switch_func = kFuncSwitchNull; // 功能总开关
@@ -23,7 +23,6 @@ static FuncSwitch s_switch_adt  = kFuncSwitchNull; // 活体检测开关
 static FuncSwitch s_switch_hr   = kFuncSwitchNull; // 心率检测开关
 static FuncSwitch s_switch_hrv  = kFuncSwitchNull; // 心率变异性检测开关
 static FuncSwitch s_switch_spo2 = kFuncSwitchNull; // 血氧检测开关
-static FuncSwitch s_switch_rr   = kFuncSwitchNull; // 呼吸率检测开关
 
 static FuncSwitch s_switch_bms = kFuncSwitchNull; // 电池检测开关
 static FuncSwitch s_switch_tmp = kFuncSwitchNull; // 温度检测开关
@@ -45,7 +44,6 @@ static FuncStatus s_status_adt  = kFuncStatusNull;
 static FuncStatus s_status_hr   = kFuncStatusNull;
 static FuncStatus s_status_hrv  = kFuncStatusNull;
 static FuncStatus s_status_spo2 = kFuncStatusNull;
-static FuncStatus s_status_rr   = kFuncStatusNull;
 static FuncStatus s_status_3x2x = kFuncStatusNull; // 3x2x spi 初始化状态
 
 // wear off
@@ -75,10 +73,6 @@ void func_ctrl_set_switch_hrv(FuncSwitch func_switch) {
 
 void func_ctrl_set_switch_spo2(FuncSwitch func_switch) {
     s_switch_spo2 = func_switch;
-}
-
-void func_ctrl_set_switch_rr(FuncSwitch func_switch) {
-    s_switch_rr = func_switch;
 }
 
 void func_ctrl_set_switch_bms(FuncSwitch func_switch) {
@@ -163,7 +157,7 @@ void wear_off_cnt_condition_increase(void) {
  * @return false otherwise.
  */
 bool func_ctrl_is_sampling(void) {
-    return s_status_init || s_status_adt || s_status_hr || s_status_hrv || s_status_spo2 || s_status_rr;
+    return s_status_init || s_status_adt || s_status_hr || s_status_hrv || s_status_spo2;
 }
 
 /**
@@ -377,7 +371,6 @@ uint16_t func_ctrl_init(void) {
     s_status_hr   = kFuncStatusOff;
     s_status_hrv  = kFuncStatusOff;
     s_status_spo2 = kFuncStatusOff;
-    s_status_rr   = kFuncStatusOff;
     s_status_3x2x = kFuncStatusOff;
 
     user_timer_init(); // 定时器初始化
@@ -504,22 +497,6 @@ void func_ctrl_start(FuncOption func_option) {
             }
             break;
 
-        case kFuncOptRr:
-            if (s_status_rr == kFuncStatusOff) {
-                APP_LOG_INFO("func_ctrl_start: Rr is on!");
-
-                if (s_status_3x2x == kFuncStatusOff) {
-                    hal_gh3x2x_spi_init();
-                    s_status_3x2x = kFuncStatusOn;
-                }
-
-                // TODO: Respiratory rate
-
-                user_timer_start(func_option);
-                s_status_rr = kFuncStatusOn;
-            }
-            break;
-
         case kFuncOptBms:
             APP_LOG_INFO("func_ctrl_start: Bms is on!");
 
@@ -568,8 +545,17 @@ void func_ctrl_start(FuncOption func_option) {
     }
 }
 
-extern GU16 lower_lvl_cnt_adt;
-extern GU16 higher_lvl_cnt_adt;
+extern GU16 low_confidence_cnt_hr;
+extern GU16 data_cnt_hr;
+
+extern GU16 low_confidence_cnt_spo2;
+extern GU16 data_cnt_spo2;
+
+extern GU16 low_confidence_cnt_hrv;
+extern GU16 data_cnt_hrv;
+
+extern GU16 low_confidence_cnt_adt;
+extern GU16 high_confidence_cnt_adt;
 
 void func_ctrl_stop(FuncOption func_option) {
     hal_gh3x2x_spi_init();
@@ -585,9 +571,10 @@ void func_ctrl_stop(FuncOption func_option) {
 
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN);
-                s_switch_adt       = kFuncSwitchOff;
-                lower_lvl_cnt_adt  = 0;
-                higher_lvl_cnt_adt = 0;
+                s_switch_adt = kFuncSwitchOff;
+
+                low_confidence_cnt_adt  = 0;
+                high_confidence_cnt_adt = 0;
 
                 s_status_adt = kFuncStatusOff;
             }
@@ -599,6 +586,10 @@ void func_ctrl_stop(FuncOption func_option) {
 
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_HR);
+
+                low_confidence_cnt_hr = 0;
+                data_cnt_hr           = 0;
+
                 s_status_hr = kFuncStatusOff;
             }
             break;
@@ -609,7 +600,26 @@ void func_ctrl_stop(FuncOption func_option) {
 
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_HRV);
+
+                low_confidence_cnt_hrv = 0;
+                data_cnt_hrv           = 0;
+
                 s_status_hrv = kFuncStatusOff;
+            }
+
+            uint16_t hrv = 0;
+            uint16_t rr  = 0;
+
+            if (user_hrv_calculate_hrv_rr(&hrv, &rr) == GUNTER_SUCCESS) {
+                APP_LOG_DEBUG("HRV: %u ms, RR: %u bpm", hrv, rr);
+
+                if (func_ctrl_cache_data(kDataTypeHrv, hrv) != GUNTER_SUCCESS) {
+                    APP_LOG_ERROR("Cache hrv data failed");
+                }
+
+                if (func_ctrl_cache_data(kDataTypeRr, rr) != GUNTER_SUCCESS) {
+                    APP_LOG_ERROR("Cache rr data failed");
+                }
             }
             break;
 
@@ -619,18 +629,11 @@ void func_ctrl_stop(FuncOption func_option) {
 
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_SPO2);
+
+                low_confidence_cnt_spo2 = 0;
+                data_cnt_spo2           = 0;
+
                 s_status_spo2 = kFuncStatusOff;
-            }
-            break;
-
-        case kFuncOptRr:
-            if (s_status_rr == kFuncStatusOn) {
-                APP_LOG_INFO("func_ctrl_stop: Rr is off!");
-
-                user_timer_stop(func_option);
-
-                // TODO: Respiratory rate
-                s_status_rr = kFuncStatusOff;
             }
             break;
 
@@ -662,7 +665,6 @@ void func_ctrl_handler(void) {
     // APP_LOG_DEBUG("s_switch_hr: %d", s_switch_hr);
     // APP_LOG_DEBUG("s_switch_hrv: %d", s_switch_hrv);
     // APP_LOG_DEBUG("s_switch_spo2: %d", s_switch_spo2);
-    // APP_LOG_DEBUG("s_switch_rr: %d", s_switch_rr);
 
     // APP_LOG_DEBUG("s_switch_bms: %d", s_switch_bms);
     // APP_LOG_DEBUG("s_switch_tmp: %d", s_switch_tmp);
@@ -676,7 +678,6 @@ void func_ctrl_handler(void) {
     // APP_LOG_DEBUG("s_status_hr: %d", s_status_hr);
     // APP_LOG_DEBUG("s_status_hrv: %d", s_status_hrv);
     // APP_LOG_DEBUG("s_status_spo2: %d", s_status_spo2);
-    // APP_LOG_DEBUG("s_status_rr: %d", s_status_rr);
 
     // APP_LOG_DEBUG("s_status_3x2x: %d", s_status_3x2x);
 
@@ -762,11 +763,6 @@ void func_ctrl_handler(void) {
                 func_ctrl_start(kFuncOptSpo2);
                 s_switch_spo2 = kFuncSwitchNull;
             }
-
-            if (s_switch_rr == kFuncStatusOn) {
-                func_ctrl_start(kFuncOptRr);
-                s_switch_rr = kFuncSwitchNull;
-            }
         }
 
         s_switch_func = kFuncSwitchNull;
@@ -792,11 +788,6 @@ void func_ctrl_handler(void) {
             s_switch_spo2 = kFuncSwitchNull;
         }
 
-        if (s_switch_rr == kFuncStatusOff) {
-            func_ctrl_stop(kFuncOptRr);
-            s_switch_rr = kFuncSwitchNull;
-        }
-
         s_switch_func = kFuncSwitchNull;
     }
 
@@ -813,7 +804,6 @@ void func_ctrl_test(void) {
         func_ctrl_start(kFuncOptHr);
         func_ctrl_start(kFuncOptHrv);
         func_ctrl_start(kFuncOptSpo2);
-        // func_ctrl_start(kFuncOptRr);
 
         s_switch_func = kFuncSwitchOff;
     }

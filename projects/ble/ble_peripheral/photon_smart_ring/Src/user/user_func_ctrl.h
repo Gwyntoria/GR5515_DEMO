@@ -34,7 +34,6 @@ typedef enum FuncOption {
     kFuncOptHr,
     kFuncOptHrv,
     kFuncOptSpo2,
-    kFuncOptRr,
     kFuncOptBms,
     kFuncOptTmp,
     kFuncOptStp,
@@ -72,7 +71,6 @@ void func_ctrl_set_switch_adt(FuncSwitch func_switch);
 void func_ctrl_set_switch_hr(FuncSwitch func_switch);
 void func_ctrl_set_switch_hrv(FuncSwitch func_switch);
 void func_ctrl_set_switch_spo2(FuncSwitch func_switch);
-void func_ctrl_set_switch_rr(FuncSwitch func_switch);
 void func_ctrl_set_switch_bms(FuncSwitch func_switch);
 void func_ctrl_set_switch_tmp(FuncSwitch func_switch);
 void func_ctrl_set_switch_stp(FuncSwitch func_switch);

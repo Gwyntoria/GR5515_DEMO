@@ -55,7 +55,6 @@
 
 /**
  * @defgroup HEALTH_MACRO Defines
- * @{
  */
 #define HEALTH_CONNECTION_MAX \
     (10 < CFG_MAX_CONNECTIONS ? 10 : CFG_MAX_CONNECTIONS) /**< Maximum number of Goodix UART Service connections. */
@@ -66,11 +65,8 @@
 #define HEALTH_SERVICE_UUID  0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, \
                              0x00, 0x10, 0x00, 0x00, 0x0E, 0x19, 0x00, 0x01 /**< The UUID of Goodix UART Service for setting advertising data. */
 
-/** @} */
-
 /**
  * @defgroup HEALTH_ENUM Enumerations
- * @{
  */
 /**@brief Goodix UART Service event types. */
 typedef enum health_evt_type_t {
@@ -88,17 +84,11 @@ typedef enum health_evt_type_t {
     HEALTH_EVT_SPO2_PORT_CLOSED,
     HEALTH_EVT_SPO2_DATA_SENT,
 
-    HEALTH_EVT_RR_PORT_OPENED,
-    HEALTH_EVT_RR_PORT_CLOSED,
-    HEALTH_EVT_RR_DATA_SENT,
-
     HEALTH_EVT_RX_DATA_RECEIVED, /**< The data from the peer has been received. */
 } health_evt_type_t;
-/** @} */
 
 /**
  * @defgroup HEALTH_STRUCT Structures
- * @{
  */
 /**@brief Goodix UART Service event. */
 typedef struct health_evt_t {
@@ -107,19 +97,15 @@ typedef struct health_evt_t {
     uint8_t*          p_data;   /**< Pointer to the buffer within received data. */
     uint16_t          length;   /**< Length of received data. */
 } health_evt_t;
-/** @} */
 
 /**
  * @defgroup HEALTH_TYPEDEF Typedefs
- * @{
  */
 /**@brief Goodix UART Service event handler type. */
 typedef void (*health_evt_handler_t)(health_evt_t* p_evt);
-/** @} */
 
 /**
  * @addtogroup HEALTH_STRUCT Structures
- * @{
  */
 /**@brief Goodix UART Service init stucture. This contains all option and data needed for initialization of the service.
  */
@@ -127,12 +113,7 @@ typedef struct health_init_t {
     health_evt_handler_t evt_handler; /**< Goodix UART Service event handler which must be provided by the application
                                          to send and receive the data. */
 } health_init_t;
-/** @} */
 
-/**
- * @defgroup HEALTH_FUNCTION Functions
- * @{
- */
 /**
  *****************************************************************************************
  * @brief Initialize a Goodix UART Service instance and add in the database.
@@ -183,21 +164,4 @@ sdk_err_t health_hrv_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t lengt
  */
 sdk_err_t health_spo2_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 
-/**
- *****************************************************************************************
- * @brief Send rr data to peer device.
- *
- * @param[in] conn_idx: Index of the connection.
- * @param[in] p_data:   Pointer to sent data.
- * @param[in] length:   Length of sent data.
- *
- * @return Result of sending data.
- *****************************************************************************************
- */
-sdk_err_t health_rr_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
-
-/** @} */
-
 #endif
-/** @} */
-/** @} */

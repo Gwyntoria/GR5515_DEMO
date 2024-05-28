@@ -789,6 +789,11 @@
               <FileType>1</FileType>
               <FilePath>..\Src\user\user_dfu.c</FilePath>
             </File>
+            <File>
+              <FileName>user_hrv.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\user\user_hrv.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

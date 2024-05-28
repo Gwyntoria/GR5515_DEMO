@@ -25,7 +25,6 @@ static app_timer_id_t s_adt_timer_id;
 static app_timer_id_t s_hr_meas_timer_id;
 static app_timer_id_t s_hrv_meas_timer_id;
 static app_timer_id_t s_spo2_meas_timer_id;
-static app_timer_id_t s_rr_meas_timer_id;
 
 void init_dev_timeout_handler(void* args) {
     func_ctrl_set_switch_func(kFuncSwitchOff);
@@ -53,11 +52,6 @@ void spo2_meas_timeout_handler(void* args) {
     func_ctrl_set_switch_spo2(kFuncSwitchOff);
 }
 
-void rr_meas_timeout_handler(void* args) {
-    func_ctrl_set_switch_func(kFuncSwitchOff);
-    func_ctrl_set_switch_rr(kFuncSwitchOff);
-}
-
 void user_timer_init(void) {
     sdk_err_t error_code;
 
@@ -76,8 +70,6 @@ void user_timer_init(void) {
     error_code = app_timer_create(&s_spo2_meas_timer_id, ATIMER_ONE_SHOT, spo2_meas_timeout_handler);
     APP_ERROR_CHECK(error_code);
 
-    error_code = app_timer_create(&s_rr_meas_timer_id, ATIMER_ONE_SHOT, rr_meas_timeout_handler);
-    APP_ERROR_CHECK(error_code);
 }
 
 void user_timer_start(FuncOption func_option) {
@@ -109,12 +101,6 @@ void user_timer_start(FuncOption func_option) {
             APP_ERROR_CHECK(error_code);
             break;
 
-        case kFuncOptRr:
-            // TODO: Respiratory rate
-            error_code = app_timer_start(s_rr_meas_timer_id, DETECTION_DURATION, NULL);
-            APP_ERROR_CHECK(error_code);
-            break;
-
         default:
             APP_LOG_ERROR("Function option error\r\n");
             break;
@@ -142,10 +128,6 @@ void user_timer_stop(FuncOption func_option) {
 
             case kFuncOptSpo2:
                 app_timer_stop(s_spo2_meas_timer_id);
-                break;
-
-            case kFuncOptRr:
-                app_timer_stop(s_rr_meas_timer_id);
                 break;
 
             default:

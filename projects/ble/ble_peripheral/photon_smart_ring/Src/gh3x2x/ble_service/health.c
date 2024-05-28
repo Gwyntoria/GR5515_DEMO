@@ -55,8 +55,6 @@
     { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x06, 0x00, 0x00, 0x01 }
 #define HEALTH_SERVER_SPO2_UUID \
     { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01 }
-#define HEALTH_SERVER_RR_UUID \
-    { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x08, 0x00, 0x00, 0x01 }
 
 #define ATT_128_PRIMARY_SERVICE BLE_ATT_16_TO_128_ARRAY(BLE_ATT_DECL_PRIMARY_SERVICE)
 #define ATT_128_CHARACTERISTIC  BLE_ATT_16_TO_128_ARRAY(BLE_ATT_DECL_CHARACTERISTIC)
@@ -84,10 +82,6 @@ enum health_attr_idx_t {
     HEALTH_IDX_SPO2_CHAR,
     HEALTH_IDX_SPO2_VAL,
     HEALTH_IDX_SPO2_CFG,
-
-    HEALTH_IDX_RR_CHAR,
-    HEALTH_IDX_RR_VAL,
-    HEALTH_IDX_RR_CFG,
 
     HEALTH_IDX_NB,
 };
@@ -198,26 +192,6 @@ static const attm_desc_128_t health_att_db[HEALTH_IDX_NB] = {
         0,
         0
     },
-
-    //* RR Characteristic Declaration
-    [HEALTH_IDX_RR_CHAR] = {
-        ATT_128_CHARACTERISTIC,
-        READ_PERM_UNSEC,
-        0,
-        0
-    },
-    [HEALTH_IDX_RR_VAL]  = {
-        HEALTH_SERVER_RR_UUID,
-        NOTIFY_PERM_UNSEC,
-        (ATT_VAL_LOC_USER | ATT_UUID_TYPE_SET(UUID_TYPE_128)),
-        HEALTH_MAX_DATA_LEN
-    },
-    [HEALTH_IDX_RR_CFG]  = {
-        ATT_128_CLIENT_CHAR_CFG,
-        READ_PERM_UNSEC | WRITE_REQ_PERM_UNSEC,
-        0,
-        0
-    },
 };
 
 /**@brief Service interface required by profile manager. */
@@ -315,12 +289,6 @@ static void health_read_att_cb(uint8_t conn_idx, const gatts_read_req_cb_t* p_pa
             cfm.status = BLE_SUCCESS;
             break;
 
-        case HEALTH_IDX_RR_CFG:
-            cfm.length = sizeof(uint16_t);
-            cfm.value  = (uint8_t*)&s_health_env.rr_ntf_cfg[conn_idx];
-            cfm.status = BLE_SUCCESS;
-            break;
-
         default:
             cfm.length = 0;
             cfm.status = BLE_ATT_ERR_INVALID_HANDLE;
@@ -376,12 +344,6 @@ static void health_write_att_cb(uint8_t conn_idx, const gatts_write_req_cb_t* p_
             s_health_env.spo2_ntf_cfg[conn_idx] = cccd_value;
             break;
 
-        case HEALTH_IDX_RR_CFG:
-            cccd_value = le16toh(&p_param->value[0]);
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_RR_PORT_OPENED : HEALTH_EVT_RR_PORT_CLOSED;
-            s_health_env.rr_ntf_cfg[conn_idx] = cccd_value;
-            break;
-
         default:
             cfm.status = BLE_ATT_ERR_INVALID_HANDLE;
             break;
@@ -429,11 +391,6 @@ static void health_cccd_set_cb(uint8_t conn_idx, uint16_t handle, uint16_t cccd_
         case HEALTH_IDX_SPO2_CFG:
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_SPO2_PORT_OPENED : HEALTH_EVT_SPO2_PORT_CLOSED;
             s_health_env.spo2_ntf_cfg[conn_idx] = cccd_value;
-            break;
-
-        case HEALTH_IDX_RR_CFG:
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_RR_PORT_OPENED : HEALTH_EVT_RR_PORT_CLOSED;
-            s_health_env.rr_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         default:
@@ -527,27 +484,6 @@ sdk_err_t health_spo2_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t leng
         send_cmd.length = length;
         send_cmd.value  = p_data;
         s_now_notify_cmp_type = HEALTH_EVT_SPO2_DATA_SENT;
-
-        // Send notification to peer device
-        error_code = ble_gatts_noti_ind(conn_idx, &send_cmd);
-    }
-
-    return error_code;
-}
-
-sdk_err_t health_rr_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length) {
-    sdk_err_t        error_code = SDK_ERR_NTF_DISABLED;
-    gatts_noti_ind_t send_cmd;
-
-    if (PRF_CLI_START_NTF == s_health_env.rr_ntf_cfg[conn_idx]) {
-        // Fill in the parameter structure
-        send_cmd.type   = BLE_GATT_NOTIFICATION;
-        send_cmd.handle = prf_find_handle_by_idx(HEALTH_IDX_RR_VAL, s_health_env.start_hdl, (uint8_t*)&s_char_mask);
-
-        // Pack measured value in database
-        send_cmd.length = length;
-        send_cmd.value  = p_data;
-        s_now_notify_cmp_type = HEALTH_EVT_RR_DATA_SENT;
 
         // Send notification to peer device
         error_code = ble_gatts_noti_ind(conn_idx, &send_cmd);

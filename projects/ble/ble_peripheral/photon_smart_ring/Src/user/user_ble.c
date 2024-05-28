@@ -53,18 +53,6 @@ void health_service_process_event(health_evt_t* p_evt) {
             func_ctrl_set_switch_spo2(kFuncSwitchOff);
             break;
 
-        case HEALTH_EVT_RR_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_RR_PORT_OPENED");
-            func_ctrl_set_switch_func(kFuncSwitchOn);
-            func_ctrl_set_switch_rr(kFuncSwitchOn);
-            break;
-
-        case HEALTH_EVT_RR_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_RR_PORT_CLOSED");
-            func_ctrl_set_switch_func(kFuncSwitchOff);
-            func_ctrl_set_switch_rr(kFuncSwitchOff);
-            break;
-
         case HEALTH_EVT_HR_DATA_SENT:
             APP_LOG_INFO("HEALTH_EVT_HR_DATA_SENT");
             break;
@@ -75,10 +63,6 @@ void health_service_process_event(health_evt_t* p_evt) {
 
         case HEALTH_EVT_SPO2_DATA_SENT:
             APP_LOG_INFO("HEALTH_EVT_SPO2_DATA_SENT");
-            break;
-
-        case HEALTH_EVT_RR_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_RR_DATA_SENT");
             break;
 
         case HEALTH_EVT_RX_DATA_RECEIVED:

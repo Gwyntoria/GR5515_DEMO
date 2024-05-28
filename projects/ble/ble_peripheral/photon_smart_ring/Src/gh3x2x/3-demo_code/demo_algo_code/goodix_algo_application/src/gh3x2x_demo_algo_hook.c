@@ -13,6 +13,7 @@
 #include "user_func_ctrl.h"
 #include "user_rtc.h"
 #include "user_data_center.h"
+#include "user_hrv.h"
 
 #if (__GOODIX_ALGO_CALL_MODE__)
 
@@ -76,6 +77,7 @@ void GH3X2X_AdtAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 }
 
 GU16 low_confidence_cnt_hr = 0;
+GU16 data_cnt_hr           = 0;
 
 /**
  * @fn     void GH3X2X_HrAlgorithmResultReport(STHbAlgoResult stHbAlgoRes[], GU16 pusAlgoResIndexArr[], usAlgoResCnt)
@@ -115,9 +117,16 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
                 GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor_func error: %d\n", ret);
             }
         }
+
+        data_cnt_hr++;
     }
 
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_hr: %d\n", low_confidence_cnt_hr);
+
+    if (data_cnt_hr >= 5) {
+        func_ctrl_set_switch_func(kFuncSwitchOff);
+        func_ctrl_set_switch_hr(kFuncSwitchOff);
+    }
 
     // extern GU32 g_unDemoFuncMode;
     // if ((g_unDemoFuncMode & GH3X2X_FUNCTION_SOFT_ADT_GREEN) != GH3X2X_FUNCTION_SOFT_ADT_GREEN) {
@@ -128,6 +137,7 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
 }
 
 GU16 low_confidence_cnt_spo2 = 0;
+GU16 data_cnt_spo2           = 0;
 
 /**
  * @fn     void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult)
@@ -170,14 +180,22 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
                 GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor_func error: %d\n", ret);
             }
         }
+
+        data_cnt_spo2++;
     }
 
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_spo2: %d\n", low_confidence_cnt_spo2);
+
+    if (data_cnt_spo2 >= 5) {
+        func_ctrl_set_switch_func(kFuncSwitchOff);
+        func_ctrl_set_switch_spo2(kFuncSwitchOff);
+    }
 
 #endif
 }
 
 GU16 low_confidence_cnt_hrv = 0;
+GU16 data_cnt_hrv           = 0;
 
 /**
  * @fn     void GH3X2X_HrvAlgorithmResultReport(STHrvAlgoResult stHrvAlgoRes[], GU16 pusAlgoResIndexArr[], usAlgoResCnt)
@@ -207,16 +225,29 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
                                  pstAlgoResult->snResult[4]);
 #endif
 
-    uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
-    health_hrv_data_send(0, &data, 1);
+    // uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
+    // health_hrv_data_send(0, &data, 1);
 
     if (pstAlgoResult->snResult[4] < CONFIDENCE_THRESHOLD_HRV) {
         low_confidence_cnt_hrv++;
     } else {
         low_confidence_cnt_hrv = 0;
+
+        for (int i = 0; i < pstAlgoResult->snResult[5]; i++) {
+            if (i >= 4) {
+                break;
+            }
+
+            user_hrv_add_data((int)pstAlgoResult->snResult[i]);
+        }
+
+        data_cnt_hrv++;
     }
 
-    // TODO: send hrv data to data center
+    if (data_cnt_hrv >= 10) {
+        func_ctrl_set_switch_func(kFuncSwitchOff);
+        func_ctrl_set_switch_hrv(kFuncSwitchOff);
+    }
 
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_hrv: %d\n", low_confidence_cnt_hrv);
 }
@@ -243,8 +274,8 @@ void GH3X2X_EcgAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 #endif
 }
 
-GU16 lower_lvl_cnt_adt  = 0;
-GU16 higher_lvl_cnt_adt = 0;
+GU16 low_confidence_cnt_adt  = 0;
+GU16 high_confidence_cnt_adt = 0;
 
 /**
  * @fn     void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
@@ -268,18 +299,18 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
                                  pstAlgoResult->snResult[1]);
 
     if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_NADT_GREEN) {
-        lower_lvl_cnt_adt++;
-        // higher_lvl_cnt_adt = 0;
+        low_confidence_cnt_adt++;
+        // high_confidence_cnt_adt = 0;
     } else {
-        // lower_lvl_cnt_adt = 0;
-        higher_lvl_cnt_adt++;
+        // low_confidence_cnt_adt = 0;
+        high_confidence_cnt_adt++;
     }
 
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("lower_lvl_cnt_adt: %d\n", lower_lvl_cnt_adt);
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("higher_lvl_cnt_adt: %d\n", higher_lvl_cnt_adt);
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_adt: %d\n", low_confidence_cnt_adt);
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("high_confidence_cnt_adt: %d\n", high_confidence_cnt_adt);
 
     // live object
-    if ((pstAlgoResult->snResult[0] == 0x1) || (higher_lvl_cnt_adt > (20 * 5))) {
+    if ((pstAlgoResult->snResult[0] == 0x1) || (high_confidence_cnt_adt > (20 * 5))) {
         // extern GU32 g_unDemoFuncMode;
         // if((g_unDemoFuncMode & GH3X2X_FUNCTION_HR) != GH3X2X_FUNCTION_HR)
         // {
@@ -295,7 +326,7 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
     }
     // non live object
     // TODO: Further improvement is needed
-    else if ((pstAlgoResult->snResult[0] & 0x2) || (lower_lvl_cnt_adt > (20 * 20))) {
+    else if ((pstAlgoResult->snResult[0] & 0x2) || (low_confidence_cnt_adt > (20 * 20))) {
 #if __GH_MSG_WTIH_DRV_LAYER_EN__
         GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
 #else
