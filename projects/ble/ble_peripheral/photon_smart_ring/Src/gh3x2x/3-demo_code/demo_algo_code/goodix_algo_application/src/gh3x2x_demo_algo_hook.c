@@ -1,9 +1,9 @@
 #include <stdio.h>
+
 #include "gh3x2x_demo_common.h"
 #include "gh3x2x_demo_algo_call.h"
 #include "gh3x2x_demo_algo_config.h"
 #include "gh3x2x_demo_algo_hook.h"
-
 #include "gh3x2x_demo.h"
 #include "app_log.h"
 
@@ -14,6 +14,27 @@
 #include "user_rtc.h"
 #include "user_data_center.h"
 #include "user_hrv.h"
+
+#define CAL_TIME_SWITCH  (1)
+#define CAL_TIME_START() g_report_func_start_time = rtc_get_relative_ms();
+#define CAL_TIME_END()                                 \
+    g_report_func_end_time = rtc_get_relative_ms(); \
+    g_report_func_time     = g_report_func_end_time - g_report_func_start_time;
+
+#define CAL_TIME_PRINT(type) GH3X2X_SAMPLE_ALGO_LOG_PARAM("Report %s time: %d ms\n", type, g_report_func_time);
+
+extern GU16 g_low_confidence_cnt_hr;
+extern GU16 g_low_confidence_cnt_spo2;
+extern GU16 g_low_confidence_cnt_hrv;
+extern GU16 g_low_confidence_cnt_adt;
+extern GU16 g_high_confidence_cnt_adt;
+extern GU16 g_data_cnt_hr;
+extern GU16 g_data_cnt_spo2;
+extern GU16 g_data_cnt_hrv;
+
+uint64_t g_report_func_start_time = 0;
+uint64_t g_report_func_end_time = 0;
+uint64_t g_report_func_time = 0;
 
 #if (__GOODIX_ALGO_CALL_MODE__)
 
@@ -76,9 +97,6 @@ void GH3X2X_AdtAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 #endif
 }
 
-GU16 low_confidence_cnt_hr = 0;
-GU16 data_cnt_hr           = 0;
-
 /**
  * @fn     void GH3X2X_HrAlgorithmResultReport(STHbAlgoResult stHbAlgoRes[], GU16 pusAlgoResIndexArr[], usAlgoResCnt)
  *
@@ -95,6 +113,10 @@ GU16 data_cnt_hr           = 0;
  */
 void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
 {
+#if CAL_TIME_SWITCH
+    CAL_TIME_START();
+#endif
+
 #if (__USE_GOODIX_HR_ALGORITHM__)
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:hr = %dbpm, confidence = %d\r\n",
                                  __FUNCTION__,
@@ -106,11 +128,11 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
 
 
     if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_HR) {
-        low_confidence_cnt_hr++;
+        g_low_confidence_cnt_hr++;
     } else {
-        low_confidence_cnt_hr = 0;
+        g_low_confidence_cnt_hr = 0;
 
-        if (data_cnt_hr < DATA_CNT_THRESHOLD_HR) {
+        if (g_data_cnt_hr < DATA_CNT_THRESHOLD_HR) {
             DataCenterS2f* data_center_s2f = get_data_center_s2f();
             if (data_center_s2f->recv_sensor_func) {
                 int ret = data_center_s2f->recv_sensor_func(data_center_s2f, kDataTypeHr, (uint16_t)data);
@@ -120,12 +142,12 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
             }
         }
 
-        data_cnt_hr++;
+        g_data_cnt_hr++;
     }
 
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_hr: %d\n", low_confidence_cnt_hr);
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_hr: %d\n", g_low_confidence_cnt_hr);
 
-    if (data_cnt_hr > DATA_CNT_THRESHOLD_HR * 3) {
+    if (g_data_cnt_hr > DATA_CNT_THRESHOLD_HR * 3) {
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_hr(kFuncSwitchOff);
     }
@@ -136,10 +158,12 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
     // }
 
 #endif
-}
 
-GU16 low_confidence_cnt_spo2 = 0;
-GU16 data_cnt_spo2           = 0;
+#if CAL_TIME_SWITCH
+    CAL_TIME_END();
+    CAL_TIME_PRINT("HR");
+#endif
+}
 
 /**
  * @fn     void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult)
@@ -158,6 +182,10 @@ GU16 data_cnt_spo2           = 0;
  */
 void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
 {
+#if CAL_TIME_SWITCH
+    CAL_TIME_START();
+#endif
+
 #if (__USE_GOODIX_SPO2_ALGORITHM__)
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]: spo2 = %d%%, R = %d, confidence = %d, con_lvl = %d\r\n",
                                  __FUNCTION__, 
@@ -171,11 +199,11 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
 
 
     if (pstAlgoResult->snResult[3] < CONFIDENCE_THRESHOLD_SPO2) {
-        low_confidence_cnt_spo2++;
+        g_low_confidence_cnt_spo2++;
     } else {
-        low_confidence_cnt_spo2 = 0;
+        g_low_confidence_cnt_spo2 = 0;
 
-        if (data_cnt_spo2 < DATA_CNT_THRESHOLD_SPO2) {
+        if (g_data_cnt_spo2 < DATA_CNT_THRESHOLD_SPO2) {
             DataCenterS2f* data_center_s2f = get_data_center_s2f();
             if (data_center_s2f->recv_sensor_func) {
                 int ret = data_center_s2f->recv_sensor_func(data_center_s2f, kDataTypeSpo2, (uint16_t)data);
@@ -185,21 +213,23 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
             }
         }
 
-        data_cnt_spo2++;
+        g_data_cnt_spo2++;
     }
 
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_spo2: %d\n", low_confidence_cnt_spo2);
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_spo2: %d\n", g_low_confidence_cnt_spo2);
 
-    if (data_cnt_spo2 > DATA_CNT_THRESHOLD_SPO2 * 3) {
+    if (g_data_cnt_spo2 > DATA_CNT_THRESHOLD_SPO2 * 3) {
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_spo2(kFuncSwitchOff);
     }
 
 #endif
-}
 
-GU16 low_confidence_cnt_hrv = 0;
-GU16 data_cnt_hrv           = 0;
+#if CAL_TIME_SWITCH
+    CAL_TIME_END();
+    CAL_TIME_PRINT("SPO2");
+#endif
+}
 
 /**
  * @fn     void GH3X2X_HrvAlgorithmResultReport(STHrvAlgoResult stHrvAlgoRes[], GU16 pusAlgoResIndexArr[], usAlgoResCnt)
@@ -217,6 +247,10 @@ GU16 data_cnt_hrv           = 0;
  */
 void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
 {
+#if CAL_TIME_SWITCH
+    CAL_TIME_START();
+#endif
+
 #if (__USE_GOODIX_HRV_ALGORITHM__)
     /* code implement by user */
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:hrv_num = %d, RRI0 = %d, RRI1 = %d, RRI2 = %d, RRI3 = %d, confidence = %d\r\n",
@@ -227,15 +261,14 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
                                  pstAlgoResult->snResult[2], 
                                  pstAlgoResult->snResult[3],
                                  pstAlgoResult->snResult[4]);
-#endif
 
     // uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     // health_hrv_data_send(0, &data, 1);
 
     if (pstAlgoResult->snResult[4] < CONFIDENCE_THRESHOLD_HRV) {
-        low_confidence_cnt_hrv++;
+        g_low_confidence_cnt_hrv++;
     } else {
-        low_confidence_cnt_hrv = 0;
+        g_low_confidence_cnt_hrv = 0;
 
         for (int i = 0; i < pstAlgoResult->snResult[5]; i++) {
             if (i >= 4) {
@@ -245,17 +278,23 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
             user_hrv_add_data((int)pstAlgoResult->snResult[i]);
         }
 
-        data_cnt_hrv++;
+        g_data_cnt_hrv++;
 
-        // printf("HRV data count: %d\n", data_cnt_hrv);
+        // printf("HRV data count: %d\n", g_data_cnt_hrv);
     }
 
-    if (data_cnt_hrv >= DATA_CNT_THRESHOLD_RRI) {
+    if (g_data_cnt_hrv >= DATA_CNT_THRESHOLD_RRI) {
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_hrv(kFuncSwitchOff);
     }
 
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_hrv: %d\n", low_confidence_cnt_hrv);
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_hrv: %d\n", g_low_confidence_cnt_hrv);
+#endif
+
+#if CAL_TIME_SWITCH
+    CAL_TIME_END();
+    CAL_TIME_PRINT("HRV");
+#endif
 }
 
 /**
@@ -274,14 +313,20 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
  */
 void GH3X2X_EcgAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
 {
+#if CAL_TIME_SWITCH
+    CAL_TIME_START();
+#endif
+
 #if (__USE_GOODIX_ECG_ALGORITHM__)
     /* code implement by user */
     //GOODIX_PLANFROM_ECG_RESULT_REPORT_ENTITY();
 #endif
-}
 
-GU16 low_confidence_cnt_adt  = 0;
-GU16 high_confidence_cnt_adt = 0;
+#if CAL_TIME_SWITCH
+    CAL_TIME_END();
+    CAL_TIME_PRINT("ECG");
+#endif
+}
 
 /**
  * @fn     void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
@@ -298,6 +343,10 @@ GU16 high_confidence_cnt_adt = 0;
  * @return  None
  */
 void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult, GU32 lubFrameId) {
+#if CAL_TIME_SWITCH
+    CAL_TIME_START();
+#endif
+
 #if (__USE_GOODIX_SOFT_ADT_ALGORITHM__)
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:result: %d, confidence: %d\r\n", 
                                  __FUNCTION__,
@@ -305,18 +354,18 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
                                  pstAlgoResult->snResult[1]);
 
     if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_NADT_GREEN) {
-        low_confidence_cnt_adt++;
-        // high_confidence_cnt_adt = 0;
+        g_low_confidence_cnt_adt++;
+        // g_high_confidence_cnt_adt = 0;
     } else {
-        // low_confidence_cnt_adt = 0;
-        high_confidence_cnt_adt++;
+        // g_low_confidence_cnt_adt = 0;
+        g_high_confidence_cnt_adt++;
     }
 
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_adt: %d\n", low_confidence_cnt_adt);
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("high_confidence_cnt_adt: %d\n", high_confidence_cnt_adt);
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_adt: %d\n", g_low_confidence_cnt_adt);
+    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_high_confidence_cnt_adt: %d\n", g_high_confidence_cnt_adt);
 
     // live object
-    if ((pstAlgoResult->snResult[0] == 0x1) || (high_confidence_cnt_adt > (20 * 5))) {
+    if ((pstAlgoResult->snResult[0] == 0x1) || (g_high_confidence_cnt_adt > (20 * 5))) {
         // extern GU32 g_unDemoFuncMode;
         // if((g_unDemoFuncMode & GH3X2X_FUNCTION_HR) != GH3X2X_FUNCTION_HR)
         // {
@@ -332,7 +381,7 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
     }
     // non live object
     // TODO: Further improvement is needed
-    else if ((pstAlgoResult->snResult[0] & 0x2) || (low_confidence_cnt_adt > (20 * 20))) {
+    else if ((pstAlgoResult->snResult[0] & 0x2) || (g_low_confidence_cnt_adt > (20 * 20))) {
 #if __GH_MSG_WTIH_DRV_LAYER_EN__
         GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
 #else
@@ -348,6 +397,11 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
         wear_off_cnt_condition_increase();
     }
     GOODIX_PLANFROM_NADT_RESULT_HANDLE_ENTITY();
+#endif
+
+#if CAL_TIME_SWITCH
+    CAL_TIME_END();
+    CAL_TIME_PRINT("S_ADT_GREEN");
 #endif
 }
 
@@ -367,6 +421,10 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
  */
 void GH3X2X_SoftAdtIrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lubFrameId)
 {
+#if CAL_TIME_SWITCH
+    CAL_TIME_START();
+#endif
+
 #if (__USE_GOODIX_SOFT_ADT_ALGORITHM__)
     GH3X2X_ALGO_LOG_PARAM("[%s]:result = %d,%d\r\n", __FUNCTION__, pstAlgoResult->snResult[0], pstAlgoResult->snResult[1]);
     //live object
@@ -387,6 +445,11 @@ void GH3X2X_SoftAdtIrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, G
         /* code implement by user */
     }
     GOODIX_PLANFROM_NADT_RESULT_HANDLE_ENTITY();
+#endif
+
+#if CAL_TIME_SWITCH
+    CAL_TIME_END();
+    CAL_TIME_PRINT("S_ADT_IR");
 #endif
 }
 

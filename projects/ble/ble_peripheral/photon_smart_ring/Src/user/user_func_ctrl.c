@@ -15,14 +15,14 @@
 #include "user_rtc.h"
 #include "user_timer.h"
 
-extern GU16 low_confidence_cnt_hr;
-extern GU16 low_confidence_cnt_spo2;
-extern GU16 low_confidence_cnt_hrv;
-extern GU16 low_confidence_cnt_adt;
-extern GU16 high_confidence_cnt_adt;
-extern GU16 data_cnt_hr;
-extern GU16 data_cnt_spo2;
-extern GU16 data_cnt_hrv;
+GU16 g_low_confidence_cnt_hr   = 0;
+GU16 g_low_confidence_cnt_spo2 = 0;
+GU16 g_low_confidence_cnt_hrv  = 0;
+GU16 g_low_confidence_cnt_adt  = 0;
+GU16 g_high_confidence_cnt_adt = 0;
+GU16 g_data_cnt_hr             = 0;
+GU16 g_data_cnt_spo2           = 0;
+GU16 g_data_cnt_hrv            = 0;
 
 // 功能开关, 默认为NULL，ON时为开启，OFF时为关闭
 static FuncSwitch s_switch_func = kFuncSwitchNull; // 功能总开关
@@ -623,8 +623,8 @@ void _func_ctrl_stop(FuncOption func_option) {
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN);
                 s_switch_adt = kFuncSwitchOff;
 
-                low_confidence_cnt_adt  = 0;
-                high_confidence_cnt_adt = 0;
+                g_low_confidence_cnt_adt  = 0;
+                g_high_confidence_cnt_adt = 0;
 
                 s_status_adt = kFuncStatusOff;
             }
@@ -637,8 +637,8 @@ void _func_ctrl_stop(FuncOption func_option) {
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_HR);
 
-                low_confidence_cnt_hr = 0;
-                data_cnt_hr           = 0;
+                g_low_confidence_cnt_hr = 0;
+                g_data_cnt_hr           = 0;
 
                 s_status_hr = kFuncStatusOff;
             }
@@ -651,8 +651,8 @@ void _func_ctrl_stop(FuncOption func_option) {
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_HRV);
 
-                low_confidence_cnt_hrv = 0;
-                data_cnt_hrv           = 0;
+                g_low_confidence_cnt_hrv = 0;
+                g_data_cnt_hrv           = 0;
 
                 s_status_hrv = kFuncStatusOff;
             }
@@ -682,8 +682,8 @@ void _func_ctrl_stop(FuncOption func_option) {
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_SPO2);
 
-                low_confidence_cnt_spo2 = 0;
-                data_cnt_spo2           = 0;
+                g_low_confidence_cnt_spo2 = 0;
+                g_data_cnt_spo2           = 0;
 
                 s_status_spo2 = kFuncStatusOff;
             }
