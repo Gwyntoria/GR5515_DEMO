@@ -15,7 +15,7 @@
 #include "user_data_center.h"
 #include "user_hrv.h"
 
-#define CAL_TIME_SWITCH  (1)
+#define CAL_TIME_SWITCH  (0)
 #define CAL_TIME_START() g_report_func_start_time = rtc_get_relative_ms();
 #define CAL_TIME_END()                                 \
     g_report_func_end_time = rtc_get_relative_ms(); \
@@ -118,14 +118,13 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
 #endif
 
 #if (__USE_GOODIX_HR_ALGORITHM__)
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:hr = %dbpm, confidence = %d\r\n",
-                                 __FUNCTION__,
-                                 pstAlgoResult->snResult[0],
-                                 pstAlgoResult->snResult[1]);
+    // GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:hr = %dbpm, confidence = %d\r\n",
+    //                              __FUNCTION__,
+    //                              pstAlgoResult->snResult[0],
+    //                              pstAlgoResult->snResult[1]);
 
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     health_hr_data_send(0, &data, 1);
-
 
     if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_HR) {
         g_low_confidence_cnt_hr++;
@@ -145,17 +144,12 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
         g_data_cnt_hr++;
     }
 
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_hr: %d\n", g_low_confidence_cnt_hr);
+    // GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_hr: %d\n", g_low_confidence_cnt_hr);
 
     if (g_data_cnt_hr > DATA_CNT_THRESHOLD_HR * 3) {
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_hr(kFuncSwitchOff);
     }
-
-    // extern GU32 g_unDemoFuncMode;
-    // if ((g_unDemoFuncMode & GH3X2X_FUNCTION_SOFT_ADT_GREEN) != GH3X2X_FUNCTION_SOFT_ADT_GREEN) {
-    //     hrs_heart_rate_measurement_send(0, pstAlgoResult->snResult[0], 1);
-    // }
 
 #endif
 
@@ -187,12 +181,12 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
 #endif
 
 #if (__USE_GOODIX_SPO2_ALGORITHM__)
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]: spo2 = %d%%, R = %d, confidence = %d, con_lvl = %d\r\n",
-                                 __FUNCTION__, 
-                                 pstAlgoResult->snResult[0],
-                                 pstAlgoResult->snResult[1],
-                                 pstAlgoResult->snResult[2],
-                                 pstAlgoResult->snResult[3]);
+    // GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]: spo2 = %d%%, R = %d, confidence = %d, con_lvl = %d\r\n",
+    //                              __FUNCTION__, 
+    //                              pstAlgoResult->snResult[0],
+    //                              pstAlgoResult->snResult[1],
+    //                              pstAlgoResult->snResult[2],
+    //                              pstAlgoResult->snResult[3]);
 
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     health_spo2_data_send(0, &data, 1);
@@ -216,7 +210,7 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
         g_data_cnt_spo2++;
     }
 
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_spo2: %d\n", g_low_confidence_cnt_spo2);
+    // GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_spo2: %d\n", g_low_confidence_cnt_spo2);
 
     if (g_data_cnt_spo2 > DATA_CNT_THRESHOLD_SPO2 * 3) {
         func_ctrl_set_switch_func(kFuncSwitchOff);
@@ -253,17 +247,14 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
 
 #if (__USE_GOODIX_HRV_ALGORITHM__)
     /* code implement by user */
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:hrv_num = %d, RRI0 = %d, RRI1 = %d, RRI2 = %d, RRI3 = %d, confidence = %d\r\n",
-                                 __FUNCTION__, 
-                                 pstAlgoResult->snResult[5], 
-                                 pstAlgoResult->snResult[0],
-                                 pstAlgoResult->snResult[1], 
-                                 pstAlgoResult->snResult[2], 
-                                 pstAlgoResult->snResult[3],
-                                 pstAlgoResult->snResult[4]);
-
-    // uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
-    // health_hrv_data_send(0, &data, 1);
+    // GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:hrv_num = %d, RRI0 = %d, RRI1 = %d, RRI2 = %d, RRI3 = %d, confidence = %d\r\n",
+    //                              __FUNCTION__, 
+    //                              pstAlgoResult->snResult[5], 
+    //                              pstAlgoResult->snResult[0],
+    //                              pstAlgoResult->snResult[1], 
+    //                              pstAlgoResult->snResult[2], 
+    //                              pstAlgoResult->snResult[3],
+    //                              pstAlgoResult->snResult[4]);
 
     if (pstAlgoResult->snResult[4] < CONFIDENCE_THRESHOLD_HRV) {
         g_low_confidence_cnt_hrv++;
@@ -288,7 +279,7 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
         func_ctrl_set_switch_hrv(kFuncSwitchOff);
     }
 
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_hrv: %d\n", g_low_confidence_cnt_hrv);
+    // GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_hrv: %d\n", g_low_confidence_cnt_hrv);
 #endif
 
 #if CAL_TIME_SWITCH
@@ -348,55 +339,40 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
 #endif
 
 #if (__USE_GOODIX_SOFT_ADT_ALGORITHM__)
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:result: %d, confidence: %d\r\n", 
-                                 __FUNCTION__,
-                                 pstAlgoResult->snResult[0],
-                                 pstAlgoResult->snResult[1]);
+    // GH3X2X_SAMPLE_ALGO_LOG_PARAM("[%s]:result: %d, confidence: %d\r\n", 
+    //                              __FUNCTION__,
+    //                              pstAlgoResult->snResult[0],
+    //                              pstAlgoResult->snResult[1]);
+
 
     if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_NADT_GREEN) {
         g_low_confidence_cnt_adt++;
-        // g_high_confidence_cnt_adt = 0;
     } else {
-        // g_low_confidence_cnt_adt = 0;
         g_high_confidence_cnt_adt++;
     }
 
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_adt: %d\n", g_low_confidence_cnt_adt);
-    GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_high_confidence_cnt_adt: %d\n", g_high_confidence_cnt_adt);
+    // GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_adt: %d\n", g_low_confidence_cnt_adt);
+    // GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_high_confidence_cnt_adt: %d\n", g_high_confidence_cnt_adt);
 
     // live object
     if ((pstAlgoResult->snResult[0] == 0x1) || (g_high_confidence_cnt_adt > (20 * 5))) {
-        // extern GU32 g_unDemoFuncMode;
-        // if((g_unDemoFuncMode & GH3X2X_FUNCTION_HR) != GH3X2X_FUNCTION_HR)
-        // {
-        //     Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_HR);
-        // }
-
-        GH3X2X_SAMPLE_ALGO_LOG_PARAM("Wear on\r\n");
-
         func_ctrl_set_result_adt(kFuncResultOn);
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_adt(kFuncSwitchOff);
         wear_off_cnt_reset();
     }
     // non live object
-    // TODO: Further improvement is needed
     else if ((pstAlgoResult->snResult[0] & 0x2) || (g_low_confidence_cnt_adt > (20 * 20))) {
 #if __GH_MSG_WTIH_DRV_LAYER_EN__
         GH_SEND_MSG_WEAR_EVENT(GH3X2X_SOFT_EVENT_WEAR_OFF);
 #else
         GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_OFF);
 #endif
-        /* code implement by user */
-
-        GH3X2X_SAMPLE_ALGO_LOG_PARAM("Wear off\r\n");
-
         func_ctrl_set_result_adt(kFuncResultOff);
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_adt(kFuncSwitchOff);
         wear_off_cnt_condition_increase();
     }
-    GOODIX_PLANFROM_NADT_RESULT_HANDLE_ENTITY();
 #endif
 
 #if CAL_TIME_SWITCH
