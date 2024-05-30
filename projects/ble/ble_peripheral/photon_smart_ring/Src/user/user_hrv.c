@@ -128,12 +128,16 @@ int user_hrv_get_data_average(int* hrv_data_average) {
  * @return GUNTER_SUCCESS if the calculation is successful, GUNTER_ERR_INSUFFICIENT if there is insufficient data.
  */
 int user_hrv_calculate_hrv_rr(uint16_t* rmssd, uint16_t* respiratory_rate) {
-    if (ring_buffer_items_count_get(&hrv_data_warehouse.hrv_buffer) == 0) {
+    uint32_t ret = 0;
+
+    ret = ring_buffer_items_count_get(&hrv_data_warehouse.hrv_buffer);
+    if (ret == 0) {
         APP_LOG_ERROR("No HRV data available");
         return GUNTER_ERR_INSUFFICIENT;
     }
 
     int rri_data_count = user_hrv_get_rri_data_count();
+    APP_LOG_DEBUG("rri_data_count: %d", rri_data_count);
 
     if (rri_data_count < 5) {
         APP_LOG_ERROR("HRV data count is less than 5");
@@ -147,9 +151,12 @@ int user_hrv_calculate_hrv_rr(uint16_t* rmssd, uint16_t* respiratory_rate) {
     int breath_duration   = 0;
 
     for (int i = 0; i < rri_data_count; i++) {
-        if (ring_buffer_pick(&hrv_data_warehouse.hrv_buffer, (uint8_t*)&rri_data[i], sizeof(rri_data[i])) != sizeof(rri_data[i])) {
+        ret = ring_buffer_read(&hrv_data_warehouse.hrv_buffer, (uint8_t*)&rri_data[i], sizeof(rri_data[i]));
+        if (ret != sizeof(rri_data[i])) {
             return GUNTER_FAILURE;
         }
+
+        APP_LOG_DEBUG("rri_data[%d]: %d", i, rri_data[i]);
 
         breath_duration += rri_data[i];
     }
