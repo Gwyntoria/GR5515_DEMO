@@ -15,6 +15,15 @@
 #include "user_rtc.h"
 #include "user_timer.h"
 
+extern GU16 low_confidence_cnt_hr;
+extern GU16 low_confidence_cnt_spo2;
+extern GU16 low_confidence_cnt_hrv;
+extern GU16 low_confidence_cnt_adt;
+extern GU16 high_confidence_cnt_adt;
+extern GU16 data_cnt_hr;
+extern GU16 data_cnt_spo2;
+extern GU16 data_cnt_hrv;
+
 // 功能开关, 默认为NULL，ON时为开启，OFF时为关闭
 static FuncSwitch s_switch_func = kFuncSwitchNull; // 功能总开关
 
@@ -31,6 +40,7 @@ static FuncSwitch s_switch_rst = kFuncSwitchNull; // 重置功能开关
 static FuncSwitch s_switch_act = kFuncSwitchNull; // 活动检测开关
 static FuncSwitch s_switch_slp = kFuncSwitchNull; // 睡眠检测开关
 static FuncSwitch s_switch_ble = kFuncSwitchNull; // BLE发送数据开关
+static FuncSwitch s_switch_lsm = kFuncSwitchNull; // LSM6DSO传感器开关
 
 static FuncResult s_result_adt = kFuncResultNull; // 活体检测结果
 static FuncResult s_result_act = kFuncResultNull; // 活动检测结果
@@ -49,7 +59,71 @@ static FuncStatus s_status_3x2x = kFuncStatusNull; // 3x2x spi 初始化状态
 // wear off
 static int s_wear_off_cnt = 0;
 
-// switch
+
+uint16_t func_ctrl_init(void) {
+    uint16_t ret = GUNTER_SUCCESS;
+
+    s_switch_ble = kFuncSwitchOff;
+    s_switch_lsm = kFuncSwitchOff;
+
+    s_result_adt = kFuncResultOff;
+    s_result_act = kFuncResultOff;
+    s_result_chg = kFuncResultOff;
+    s_result_slp = kFuncResultOff;
+
+    s_status_test = kFuncStatusOff;
+    s_status_init = kFuncStatusOff;
+    s_status_adt  = kFuncStatusOff;
+    s_status_hr   = kFuncStatusOff;
+    s_status_hrv  = kFuncStatusOff;
+    s_status_spo2 = kFuncStatusOff;
+    s_status_3x2x = kFuncStatusOff;
+
+    user_timer_init(); // 定时器初始化
+
+    // RTC间隔中断初始化
+    ret = rtc_set_tick_alarm(DETECTION_INTERVAL);
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("rtc_set_tick_alarm failed");
+        return ret;
+    }
+
+    APP_LOG_INFO("DETECTION_INTERVAL is %us!",
+                 (DETECTION_INTERVAL / SEC_TO_MS));
+
+    // RTC日期中断初始化
+    app_rtc_alarm_t rtc_alarm = {
+        .min                  = 2,
+        .hour                 = 0,
+        .alarm_sel            = CALENDAR_ALARM_SEL_WEEKDAY,
+        .alarm_date_week_mask = CALENDAR_ALARM_WEEKDAY_SUN |
+                                CALENDAR_ALARM_WEEKDAY_MON |
+                                CALENDAR_ALARM_WEEKDAY_TUE |
+                                CALENDAR_ALARM_WEEKDAY_WED |
+                                CALENDAR_ALARM_WEEKDAY_THU |
+                                CALENDAR_ALARM_WEEKDAY_FRI |
+                                CALENDAR_ALARM_WEEKDAY_SAT,
+    };
+
+    ret = rtc_set_date_alarm(&rtc_alarm);
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("rtc_set_date_alarm failed");
+        return ret;
+    }
+
+    APP_LOG_INFO("func_ctrl_init success!");
+
+    return GUNTER_SUCCESS;
+}
+
+uint16_t func_ctrl_deinit(void) {
+    s_switch_func = kFuncSwitchNull;
+    return GUNTER_SUCCESS;
+}
+
+/**
+ * @defgroup switch function
+*/
 
 void func_ctrl_set_switch_func(FuncSwitch func_switch) {
     s_switch_func = func_switch;
@@ -103,7 +177,13 @@ void func_ctrl_set_switch_ble(FuncSwitch func_switch) {
     s_switch_ble = func_switch;
 }
 
-// result
+void func_ctrl_set_switch_lsm(FuncSwitch func_switch) {
+    s_switch_lsm = func_switch;
+}
+
+/**
+ * @defgroup result function
+*/
 
 void func_ctrl_set_result_adt(FuncResult func_result) {
     s_result_adt = func_result;
@@ -125,16 +205,12 @@ FuncResult func_ctrl_get_result_slp(void) {
     return s_result_slp;
 }
 
-// status
+/**
+ * @defgroup status function
+*/
 
 void func_ctrl_set_status_3x2x_off(void) {
     s_status_3x2x = kFuncStatusOff;
-}
-
-void func_ctrl_uninit_3x2x(void) {
-    if (!func_ctrl_is_sampling() && s_status_3x2x == kFuncStatusOn) {
-        s_status_3x2x = kFuncStatusOff;
-    }
 }
 
 // wear off
@@ -149,7 +225,6 @@ void wear_off_cnt_condition_increase(void) {
     }
 }
 
-
 /**
  * Checks if the sampling is in progress.
  *
@@ -161,6 +236,18 @@ bool func_ctrl_is_sampling(void) {
 }
 
 /**
+ * @brief Uninitializes the 3x2x function control.
+ *
+ * This function checks if the sampling is not in progress and the status of the 3x2x function is on.
+ * If both conditions are met, it sets the status of the 3x2x function to off.
+ */
+void _func_ctrl_uninit_3x2x(void) {
+    if (!func_ctrl_is_sampling() && s_status_3x2x == kFuncStatusOn) {
+        s_status_3x2x = kFuncStatusOff;
+    }
+}
+
+/**
  * @brief Caches the given data in the data center.
  *
  * This function caches the provided data in the data center for the specified data type.
@@ -169,7 +256,7 @@ bool func_ctrl_is_sampling(void) {
  * @param data The data to be cached.
  * @return Returns GUNTER_SUCCESS if the data is successfully cached, otherwise returns GUNTER_FAILURE.
  */
-int func_ctrl_cache_data(DataType data_type, uint16_t data) {
+int _func_ctrl_cache_data(DataType data_type, uint16_t data) {
     DataCenterS2f* data_center_s2f = get_data_center_s2f();
     if (data_center_s2f == NULL) {
         APP_LOG_ERROR("Get data center f2b failed");
@@ -196,12 +283,12 @@ int func_ctrl_cache_data(DataType data_type, uint16_t data) {
  *
  * @return GUNTER_SUCCESS if the data is successfully saved to flash, GUNTER_FAILURE otherwise.
  */
-int func_ctrl_save_data() {
+int _func_ctrl_save_data() {
     if (func_ctrl_is_sampling() || s_status_3x2x) {
         return GUNTER_SUCCESS;
     }
 
-    // APP_LOG_INFO("func_ctrl_save_data");
+    // APP_LOG_INFO("_func_ctrl_save_data");
 
     DataCenterS2f* data_center_s2f = get_data_center_s2f();
     if (data_center_s2f == NULL) {
@@ -219,7 +306,12 @@ int func_ctrl_save_data() {
     return GUNTER_SUCCESS;
 }
 
-int func_ctrl_ble_send_data() {
+/**
+ * Sends data over BLE if the BLE switch is on and there is data available in flash.
+ *
+ * @return GUNTER_SUCCESS if the data is sent successfully, otherwise GUNTER_FAILURE.
+ */
+int _func_ctrl_ble_send_data() {
     // APP_LOG_DEBUG("s_switch_ble: %d", s_switch_ble);
 
     if (s_switch_ble != kFuncSwitchOn) {
@@ -230,7 +322,7 @@ int func_ctrl_ble_send_data() {
         return GUNTER_SUCCESS;
     }
 
-    APP_LOG_INFO("func_ctrl_ble_send_data");
+    APP_LOG_INFO("_func_ctrl_ble_send_data");
 
     int ret = 0;
 
@@ -355,69 +447,38 @@ int func_ctrl_ble_send_data() {
     return GUNTER_SUCCESS;
 }
 
-uint16_t func_ctrl_init(void) {
-    uint16_t ret = GUNTER_SUCCESS;
-
-    s_switch_ble = kFuncSwitchOff;
-
-    s_result_adt = kFuncResultOff;
-    s_result_act = kFuncResultOff;
-    s_result_chg = kFuncResultOff;
-    s_result_slp = kFuncResultOff;
-
-    s_status_test = kFuncStatusOff;
-    s_status_init = kFuncStatusOff;
-    s_status_adt  = kFuncStatusOff;
-    s_status_hr   = kFuncStatusOff;
-    s_status_hrv  = kFuncStatusOff;
-    s_status_spo2 = kFuncStatusOff;
-    s_status_3x2x = kFuncStatusOff;
-
-    user_timer_init(); // 定时器初始化
-
-    // RTC间隔中断初始化
-    ret = rtc_set_tick_alarm(DETECTION_INTERVAL);
-    if (ret != GUNTER_SUCCESS) {
-        APP_LOG_ERROR("rtc_set_tick_alarm failed");
-        return ret;
+int _func_ctrl_get_lsm6dso_event() {
+    if (s_switch_lsm != kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
     }
 
-    APP_LOG_INFO("DETECTION_INTERVAL is %us!",
-                 (DETECTION_INTERVAL / SEC_TO_MS));
-
-    // RTC日期中断初始化
-    app_rtc_alarm_t rtc_alarm = {
-        .min                  = 2,
-        .hour                 = 0,
-        .alarm_sel            = CALENDAR_ALARM_SEL_WEEKDAY,
-        .alarm_date_week_mask = CALENDAR_ALARM_WEEKDAY_SUN |
-                                CALENDAR_ALARM_WEEKDAY_MON |
-                                CALENDAR_ALARM_WEEKDAY_TUE |
-                                CALENDAR_ALARM_WEEKDAY_WED |
-                                CALENDAR_ALARM_WEEKDAY_THU |
-                                CALENDAR_ALARM_WEEKDAY_FRI |
-                                CALENDAR_ALARM_WEEKDAY_SAT,
-    };
-
-    ret = rtc_set_date_alarm(&rtc_alarm);
+    int ret = lsm6dso_get_event_status();
     if (ret != GUNTER_SUCCESS) {
-        APP_LOG_ERROR("rtc_set_date_alarm failed");
-        return ret;
+        APP_LOG_ERROR("Get event status failed");
+        return GUNTER_FAILURE;
     }
 
-    APP_LOG_INFO("func_ctrl_init success!");
+    s_switch_lsm = kFuncSwitchOff;
 
     return GUNTER_SUCCESS;
 }
 
-uint16_t func_ctrl_deinit(void) {
-    s_switch_func = kFuncSwitchNull;
+
+int _func_ctrl_reset_component() {
+    int ret = GUNTER_FAILURE;
+
+    ret = lsm6dso_reset_step_counter();
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("lsm6dso_reset_step_counter failed with %#x!\n", ret);
+    }
+
     return GUNTER_SUCCESS;
 }
+
 
 // start & stop
 
-void func_ctrl_start(FuncOption func_option) {
+void _func_ctrl_start(FuncOption func_option) {
 
     // user_timer_start(func_option);
 
@@ -439,7 +500,7 @@ void func_ctrl_start(FuncOption func_option) {
 
         case kFuncOptAdt:
             if (s_status_adt == kFuncStatusOff) {
-                APP_LOG_INFO("func_ctrl_start: Adt is on!");
+                APP_LOG_INFO("_func_ctrl_start: Adt is on!");
 
                 if (s_status_3x2x != kFuncStatusOn) {
                     hal_gh3x2x_spi_init();
@@ -454,7 +515,7 @@ void func_ctrl_start(FuncOption func_option) {
 
         case kFuncOptHr:
             if (s_status_hr == kFuncStatusOff) {
-                APP_LOG_INFO("func_ctrl_start: Hr is on!");
+                APP_LOG_INFO("_func_ctrl_start: Hr is on!");
 
                 if (s_status_3x2x != kFuncStatusOn) {
                     hal_gh3x2x_spi_init();
@@ -469,7 +530,7 @@ void func_ctrl_start(FuncOption func_option) {
 
         case kFuncOptHrv:
             if (s_status_hrv == kFuncStatusOff) {
-                APP_LOG_INFO("func_ctrl_start: Hrv is on!");
+                APP_LOG_INFO("_func_ctrl_start: Hrv is on!");
 
                 if (s_status_3x2x != kFuncStatusOn) {
                     hal_gh3x2x_spi_init();
@@ -484,7 +545,7 @@ void func_ctrl_start(FuncOption func_option) {
 
         case kFuncOptSpo2:
             if (s_status_spo2 == kFuncStatusOff) {
-                APP_LOG_INFO("func_ctrl_start: Spo2 is on!");
+                APP_LOG_INFO("_func_ctrl_start: Spo2 is on!");
 
                 if (s_status_3x2x != kFuncStatusOn) {
                     hal_gh3x2x_spi_init();
@@ -498,7 +559,7 @@ void func_ctrl_start(FuncOption func_option) {
             break;
 
         case kFuncOptBms:
-            APP_LOG_INFO("func_ctrl_start: Bms is on!");
+            APP_LOG_INFO("_func_ctrl_start: Bms is on!");
 
             uint16_t percentage = 0;
             if (s_result_chg == kFuncResultOn) {
@@ -509,32 +570,32 @@ void func_ctrl_start(FuncOption func_option) {
 
             APP_LOG_DEBUG("Battery percentage: %d%%", percentage);
 
-            if (func_ctrl_cache_data(kDataTypeBattery, percentage) != GUNTER_SUCCESS) {
+            if (_func_ctrl_cache_data(kDataTypeBattery, percentage) != GUNTER_SUCCESS) {
                 APP_LOG_ERROR("Cache battery data failed");
             }
 
             break;
 
         case kFuncOptTmp:
-            APP_LOG_INFO("func_ctrl_start: Temp is on!");
+            APP_LOG_INFO("_func_ctrl_start: Temp is on!");
 
             float tmp = nst112x_get_temperature();
             APP_LOG_DEBUG("Temperature: %.2f", tmp);
 
             uint16_t data = (uint16_t)float_to_fixed_point(tmp, NST112_TEMPERATURE_RANGE_MIN, NST112_TEMPERATURE_RANGE_MAX, 100);
 
-            if (func_ctrl_cache_data(kDataTypeTemp, data) != GUNTER_SUCCESS) {
+            if (_func_ctrl_cache_data(kDataTypeTemp, data) != GUNTER_SUCCESS) {
                 APP_LOG_ERROR("Cache temperature data failed");
             }
             break;
 
         case kFuncOptStp:
-            APP_LOG_INFO("func_ctrl_start: Step Counter is on!");
+            APP_LOG_INFO("_func_ctrl_start: Step Counter is on!");
 
             uint16_t step_cnt = lsm6dso_get_step_count();
             APP_LOG_DEBUG("Step Counter: %u", step_cnt);
 
-            if (func_ctrl_cache_data(kDataTypeStep, step_cnt) != GUNTER_SUCCESS) {
+            if (_func_ctrl_cache_data(kDataTypeStep, step_cnt) != GUNTER_SUCCESS) {
                 APP_LOG_ERROR("Cache step counter data failed");
             }
             break;
@@ -545,29 +606,18 @@ void func_ctrl_start(FuncOption func_option) {
     }
 }
 
-extern GU16 low_confidence_cnt_hr;
-extern GU16 data_cnt_hr;
 
-extern GU16 low_confidence_cnt_spo2;
-extern GU16 data_cnt_spo2;
-
-extern GU16 low_confidence_cnt_hrv;
-extern GU16 data_cnt_hrv;
-
-extern GU16 low_confidence_cnt_adt;
-extern GU16 high_confidence_cnt_adt;
-
-void func_ctrl_stop(FuncOption func_option) {
+void _func_ctrl_stop(FuncOption func_option) {
     hal_gh3x2x_spi_init();
 
-    if (func_option != kFuncOptAdt && s_result_adt != kFuncResultNull) {
-        s_result_adt = kFuncResultNull;
+    if (func_option != kFuncOptAdt && s_result_adt != kFuncResultOff) {
+        s_result_adt = kFuncResultOff;
     }
 
     switch (func_option) {
         case kFuncOptAdt:
             if (s_status_adt == kFuncStatusOn) {
-                APP_LOG_INFO("func_ctrl_stop: Adt is off!");
+                APP_LOG_INFO("_func_ctrl_stop: Adt is off!");
 
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_SOFT_ADT_GREEN);
@@ -582,7 +632,7 @@ void func_ctrl_stop(FuncOption func_option) {
 
         case kFuncOptHr:
             if (s_status_hr == kFuncStatusOn) {
-                APP_LOG_INFO("func_ctrl_stop: Hr is off!");
+                APP_LOG_INFO("_func_ctrl_stop: Hr is off!");
 
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_HR);
@@ -596,7 +646,7 @@ void func_ctrl_stop(FuncOption func_option) {
 
         case kFuncOptHrv:
             if (s_status_hrv == kFuncStatusOn) {
-                APP_LOG_INFO("func_ctrl_stop: Hrv is off!");
+                APP_LOG_INFO("_func_ctrl_stop: Hrv is off!");
 
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_HRV);
@@ -613,11 +663,11 @@ void func_ctrl_stop(FuncOption func_option) {
             if (user_hrv_calculate_hrv_rr(&hrv, &rr) == GUNTER_SUCCESS) {
                 APP_LOG_DEBUG("HRV: %u ms, RR: %u bpm", hrv, rr);
 
-                if (func_ctrl_cache_data(kDataTypeHrv, hrv) != GUNTER_SUCCESS) {
+                if (_func_ctrl_cache_data(kDataTypeHrv, hrv) != GUNTER_SUCCESS) {
                     APP_LOG_ERROR("Cache hrv data failed");
                 }
 
-                if (func_ctrl_cache_data(kDataTypeRr, rr) != GUNTER_SUCCESS) {
+                if (_func_ctrl_cache_data(kDataTypeRr, rr) != GUNTER_SUCCESS) {
                     APP_LOG_ERROR("Cache rr data failed");
                 }
             }
@@ -627,7 +677,7 @@ void func_ctrl_stop(FuncOption func_option) {
 
         case kFuncOptSpo2:
             if (s_status_spo2 == kFuncStatusOn) {
-                APP_LOG_INFO("func_ctrl_stop: Spo2 is off!");
+                APP_LOG_INFO("_func_ctrl_stop: Spo2 is off!");
 
                 user_timer_stop(func_option);
                 Gh3x2xDemoStopSampling(GH3X2X_FUNCTION_SPO2);
@@ -645,22 +695,11 @@ void func_ctrl_stop(FuncOption func_option) {
     }
 }
 
-int func_ctrl_reset_component() {
-    int ret = GUNTER_FAILURE;
-
-    ret = lsm6dso_reset_step_counter();
-    if (ret != GUNTER_SUCCESS) {
-        APP_LOG_ERROR("lsm6dso_reset_step_counter failed with %#x!\n", ret);
-    }
-
-    return GUNTER_SUCCESS;
-}
-
 void func_ctrl_handler(void) {
     int ret = 0;
 
-    // static uint32_t count = 0;
-    // APP_LOG_DEBUG("func_ctrl_handler: %u", count++);
+    static uint32_t count = 0;
+    APP_LOG_DEBUG("func_ctrl_handler: %u", count++);
 
     // APP_LOG_DEBUG("s_switch_func: %d", s_switch_func);
     // APP_LOG_DEBUG("s_switch_adt: %d", s_switch_adt);
@@ -681,11 +720,11 @@ void func_ctrl_handler(void) {
     // APP_LOG_DEBUG("s_status_hrv: %d", s_status_hrv);
     // APP_LOG_DEBUG("s_status_spo2: %d", s_status_spo2);
 
-    // APP_LOG_DEBUG("s_status_3x2x: %d", s_status_3x2x);
+    APP_LOG_DEBUG("s_status_3x2x: %d", s_status_3x2x);
 
     // 重置部分功能
     if (s_switch_rst == kFuncSwitchOn) {
-        func_ctrl_reset_component();
+        _func_ctrl_reset_component();
         s_switch_rst = kFuncSwitchNull;
     }
 
@@ -695,14 +734,19 @@ void func_ctrl_handler(void) {
         return;
     }
 
-    ret = func_ctrl_save_data();
+    ret = _func_ctrl_save_data();
     if (ret != GUNTER_SUCCESS) {
-        APP_LOG_ERROR("func_ctrl_save_data failed");
+        APP_LOG_ERROR("_func_ctrl_save_data failed");
     }
 
-    ret = func_ctrl_ble_send_data();
+    ret = _func_ctrl_ble_send_data();
     if (ret != GUNTER_SUCCESS) {
-        APP_LOG_ERROR("func_ctrl_ble_send_data failed");
+        APP_LOG_ERROR("_func_ctrl_ble_send_data failed");
+    }
+
+    ret = _func_ctrl_get_lsm6dso_event();
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("_func_ctrl_get_lsm6dso_event failed");
     }
 
     // 功能总开关未指定时，后续功能不执行
@@ -712,55 +756,56 @@ void func_ctrl_handler(void) {
     }
 
     if (s_switch_bms == kFuncSwitchOn) {
-        func_ctrl_start(kFuncOptBms);
+        _func_ctrl_start(kFuncOptBms);
         s_switch_bms = kFuncSwitchNull;
     }
 
     if (s_switch_tmp == kFuncSwitchOn) {
-        func_ctrl_start(kFuncOptTmp);
+        _func_ctrl_start(kFuncOptTmp);
         s_switch_tmp = kFuncSwitchNull;
     }
 
     if (s_switch_stp == kFuncSwitchOn) {
-        func_ctrl_start(kFuncOptStp);
+        _func_ctrl_start(kFuncOptStp);
         s_switch_stp = kFuncSwitchNull;
     }
 
     if (s_switch_func == kFuncSwitchOn) {
         if (s_switch_init == kFuncSwitchOn) {
-            func_ctrl_start(kFuncOptInitDev);
+            _func_ctrl_start(kFuncOptInitDev);
             s_switch_init = kFuncSwitchNull;
         }
 
-        if (s_switch_adt == kFuncStatusOn &&
-            (s_result_act != kFuncResultOn && s_result_adt != kFuncResultOn)) {
-            do {
-                // Wear off detected
-                if (s_wear_off_cnt > WEAR_OFF_CNT_THRESHOLD) {
-                    APP_LOG_INFO("Wear off detected, stop adt!");
-                    break;
-                }
+        if (s_switch_adt == kFuncStatusOn) {
+            if (s_result_act != kFuncResultOn && s_result_adt != kFuncResultOn) {
+                do {
+                    // Wear off detected
+                    if (s_wear_off_cnt > WEAR_OFF_CNT_THRESHOLD) {
+                        APP_LOG_INFO("Wear off detected, stop adt!");
+                        break;
+                    }
 
-                func_ctrl_start(kFuncOptAdt);
+                    _func_ctrl_start(kFuncOptAdt);
 
-            } while (0);
+                } while (0);
+            }
             s_switch_adt = kFuncSwitchNull;
         }
 
         if (s_status_adt == kFuncStatusOff &&
             (s_result_act == kFuncResultOn || s_result_adt == kFuncResultOn)) {
             if (s_switch_hr == kFuncStatusOn) {
-                func_ctrl_start(kFuncOptHr);
+                _func_ctrl_start(kFuncOptHr);
                 s_switch_hr = kFuncSwitchNull;
             }
 
             if (s_switch_hrv == kFuncStatusOn) {
-                func_ctrl_start(kFuncOptHrv);
+                _func_ctrl_start(kFuncOptHrv);
                 s_switch_hrv = kFuncSwitchNull;
             }
 
             if (s_switch_spo2 == kFuncStatusOn) {
-                func_ctrl_start(kFuncOptSpo2);
+                _func_ctrl_start(kFuncOptSpo2);
                 s_switch_spo2 = kFuncSwitchNull;
             }
         }
@@ -769,29 +814,29 @@ void func_ctrl_handler(void) {
 
     } else if (s_switch_func == kFuncSwitchOff) {
         if (s_switch_adt == kFuncStatusOff) {
-            func_ctrl_stop(kFuncOptAdt);
+            _func_ctrl_stop(kFuncOptAdt);
             s_switch_adt = kFuncSwitchNull;
         }
 
         if (s_switch_hr == kFuncStatusOff) {
-            func_ctrl_stop(kFuncOptHr);
+            _func_ctrl_stop(kFuncOptHr);
             s_switch_hr = kFuncSwitchNull;
         }
 
         if (s_switch_hrv == kFuncStatusOff) {
-            func_ctrl_stop(kFuncOptHrv);
+            _func_ctrl_stop(kFuncOptHrv);
             s_switch_hrv = kFuncSwitchNull;
         }
 
         if (s_switch_spo2 == kFuncStatusOff) {
-            func_ctrl_stop(kFuncOptSpo2);
+            _func_ctrl_stop(kFuncOptSpo2);
             s_switch_spo2 = kFuncSwitchNull;
         }
 
         s_switch_func = kFuncSwitchNull;
     }
 
-    func_ctrl_uninit_3x2x();
+    _func_ctrl_uninit_3x2x();
 
 }
 
@@ -802,14 +847,14 @@ void func_ctrl_test(void) {
     APP_LOG_DEBUG("s_switch_func: %d", s_switch_func);
 
     if (s_switch_func == kFuncSwitchOn) {
-        // func_ctrl_start(kFuncOptAdt);
-        func_ctrl_start(kFuncOptHr);
-        func_ctrl_start(kFuncOptHrv);
-        func_ctrl_start(kFuncOptSpo2);
+        // _func_ctrl_start(kFuncOptAdt);
+        _func_ctrl_start(kFuncOptHr);
+        _func_ctrl_start(kFuncOptHrv);
+        _func_ctrl_start(kFuncOptSpo2);
 
         s_switch_func = kFuncSwitchOff;
     }
 
-    // func_ctrl_start(kFuncOptBms);
-    // func_ctrl_start(kFuncOptTmp);
+    // _func_ctrl_start(kFuncOptBms);
+    // _func_ctrl_start(kFuncOptTmp);
 }
