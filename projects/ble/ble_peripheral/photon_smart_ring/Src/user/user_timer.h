@@ -26,6 +26,8 @@ void user_timer_init(void);
 void user_timer_start(FuncOption func_option);
 void user_timer_stop(FuncOption func_option);
 
+void lsm6dso_start_timer(void);
+
 #ifdef __cplusplus
 #if __cplusplus
 }

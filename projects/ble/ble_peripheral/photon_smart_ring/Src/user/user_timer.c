@@ -25,49 +25,54 @@ static app_timer_id_t s_adt_timer_id;
 static app_timer_id_t s_hr_meas_timer_id;
 static app_timer_id_t s_hrv_meas_timer_id;
 static app_timer_id_t s_spo2_meas_timer_id;
+static app_timer_id_t s_lsm6dso_timer_id;
 
-void init_dev_timeout_handler(void* args) {
+void _init_dev_timeout_handler(void* args) {
     func_ctrl_set_switch_func(kFuncSwitchOff);
     func_ctrl_set_switch_init(kFuncSwitchOff);
 }
 
-void adt_meas_timeout_handler(void* args) {
+void _adt_meas_timeout_handler(void* args) {
     func_ctrl_set_switch_func(kFuncSwitchOff);
     func_ctrl_set_switch_adt(kFuncSwitchOff);
 }
 
-void hr_meas_timeout_handler(void* args) {
+void _hr_meas_timeout_handler(void* args) {
     func_ctrl_set_switch_func(kFuncSwitchOff);
     func_ctrl_set_switch_hr(kFuncSwitchOff);
 
 }
 
-void hrv_meas_timeout_handler(void* args) {
+void _hrv_meas_timeout_handler(void* args) {
     func_ctrl_set_switch_func(kFuncSwitchOff);
     func_ctrl_set_switch_hrv(kFuncSwitchOff);
 }
 
-void spo2_meas_timeout_handler(void* args) {
+void _spo2_meas_timeout_handler(void* args) {
     func_ctrl_set_switch_func(kFuncSwitchOff);
     func_ctrl_set_switch_spo2(kFuncSwitchOff);
+}
+
+void _lsm6dso_timeout_handler(void* args) {
+    func_ctrl_set_switch_lsm(kFuncSwitchOn);
 }
 
 void user_timer_init(void) {
     sdk_err_t error_code;
 
-    error_code = app_timer_create(&s_init_dev_timer_id, ATIMER_ONE_SHOT, init_dev_timeout_handler);
+    error_code = app_timer_create(&s_init_dev_timer_id, ATIMER_ONE_SHOT, _init_dev_timeout_handler);
     APP_ERROR_CHECK(error_code);
 
-    error_code = app_timer_create(&s_adt_timer_id, ATIMER_ONE_SHOT, adt_meas_timeout_handler);
+    error_code = app_timer_create(&s_adt_timer_id, ATIMER_ONE_SHOT, _adt_meas_timeout_handler);
     APP_ERROR_CHECK(error_code);
 
-    error_code = app_timer_create(&s_hr_meas_timer_id, ATIMER_ONE_SHOT, hr_meas_timeout_handler);
+    error_code = app_timer_create(&s_hr_meas_timer_id, ATIMER_ONE_SHOT, _hr_meas_timeout_handler);
     APP_ERROR_CHECK(error_code);
 
-    error_code = app_timer_create(&s_hrv_meas_timer_id, ATIMER_ONE_SHOT, hrv_meas_timeout_handler);
+    error_code = app_timer_create(&s_hrv_meas_timer_id, ATIMER_ONE_SHOT, _hrv_meas_timeout_handler);
     APP_ERROR_CHECK(error_code);
 
-    error_code = app_timer_create(&s_spo2_meas_timer_id, ATIMER_ONE_SHOT, spo2_meas_timeout_handler);
+    error_code = app_timer_create(&s_spo2_meas_timer_id, ATIMER_ONE_SHOT, _spo2_meas_timeout_handler);
     APP_ERROR_CHECK(error_code);
 
 }
@@ -135,4 +140,16 @@ void user_timer_stop(FuncOption func_option) {
                 break;
         }
     }
+}
+
+void lsm6dso_start_timer(void) {
+    sdk_err_t error_code = 0;
+
+    error_code = app_timer_create(&s_lsm6dso_timer_id, ATIMER_REPEAT, _lsm6dso_timeout_handler);
+    APP_ERROR_CHECK(error_code);
+
+    error_code = app_timer_start(s_lsm6dso_timer_id, 10, NULL);
+    APP_ERROR_CHECK(error_code);
+
+    APP_LOG_INFO("lsm6dso timer start success");
 }
