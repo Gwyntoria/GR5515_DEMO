@@ -100,6 +100,8 @@ int count_sequence_in_buffer(const uint8_t* buffer, size_t buffer_size,
 uint32_t float_to_fixed_point(float input, int min, int max, int scale);
 float    fixed_point_to_float(uint32_t input, int min, int max, int scale);
 
+void calculate_interval_from_previous(char* tag);
+
 #ifdef __cplusplus
 }
 #endif

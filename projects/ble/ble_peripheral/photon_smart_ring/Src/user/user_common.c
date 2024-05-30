@@ -264,3 +264,20 @@ float fixed_point_to_float(uint32_t input, int min, int max, int scale) {
     
     return scaledInput;
 }
+
+void calculate_interval_from_previous(char* tag) {
+    static uint64_t time_pre = 0;
+    uint64_t        time_cur = 0;
+    uint64_t        time_dif = 0;
+
+    time_cur = rtc_get_relative_ms();
+
+    if (time_pre == 0) {
+        time_pre = time_cur;
+    }
+
+    time_dif = time_cur - time_pre;
+    APP_LOG_DEBUG("Interval[%s] from previous: %llu ms", tag, time_dif);
+
+    time_pre = time_cur;
+}
