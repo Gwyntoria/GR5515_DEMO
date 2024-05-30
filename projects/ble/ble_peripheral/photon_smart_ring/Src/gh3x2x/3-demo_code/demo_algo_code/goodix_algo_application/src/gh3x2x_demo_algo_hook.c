@@ -110,11 +110,13 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
     } else {
         low_confidence_cnt_hr = 0;
 
-        DataCenterS2f* data_center_s2f = get_data_center_s2f();
-        if (data_center_s2f->recv_sensor_func) {
-            int ret = data_center_s2f->recv_sensor_func(data_center_s2f, kDataTypeHr, (uint16_t)data);
-            if (ret != GUNTER_SUCCESS) {
-                GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor_func error: %d\n", ret);
+        if (data_cnt_hr < DATA_CNT_THRESHOLD_HR) {
+            DataCenterS2f* data_center_s2f = get_data_center_s2f();
+            if (data_center_s2f->recv_sensor_func) {
+                int ret = data_center_s2f->recv_sensor_func(data_center_s2f, kDataTypeHr, (uint16_t)data);
+                if (ret != GUNTER_SUCCESS) {
+                    GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor_func error: %d\n", ret);
+                }
             }
         }
 
@@ -123,7 +125,7 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
 
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_hr: %d\n", low_confidence_cnt_hr);
 
-    if (data_cnt_hr >= 5) {
+    if (data_cnt_hr > DATA_CNT_THRESHOLD_HR * 3) {
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_hr(kFuncSwitchOff);
     }
@@ -173,11 +175,13 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
     } else {
         low_confidence_cnt_spo2 = 0;
 
-        DataCenterS2f* data_center_s2f = get_data_center_s2f();
-        if (data_center_s2f->recv_sensor_func) {
-            int ret = data_center_s2f->recv_sensor_func(data_center_s2f, kDataTypeSpo2, (uint16_t)data);
-            if (ret != GUNTER_SUCCESS) {
-                GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor_func error: %d\n", ret);
+        if (data_cnt_spo2 < DATA_CNT_THRESHOLD_SPO2) {
+            DataCenterS2f* data_center_s2f = get_data_center_s2f();
+            if (data_center_s2f->recv_sensor_func) {
+                int ret = data_center_s2f->recv_sensor_func(data_center_s2f, kDataTypeSpo2, (uint16_t)data);
+                if (ret != GUNTER_SUCCESS) {
+                    GH3X2X_SAMPLE_ALGO_LOG_PARAM("DataCenterS2f recv_sensor_func error: %d\n", ret);
+                }
             }
         }
 
@@ -186,7 +190,7 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
 
     GH3X2X_SAMPLE_ALGO_LOG_PARAM("low_confidence_cnt_spo2: %d\n", low_confidence_cnt_spo2);
 
-    if (data_cnt_spo2 >= 5) {
+    if (data_cnt_spo2 > DATA_CNT_THRESHOLD_SPO2 * 3) {
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_spo2(kFuncSwitchOff);
     }
@@ -242,9 +246,11 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
         }
 
         data_cnt_hrv++;
+
+        // printf("HRV data count: %d\n", data_cnt_hrv);
     }
 
-    if (data_cnt_hrv >= 10) {
+    if (data_cnt_hrv >= DATA_CNT_THRESHOLD_RRI) {
         func_ctrl_set_switch_func(kFuncSwitchOff);
         func_ctrl_set_switch_hrv(kFuncSwitchOff);
     }
