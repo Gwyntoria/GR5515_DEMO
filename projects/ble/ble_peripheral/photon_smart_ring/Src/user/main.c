@@ -139,22 +139,26 @@ int main(void) {
 
     // flash_func_test();
 
+    lsm6dso_start_timer(); // 启动6轴传感器定时器
+
     while (1) {
 
         if (g_uchGh3x2xIntCallBackIsCalled) {
             Gh3x2xDemoInterruptProcess();
         }
 
+        // calculate_interval_from_previous("main");
+
         func_ctrl_handler(); // 功能控制模块处理
         // func_ctrl_test(); // 功能控制模块测试
 
-        lsm6dso_get_event_status();
+        // lsm6dso_get_event_status();
 
         app_log_flush(); // 刷新log缓存
         app_log_store_schedule();
         pwr_mgmt_schedule(); // 电源管理调度，负责管理查询是否可以进入睡眠
         dfu_schedule();
 
-        delay_ms(20);
+        delay_ms(1);
     }
 }
