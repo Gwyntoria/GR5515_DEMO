@@ -9,11 +9,7 @@ extern "C" {
 #endif
 #endif
 
-uint16_t user_nfc_init(void);
-uint16_t user_nfc_read_user_mem(uint16_t user_memory_addr, uint8_t* buffer, uint16_t size);
-uint16_t user_nfc_write_user_mem(uint16_t user_memory_addr, uint8_t* data, uint16_t size);
-uint16_t user_nfc_read_sys_reg(uint16_t reg_addr, uint8_t* buffer, uint16_t size);
-uint16_t user_nfc_write_sys_reg(uint16_t reg_addr, uint8_t* data, uint16_t size);
+int user_nfc_init(void);
 
 void user_nfc_test(void);
 
