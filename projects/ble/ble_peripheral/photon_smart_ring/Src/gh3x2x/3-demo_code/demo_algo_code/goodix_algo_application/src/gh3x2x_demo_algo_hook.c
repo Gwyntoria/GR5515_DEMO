@@ -16,12 +16,19 @@
 #include "user_hrv.h"
 
 #define CAL_TIME_SWITCH  (0)
+
+#if CAL_TIME_SWITCH
+uint64_t g_report_func_start_time = 0;
+uint64_t g_report_func_end_time   = 0;
+uint64_t g_report_func_time       = 0;
+
 #define CAL_TIME_START() g_report_func_start_time = rtc_get_relative_ms();
-#define CAL_TIME_END()                                 \
+#define CAL_TIME_END()                              \
     g_report_func_end_time = rtc_get_relative_ms(); \
     g_report_func_time     = g_report_func_end_time - g_report_func_start_time;
 
 #define CAL_TIME_PRINT(type) GH3X2X_SAMPLE_ALGO_LOG_PARAM("Report %s time: %d ms\n", type, g_report_func_time);
+#endif
 
 extern GU16 g_low_confidence_cnt_hr;
 extern GU16 g_low_confidence_cnt_spo2;
@@ -31,10 +38,6 @@ extern GU16 g_high_confidence_cnt_adt;
 extern GU16 g_data_cnt_hr;
 extern GU16 g_data_cnt_spo2;
 extern GU16 g_data_cnt_hrv;
-
-uint64_t g_report_func_start_time = 0;
-uint64_t g_report_func_end_time = 0;
-uint64_t g_report_func_time = 0;
 
 #if (__GOODIX_ALGO_CALL_MODE__)
 
