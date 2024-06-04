@@ -26,7 +26,7 @@ static RtcStatus s_rtc_status = kRtcDefault;
 void rtc_evt_tick_alarm_handler(void) {
     APP_LOG_INFO("rtc tick alarm triggered");
 
-    func_ctrl_set_switch_func(kFuncSwitchOn);
+    func_ctrl_set_switch_3x2x(kFuncSwitchOn);
 
     func_ctrl_set_switch_adt(kFuncSwitchOn);
     func_ctrl_set_switch_hr(kFuncSwitchOn);

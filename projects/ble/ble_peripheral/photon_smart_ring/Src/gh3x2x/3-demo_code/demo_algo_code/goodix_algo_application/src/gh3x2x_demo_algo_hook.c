@@ -14,6 +14,7 @@
 #include "user_rtc.h"
 #include "user_data_center.h"
 #include "user_hrv.h"
+#include "user_3x2x_log.h"
 
 #define CAL_TIME_SWITCH  (0)
 
@@ -126,6 +127,11 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
     //                              pstAlgoResult->snResult[0],
     //                              pstAlgoResult->snResult[1]);
 
+    log_hr_t log_hr;
+    log_hr.hr = pstAlgoResult->snResult[0];
+    log_hr.confidence = pstAlgoResult->snResult[1];
+    user_3x2x_log_cache_hr(&log_hr);
+
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     health_hr_data_send(0, &data, 1);
 
@@ -150,7 +156,7 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
     // GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_hr: %d\n", g_low_confidence_cnt_hr);
 
     if (g_data_cnt_hr > DATA_CNT_THRESHOLD_HR * 3) {
-        func_ctrl_set_switch_func(kFuncSwitchOff);
+        func_ctrl_set_switch_3x2x(kFuncSwitchOff);
         func_ctrl_set_switch_hr(kFuncSwitchOff);
     }
 
@@ -191,6 +197,11 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
     //                              pstAlgoResult->snResult[2],
     //                              pstAlgoResult->snResult[3]);
 
+    log_spo2_t log_spo2;
+    log_spo2.spo2 = pstAlgoResult->snResult[0];
+    log_spo2.confidence = pstAlgoResult->snResult[3];
+    user_3x2x_log_cache_spo2(&log_spo2);
+
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
     health_spo2_data_send(0, &data, 1);
 
@@ -216,7 +227,7 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
     // GH3X2X_SAMPLE_ALGO_LOG_PARAM("g_low_confidence_cnt_spo2: %d\n", g_low_confidence_cnt_spo2);
 
     if (g_data_cnt_spo2 > DATA_CNT_THRESHOLD_SPO2 * 3) {
-        func_ctrl_set_switch_func(kFuncSwitchOff);
+        func_ctrl_set_switch_3x2x(kFuncSwitchOff);
         func_ctrl_set_switch_spo2(kFuncSwitchOff);
     }
 
@@ -259,6 +270,15 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
     //                              pstAlgoResult->snResult[3],
     //                              pstAlgoResult->snResult[4]);
 
+    log_hrv_t log_hrv;
+    log_hrv.rri_0      = pstAlgoResult->snResult[0];
+    log_hrv.rri_1      = pstAlgoResult->snResult[1];
+    log_hrv.rri_2      = pstAlgoResult->snResult[2];
+    log_hrv.rri_3      = pstAlgoResult->snResult[3];
+    log_hrv.confidence = pstAlgoResult->snResult[4];
+    log_hrv.num        = pstAlgoResult->snResult[5];
+    user_3x2x_log_cache_hrv(&log_hrv);
+
     if (pstAlgoResult->snResult[4] < CONFIDENCE_THRESHOLD_HRV) {
         g_low_confidence_cnt_hrv++;
     } else {
@@ -278,7 +298,7 @@ void GH3X2X_HrvAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lu
     }
 
     if (g_data_cnt_hrv >= DATA_CNT_THRESHOLD_RRI) {
-        func_ctrl_set_switch_func(kFuncSwitchOff);
+        func_ctrl_set_switch_3x2x(kFuncSwitchOff);
         func_ctrl_set_switch_hrv(kFuncSwitchOff);
     }
 
@@ -347,6 +367,10 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
     //                              pstAlgoResult->snResult[0],
     //                              pstAlgoResult->snResult[1]);
 
+    log_adt_t log_adt;
+    log_adt.adt = pstAlgoResult->snResult[0];
+    log_adt.confidence = pstAlgoResult->snResult[1];
+    user_3x2x_log_cache_adt(&log_adt);
 
     if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_NADT_GREEN) {
         g_low_confidence_cnt_adt++;
@@ -360,7 +384,7 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
     // live object
     if ((pstAlgoResult->snResult[0] == 0x1) || (g_high_confidence_cnt_adt > (20 * 5))) {
         func_ctrl_set_result_adt(kFuncResultOn);
-        func_ctrl_set_switch_func(kFuncSwitchOff);
+        func_ctrl_set_switch_3x2x(kFuncSwitchOff);
         func_ctrl_set_switch_adt(kFuncSwitchOff);
         wear_off_cnt_reset();
     }
@@ -372,7 +396,7 @@ void GH3X2X_SoftAdtGreenAlgorithmResultReport(STGh3x2xAlgoResult* pstAlgoResult,
         GH3X2X_SetSoftEvent(GH3X2X_SOFT_EVENT_WEAR_OFF);
 #endif
         func_ctrl_set_result_adt(kFuncResultOff);
-        func_ctrl_set_switch_func(kFuncSwitchOff);
+        func_ctrl_set_switch_3x2x(kFuncSwitchOff);
         func_ctrl_set_switch_adt(kFuncSwitchOff);
         wear_off_cnt_condition_increase();
     }

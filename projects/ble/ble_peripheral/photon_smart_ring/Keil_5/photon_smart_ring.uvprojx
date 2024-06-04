@@ -794,6 +794,11 @@
               <FileType>1</FileType>
               <FilePath>..\Src\user\user_hrv.c</FilePath>
             </File>
+            <File>
+              <FileName>user_3x2x_log.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Src\user\user_3x2x_log.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

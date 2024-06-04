@@ -139,8 +139,8 @@ int user_hrv_calculate_hrv_rr(uint16_t* rmssd, uint16_t* respiratory_rate) {
     int rri_data_count = user_hrv_get_rri_data_count();
     APP_LOG_DEBUG("rri_data_count: %d", rri_data_count);
 
-    if (rri_data_count < 5) {
-        APP_LOG_ERROR("HRV data count is less than 5");
+    if (rri_data_count < 10) {
+        APP_LOG_ERROR("RRI data count is less than 10");
         return GUNTER_ERR_INSUFFICIENT;
     }
 

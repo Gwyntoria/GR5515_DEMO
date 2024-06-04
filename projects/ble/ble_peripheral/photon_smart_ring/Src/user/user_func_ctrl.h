@@ -37,9 +37,6 @@ typedef enum FuncOption {
     kFuncOptHr,
     kFuncOptHrv,
     kFuncOptSpo2,
-    kFuncOptBms,
-    kFuncOptTmp,
-    kFuncOptStp,
     kFuncOptNull
 } FuncOption;
 
@@ -68,7 +65,7 @@ extern "C" {
 uint16_t func_ctrl_init(void);
 uint16_t func_ctrl_deinit(void);
 
-void func_ctrl_set_switch_func(FuncSwitch func_switch);
+void func_ctrl_set_switch_3x2x(FuncSwitch func_switch);
 void func_ctrl_set_switch_init(FuncSwitch func_switch);
 void func_ctrl_set_switch_adt(FuncSwitch func_switch);
 void func_ctrl_set_switch_hr(FuncSwitch func_switch);

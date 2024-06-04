@@ -14,6 +14,7 @@
 #include "user_lsm6dso.h"
 #include "user_rtc.h"
 #include "user_timer.h"
+#include "user_3x2x_log.h"
 
 GU16 g_low_confidence_cnt_hr   = 0;
 GU16 g_low_confidence_cnt_spo2 = 0;
@@ -25,8 +26,7 @@ GU16 g_data_cnt_spo2           = 0;
 GU16 g_data_cnt_hrv            = 0;
 
 // 功能开关, 默认为NULL，ON时为开启，OFF时为关闭
-static FuncSwitch s_switch_func = kFuncSwitchNull; // 功能总开关
-
+static FuncSwitch s_switch_3x2x = kFuncSwitchNull; // 3x2x开关
 static FuncSwitch s_switch_init = kFuncSwitchNull; // 初始化开关
 static FuncSwitch s_switch_adt  = kFuncSwitchNull; // 活体检测开关
 static FuncSwitch s_switch_hr   = kFuncSwitchNull; // 心率检测开关
@@ -40,7 +40,7 @@ static FuncSwitch s_switch_rst = kFuncSwitchNull; // 重置功能开关
 static FuncSwitch s_switch_act = kFuncSwitchNull; // 活动检测开关
 static FuncSwitch s_switch_slp = kFuncSwitchNull; // 睡眠检测开关
 static FuncSwitch s_switch_ble = kFuncSwitchNull; // BLE发送数据开关
-static FuncSwitch s_switch_lsm = kFuncSwitchNull; // LSM6DSO传感器开关
+static FuncSwitch s_switch_6ds = kFuncSwitchNull; // LSM6DSO传感器开关
 
 static FuncResult s_result_adt = kFuncResultNull; // 活体检测结果
 static FuncResult s_result_act = kFuncResultNull; // 活动检测结果
@@ -63,8 +63,14 @@ static int s_wear_off_cnt = 0;
 uint16_t func_ctrl_init(void) {
     uint16_t ret = GUNTER_SUCCESS;
 
+    s_switch_bms = kFuncSwitchOff;
+    s_switch_tmp = kFuncSwitchOff;
+    s_switch_stp = kFuncSwitchOff;
+    s_switch_rst = kFuncSwitchOff;
+    s_switch_act = kFuncSwitchOff;
+    s_switch_slp = kFuncSwitchOff;
     s_switch_ble = kFuncSwitchOff;
-    s_switch_lsm = kFuncSwitchOff;
+    s_switch_6ds = kFuncSwitchOff;
 
     s_result_adt = kFuncResultOff;
     s_result_act = kFuncResultOff;
@@ -117,7 +123,7 @@ uint16_t func_ctrl_init(void) {
 }
 
 uint16_t func_ctrl_deinit(void) {
-    s_switch_func = kFuncSwitchNull;
+    s_switch_3x2x = kFuncSwitchNull;
     return GUNTER_SUCCESS;
 }
 
@@ -125,8 +131,8 @@ uint16_t func_ctrl_deinit(void) {
  * @defgroup switch function
 */
 
-void func_ctrl_set_switch_func(FuncSwitch func_switch) {
-    s_switch_func = func_switch;
+void func_ctrl_set_switch_3x2x(FuncSwitch func_switch) {
+    s_switch_3x2x = func_switch;
 }
 
 void func_ctrl_set_switch_init(FuncSwitch func_switch) {
@@ -178,7 +184,7 @@ void func_ctrl_set_switch_ble(FuncSwitch func_switch) {
 }
 
 void func_ctrl_set_switch_lsm(FuncSwitch func_switch) {
-    s_switch_lsm = func_switch;
+    s_switch_6ds = func_switch;
 }
 
 /**
@@ -270,6 +276,68 @@ int _func_ctrl_cache_data(DataType data_type, uint16_t data) {
             return GUNTER_FAILURE;
         }
     }
+
+    return GUNTER_SUCCESS;
+}
+
+int _func_ctrl_get_battery_percentage(void) {
+    if (s_switch_bms != kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
+    uint16_t percentage = 0;
+    if (s_result_chg == kFuncResultOn) {
+        percentage = get_battery_percentage(VOL_CHAN_CHARGING);
+    } else {
+        percentage = get_battery_percentage(VOL_CHAN_DISCHARGING);
+    }
+
+    APP_LOG_DEBUG("Battery percentage: %d%%", percentage);
+
+    if (_func_ctrl_cache_data(kDataTypeBattery, percentage) != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("Cache battery data failed");
+        return GUNTER_FAILURE;
+    }
+
+    s_switch_bms = kFuncSwitchOff;
+
+    return GUNTER_SUCCESS;
+}
+
+int _func_ctrl_get_temperature(void) {
+    if (s_switch_tmp != kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
+    float tmp = nst112x_get_temperature();
+    APP_LOG_DEBUG("Temperature: %.2f", tmp);
+
+    uint16_t data = (uint16_t)float_to_fixed_point(tmp, NST112_TEMPERATURE_RANGE_MIN, NST112_TEMPERATURE_RANGE_MAX, 100);
+
+    if (_func_ctrl_cache_data(kDataTypeTemp, data) != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("Cache temperature data failed");
+        return GUNTER_FAILURE;
+    }
+
+    s_switch_tmp = kFuncSwitchOff;
+
+    return GUNTER_SUCCESS;
+}
+
+int _func_ctrl_get_step_counter(void) {
+    if (s_switch_stp != kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
+    uint16_t step_cnt = lsm6dso_get_step_count();
+    APP_LOG_DEBUG("Step Counter: %u", step_cnt);
+
+    if (_func_ctrl_cache_data(kDataTypeStep, step_cnt) != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("Cache step counter data failed");
+        return GUNTER_FAILURE;
+    }
+
+    s_switch_stp = kFuncSwitchOff;
 
     return GUNTER_SUCCESS;
 }
@@ -448,7 +516,7 @@ int _func_ctrl_ble_send_data() {
 }
 
 int _func_ctrl_get_lsm6dso_event() {
-    if (s_switch_lsm != kFuncSwitchOn) {
+    if (s_switch_6ds != kFuncSwitchOn) {
         return GUNTER_SUCCESS;
     }
 
@@ -458,19 +526,25 @@ int _func_ctrl_get_lsm6dso_event() {
         return GUNTER_FAILURE;
     }
 
-    s_switch_lsm = kFuncSwitchOff;
+    s_switch_6ds = kFuncSwitchOff;
 
     return GUNTER_SUCCESS;
 }
 
 
 int _func_ctrl_reset_component() {
+    if (s_switch_rst != kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
     int ret = GUNTER_FAILURE;
 
     ret = lsm6dso_reset_step_counter();
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("lsm6dso_reset_step_counter failed with %#x!\n", ret);
     }
+
+    s_switch_rst = kFuncSwitchOff;
 
     return GUNTER_SUCCESS;
 }
@@ -479,9 +553,6 @@ int _func_ctrl_reset_component() {
 // start & stop
 
 void _func_ctrl_start(FuncOption func_option) {
-
-    // user_timer_start(func_option);
-
     switch (func_option) {
         case kFuncOptInitDev:
             if (s_status_init == kFuncStatusOff) {
@@ -555,48 +626,6 @@ void _func_ctrl_start(FuncOption func_option) {
                 Gh3x2xDemoStartSampling(GH3X2X_FUNCTION_SPO2);
                 user_timer_start(func_option);
                 s_status_spo2 = kFuncStatusOn;
-            }
-            break;
-
-        case kFuncOptBms:
-            APP_LOG_INFO("_func_ctrl_start: Bms is on!");
-
-            uint16_t percentage = 0;
-            if (s_result_chg == kFuncResultOn) {
-                percentage = get_battery_percentage(VOL_CHAN_CHARGING);
-            } else {
-                percentage = get_battery_percentage(VOL_CHAN_DISCHARGING);
-            }
-
-            APP_LOG_DEBUG("Battery percentage: %d%%", percentage);
-
-            if (_func_ctrl_cache_data(kDataTypeBattery, percentage) != GUNTER_SUCCESS) {
-                APP_LOG_ERROR("Cache battery data failed");
-            }
-
-            break;
-
-        case kFuncOptTmp:
-            APP_LOG_INFO("_func_ctrl_start: Temp is on!");
-
-            float tmp = nst112x_get_temperature();
-            APP_LOG_DEBUG("Temperature: %.2f", tmp);
-
-            uint16_t data = (uint16_t)float_to_fixed_point(tmp, NST112_TEMPERATURE_RANGE_MIN, NST112_TEMPERATURE_RANGE_MAX, 100);
-
-            if (_func_ctrl_cache_data(kDataTypeTemp, data) != GUNTER_SUCCESS) {
-                APP_LOG_ERROR("Cache temperature data failed");
-            }
-            break;
-
-        case kFuncOptStp:
-            APP_LOG_INFO("_func_ctrl_start: Step Counter is on!");
-
-            uint16_t step_cnt = lsm6dso_get_step_count();
-            APP_LOG_DEBUG("Step Counter: %u", step_cnt);
-
-            if (_func_ctrl_cache_data(kDataTypeStep, step_cnt) != GUNTER_SUCCESS) {
-                APP_LOG_ERROR("Cache step counter data failed");
             }
             break;
 
@@ -695,13 +724,47 @@ void _func_ctrl_stop(FuncOption func_option) {
     }
 }
 
+void _func_ctrl_3x2x_log() {
+    if (s_status_3x2x != kFuncStatusOn) {
+        return;
+    }
+
+    if (s_status_hr == kFuncStatusOn) {
+        // APP_LOG_DEBUG("g_low_confidence_cnt_hr: %u", g_low_confidence_cnt_hr);
+        // APP_LOG_DEBUG("g_data_cnt_hr: %u", g_data_cnt_hr);
+
+        user_3x2x_log_print_hr();
+    }
+
+    if (s_status_spo2 == kFuncStatusOn) {
+        // APP_LOG_DEBUG("g_low_confidence_cnt_spo2: %u", g_low_confidence_cnt_spo2);
+        // APP_LOG_DEBUG("g_data_cnt_spo2: %u", g_data_cnt_spo2);
+
+        user_3x2x_log_print_spo2();
+    }
+
+    if (s_status_hrv == kFuncStatusOn) {
+        // APP_LOG_DEBUG("g_low_confidence_cnt_hrv: %u", g_low_confidence_cnt_hrv);
+        // APP_LOG_DEBUG("g_data_cnt_hrv: %u", g_data_cnt_hrv);
+
+        user_3x2x_log_print_hrv();
+    }
+
+    if (s_status_adt == kFuncStatusOn) {
+        // APP_LOG_DEBUG("g_low_confidence_cnt_adt: %u", g_low_confidence_cnt_adt);
+        // APP_LOG_DEBUG("g_high_confidence_cnt_adt: %u", g_high_confidence_cnt_adt);
+
+        user_3x2x_log_print_adt();
+    }
+}
+
 void func_ctrl_handler(void) {
     int ret = 0;
 
-    static uint32_t count = 0;
-    APP_LOG_DEBUG("func_ctrl_handler: %u", count++);
+    // static uint32_t count = 0;
+    // APP_LOG_DEBUG("func_ctrl_handler: %u", count++);
 
-    // APP_LOG_DEBUG("s_switch_func: %d", s_switch_func);
+    // APP_LOG_DEBUG("s_switch_3x2x: %d", s_switch_3x2x);
     // APP_LOG_DEBUG("s_switch_adt: %d", s_switch_adt);
     // APP_LOG_DEBUG("s_switch_hr: %d", s_switch_hr);
     // APP_LOG_DEBUG("s_switch_hrv: %d", s_switch_hrv);
@@ -720,12 +783,12 @@ void func_ctrl_handler(void) {
     // APP_LOG_DEBUG("s_status_hrv: %d", s_status_hrv);
     // APP_LOG_DEBUG("s_status_spo2: %d", s_status_spo2);
 
-    APP_LOG_DEBUG("s_status_3x2x: %d", s_status_3x2x);
+    // APP_LOG_DEBUG("s_status_3x2x: %d", s_status_3x2x);
 
     // 重置部分功能
-    if (s_switch_rst == kFuncSwitchOn) {
-        _func_ctrl_reset_component();
-        s_switch_rst = kFuncSwitchNull;
+    ret = _func_ctrl_reset_component();
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("_func_ctrl_reset_component failed");
     }
 
     // 处于充电模式下，后续功能不执行
@@ -749,28 +812,22 @@ void func_ctrl_handler(void) {
         APP_LOG_ERROR("_func_ctrl_get_lsm6dso_event failed");
     }
 
-    // 功能总开关未指定时，后续功能不执行
-    if (s_switch_func == kFuncSwitchNull) {
-        // APP_LOG_DEBUG("func_ctrl_handler: func_switch is off!");
-        return;
+    ret = _func_ctrl_get_battery_percentage();
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("_func_ctrl_get_battery_percentage failed");
     }
 
-    if (s_switch_bms == kFuncSwitchOn) {
-        _func_ctrl_start(kFuncOptBms);
-        s_switch_bms = kFuncSwitchNull;
+    ret = _func_ctrl_get_temperature();
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("_func_ctrl_get_temperature failed");
     }
 
-    if (s_switch_tmp == kFuncSwitchOn) {
-        _func_ctrl_start(kFuncOptTmp);
-        s_switch_tmp = kFuncSwitchNull;
+    ret = _func_ctrl_get_step_counter();
+    if (ret != GUNTER_SUCCESS) {
+        APP_LOG_ERROR("_func_ctrl_get_step_counter failed");
     }
 
-    if (s_switch_stp == kFuncSwitchOn) {
-        _func_ctrl_start(kFuncOptStp);
-        s_switch_stp = kFuncSwitchNull;
-    }
-
-    if (s_switch_func == kFuncSwitchOn) {
+    if (s_switch_3x2x == kFuncSwitchOn) {
         if (s_switch_init == kFuncSwitchOn) {
             _func_ctrl_start(kFuncOptInitDev);
             s_switch_init = kFuncSwitchNull;
@@ -810,9 +867,9 @@ void func_ctrl_handler(void) {
             }
         }
 
-        s_switch_func = kFuncSwitchNull;
+        s_switch_3x2x = kFuncSwitchNull;
 
-    } else if (s_switch_func == kFuncSwitchOff) {
+    } else if (s_switch_3x2x == kFuncSwitchOff) {
         if (s_switch_adt == kFuncStatusOff) {
             _func_ctrl_stop(kFuncOptAdt);
             s_switch_adt = kFuncSwitchNull;
@@ -833,10 +890,12 @@ void func_ctrl_handler(void) {
             s_switch_spo2 = kFuncSwitchNull;
         }
 
-        s_switch_func = kFuncSwitchNull;
+        s_switch_3x2x = kFuncSwitchNull;
     }
 
     _func_ctrl_uninit_3x2x();
+
+    _func_ctrl_3x2x_log();
 
 }
 
@@ -844,15 +903,15 @@ void func_ctrl_test(void) {
     static uint32_t count = 0;
     APP_LOG_DEBUG("func_ctrl_test: %u", count++);
 
-    APP_LOG_DEBUG("s_switch_func: %d", s_switch_func);
+    APP_LOG_DEBUG("s_switch_3x2x: %d", s_switch_3x2x);
 
-    if (s_switch_func == kFuncSwitchOn) {
+    if (s_switch_3x2x == kFuncSwitchOn) {
         // _func_ctrl_start(kFuncOptAdt);
         _func_ctrl_start(kFuncOptHr);
         _func_ctrl_start(kFuncOptHrv);
         _func_ctrl_start(kFuncOptSpo2);
 
-        s_switch_func = kFuncSwitchOff;
+        s_switch_3x2x = kFuncSwitchOff;
     }
 
     // _func_ctrl_start(kFuncOptBms);

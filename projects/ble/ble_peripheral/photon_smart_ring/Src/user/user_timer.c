@@ -28,28 +28,27 @@ static app_timer_id_t s_spo2_meas_timer_id;
 static app_timer_id_t s_lsm6dso_timer_id;
 
 void _init_dev_timeout_handler(void* args) {
-    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_3x2x(kFuncSwitchOff);
     func_ctrl_set_switch_init(kFuncSwitchOff);
 }
 
 void _adt_meas_timeout_handler(void* args) {
-    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_3x2x(kFuncSwitchOff);
     func_ctrl_set_switch_adt(kFuncSwitchOff);
 }
 
 void _hr_meas_timeout_handler(void* args) {
-    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_3x2x(kFuncSwitchOff);
     func_ctrl_set_switch_hr(kFuncSwitchOff);
-
 }
 
 void _hrv_meas_timeout_handler(void* args) {
-    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_3x2x(kFuncSwitchOff);
     func_ctrl_set_switch_hrv(kFuncSwitchOff);
 }
 
 void _spo2_meas_timeout_handler(void* args) {
-    func_ctrl_set_switch_func(kFuncSwitchOff);
+    func_ctrl_set_switch_3x2x(kFuncSwitchOff);
     func_ctrl_set_switch_spo2(kFuncSwitchOff);
 }
 

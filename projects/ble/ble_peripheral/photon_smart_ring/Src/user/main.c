@@ -68,6 +68,7 @@
 #include "user_nfc.h"
 #include "user_rtc.h"
 #include "user_timer.h"
+#include "user_3x2x_log.h"
 
 /*
  * GLOBAL VARIABLE DEFINITIONS
@@ -127,6 +128,7 @@ int main(void) {
     func_ctrl_init(); // 功能控制模块初始化
     udc_init();       // 数据管理模块初始化
     user_hrv_init();  // HRV模块初始化
+    user_3x2x_log_init(); // 3x2x log模块初始化
 
     // ufs_test(); // 文件系统测试
     // udc_test(); // 数据管理模块测试
