@@ -33,6 +33,11 @@ void user_hrv_init(void) {
  * or GUNTER_ERR_INSUFFICIENT if the HRV buffer is already full.
  */
 int user_hrv_add_data(int rri_data) {
+    if (hrv_data_warehouse.hrv_buffer.p_buffer == NULL) {
+        APP_LOG_ERROR("HRV buffer is not initialized");
+        return GUNTER_ERR_NULL_POINTER;
+    }
+    
     if (ring_buffer_is_reach_left_threshold(&hrv_data_warehouse.hrv_buffer, 4) == true) {
         APP_LOG_ERROR("HRV buffer is full");
         return GUNTER_ERR_INSUFFICIENT;
@@ -55,6 +60,11 @@ int user_hrv_add_data(int rri_data) {
  * @return Returns GUNTER_SUCCESS if HRV data is successfully retrieved, GUNTER_FAILURE if there was an error, or GUNTER_ERR_INSUFFICIENT if there is no HRV data available.
  */
 int user_hrv_get_data(int* rri_data) {
+    if (hrv_data_warehouse.hrv_buffer.p_buffer == NULL) {
+        APP_LOG_ERROR("HRV buffer is not initialized");
+        return GUNTER_ERR_NULL_POINTER;
+    }
+
     if (ring_buffer_items_count_get(&hrv_data_warehouse.hrv_buffer) == 0) {
         APP_LOG_ERROR("No HRV data available");
         return GUNTER_ERR_INSUFFICIENT;
@@ -85,6 +95,11 @@ uint16_t user_hrv_get_rri_data_count(void) {
  * This function clears the HRV buffer and sets the RRI data count to zero, effectively cleaning the HRV data.
  */
 void user_hrv_clean_data(void) {
+    if (hrv_data_warehouse.hrv_buffer.p_buffer == NULL) {
+        APP_LOG_ERROR("HRV buffer is not initialized");
+        return;
+    }
+
     ring_buffer_clean(&hrv_data_warehouse.hrv_buffer);
     hrv_data_warehouse.rri_data_count = 0;
 }
@@ -96,6 +111,11 @@ void user_hrv_clean_data(void) {
  * @return GUNTER_SUCCESS if the average is calculated successfully, GUNTER_ERR_INSUFFICIENT if there is no HRV data available, or GUNTER_FAILURE if there is an error in retrieving the HRV data.
  */
 int user_hrv_get_data_average(int* hrv_data_average) {
+    if (hrv_data_warehouse.hrv_buffer.p_buffer == NULL) {
+        APP_LOG_ERROR("HRV buffer is not initialized");
+        return GUNTER_ERR_NULL_POINTER;
+    }
+
     if (ring_buffer_items_count_get(&hrv_data_warehouse.hrv_buffer) == 0) {
         APP_LOG_ERROR("No HRV data available");
         return GUNTER_ERR_INSUFFICIENT;
@@ -129,6 +149,11 @@ int user_hrv_get_data_average(int* hrv_data_average) {
  */
 int user_hrv_calculate_hrv_rr(uint16_t* rmssd, uint16_t* respiratory_rate) {
     uint32_t ret = 0;
+
+    if (hrv_data_warehouse.hrv_buffer.p_buffer == NULL) {
+        APP_LOG_ERROR("HRV buffer is not initialized");
+        return GUNTER_ERR_NULL_POINTER;
+    }
 
     ret = ring_buffer_items_count_get(&hrv_data_warehouse.hrv_buffer);
     if (ret == 0) {
