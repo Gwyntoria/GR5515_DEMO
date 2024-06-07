@@ -663,8 +663,6 @@ uint16_t lsm6dso_get_step_count(void) {
         return LSM6DSO_ERROR;
     }
 
-    APP_LOG_INFO("step_count: %d", s_lsm6dso_step_count);
-
     return s_lsm6dso_step_count;
 }
 
