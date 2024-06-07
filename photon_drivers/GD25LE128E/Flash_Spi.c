@@ -113,7 +113,7 @@ int8_t flash_init(void) {
     Flashid = Flashid << 8 | Flash_id[1];
     Flashid = Flashid << 8 | Flash_id[2];
     if (Flashid == GD25LE128E_ID) {
-        APP_LOG_INFO("flash init success!");
+        // APP_LOG_INFO("flash init success!");
         return FLASH_SUCCESS;
     }
     APP_LOG_ERROR("flash id error!");

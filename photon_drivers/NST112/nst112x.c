@@ -264,7 +264,7 @@ void nst112x_fifo_add_sensor_value() {
 #if NST_I2C_CHN_0
     for (int i = 0; i < 2; i++) {
         value = _nst112x_get_sensor_value(NST_I2C_ID_0, NST112C_I2C_ADDR + i);
-        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#.2x] value: %d", NST_I2C_ID_0 , NST112C_I2C_ADDR + i, value);
+        // APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#.2x] value: %d", NST_I2C_ID_0 , NST112C_I2C_ADDR + i, value);
 
         nst112x_array[nst112x_array_index] = value;
         nst112x_array_num++;
@@ -275,7 +275,7 @@ void nst112x_fifo_add_sensor_value() {
 #if NST_I2C_CHN_1
     for (int i = 0; i < 2; i++) {
         value = _nst112x_get_sensor_value(NST_I2C_ID_1, NST112C_I2C_ADDR + i);
-        APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#.2x] value: %d", NST_I2C_ID_1 , NST112C_I2C_ADDR + i, value);
+        // APP_LOG_DEBUG("NST112C i2c[%d]-sensor[%#.2x] value: %d", NST_I2C_ID_1 , NST112C_I2C_ADDR + i, value);
 
         nst112x_array[nst112x_array_index] = value;
         nst112x_array_num++;
