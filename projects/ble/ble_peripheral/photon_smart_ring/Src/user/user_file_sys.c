@@ -4,12 +4,13 @@
 #include <string.h>
 
 #include "app_log.h"
+#include "gr551xx.h"
 
 #include "GD25LE128E/Flash_Spi.h"
 #include "user_app.h"
 #include "user_common.h"
 
-#define DATA_STREAM_OUTPUT 0
+#define FS_LOG_OUTPUT 0
 
 static uint8_t s_flash_usage_status = FS_USAGE_STATUS_OFF;
 
@@ -113,8 +114,6 @@ int _deserialize_config_data(uint8_t* buffer, FlashZoneConfig* flash_zone_config
         return GUNTER_ERR_NULL_POINTER;
     }
 
-    APP_LOG_INFO("_deserialize_config_data");
-
     uint16_t offset = 0;
 
     flash_zone_config->status = buffer[offset];
@@ -134,9 +133,9 @@ int _deserialize_config_data(uint8_t* buffer, FlashZoneConfig* flash_zone_config
     flash_zone_config->activation = buffer[offset];
     offset++;
 
+#if FS_LOG_OUTPUT
     APP_LOG_DEBUG("config status: %02x", flash_zone_config->status);
-
-    APP_LOG_INFO("_deserialize_config_data finished");
+#endif
 
     return GUNTER_SUCCESS;
 }
@@ -154,8 +153,10 @@ int _read_config(void) {
         return GUNTER_FAILURE;
     }
 
+#if FS_LOG_OUTPUT
     APP_LOG_INFO("read flash config:");
     data_stream_hex(flash_zone_config_buf, FS_CFG_DATA_LEN);
+#endif
 
     ret = _deserialize_config_data(flash_zone_config_buf, &s_flash_zone_config);
     if (ret != GUNTER_SUCCESS) {
@@ -181,8 +182,10 @@ int _update_config(FlashZoneConfig* flash_zone_config) {
         return GUNTER_FAILURE;
     }
 
+#if FS_LOG_OUTPUT
     APP_LOG_INFO("update flash config:");
     data_stream_hex(flash_zone_config_buf, FS_CFG_DATA_LEN);
+#endif
 
     flash_ret = flash_update_sector_data(FS_ADDR_OP_CFG, flash_zone_config_buf, FS_CFG_DATA_LEN);
     if (flash_ret != FLASH_SUCCESS) {
@@ -274,14 +277,18 @@ int _serialize_flash_zone_info(uint8_t* buffer, FlashZoneInfo* flash_zone_info) 
     offset += 2;
     write_big_endian_4(buffer + offset, flash_zone_info->rd_addr);
 
+#if FS_LOG_OUTPUT
     APP_LOG_DEBUG("flash_zone_info->rd_addr = %u", flash_zone_info->rd_addr);
     data_stream_hex(buffer + offset, 4);
+#endif
 
     offset += 4;
     write_big_endian_4(buffer + offset, flash_zone_info->wt_addr);
 
+#if FS_LOG_OUTPUT
     APP_LOG_DEBUG("flash_zone_info->wt_addr = %u", flash_zone_info->wt_addr);
     data_stream_hex(buffer + offset, 4);
+#endif
 
     offset += 4;
     buffer[offset] = flash_zone_info->cycle_state;
@@ -355,8 +362,10 @@ int _read_flash_zone_info(FlashZone flash_zone) {
         return GUNTER_FAILURE;
     }
 
+#if FS_LOG_OUTPUT
     APP_LOG_DEBUG("read flash_zone[%d] info:", flash_zone);
     data_stream_hex(flash_zone_info_buf, FS_ZONE_INFO_LEN);
+#endif
 
     ret = _deserialize_flash_zone_info(flash_zone_info_buf, flash_zone_info);
     if (ret != GUNTER_SUCCESS) {
@@ -395,9 +404,10 @@ int _update_flash_zone_info(FlashZoneInfo* flash_zone_info) {
         APP_LOG_ERROR("ufs: _serialize_config_data failed");
         return GUNTER_FAILURE;
     }
-
+#if FS_LOG_OUTPUT
     APP_LOG_DEBUG("update flash_zone[%d] info:", flash_zone_info->type);
     data_stream_hex(flash_zone_info_buf, FS_ZONE_INFO_LEN);
+#endif
 
     flash_ret = flash_update_sector_data(addr, flash_zone_info_buf, FS_ZONE_INFO_LEN);
     if (flash_ret != FLASH_SUCCESS) {
@@ -453,12 +463,12 @@ int _init_flash_zone_info(FlashZone flash_zone) {
             // break;
     }
 
-    APP_LOG_DEBUG("sector_op: %u", sector_op);
-    APP_LOG_DEBUG("sector_ed: %u", sector_ed);
-    APP_LOG_DEBUG("rd_sector: %u", rd_sector);
-    APP_LOG_DEBUG("wt_sector: %u", wt_sector);
-    APP_LOG_DEBUG("rd_addr: %u", rd_addr);
-    APP_LOG_DEBUG("wt_addr: %u", wt_addr);
+    // APP_LOG_DEBUG("sector_op: %u", sector_op);
+    // APP_LOG_DEBUG("sector_ed: %u", sector_ed);
+    // APP_LOG_DEBUG("rd_sector: %u", rd_sector);
+    // APP_LOG_DEBUG("wt_sector: %u", wt_sector);
+    // APP_LOG_DEBUG("rd_addr: %u", rd_addr);
+    // APP_LOG_DEBUG("wt_addr: %u", wt_addr);
 
     if (flash_zone_info->status != SS_DATA) {
         APP_LOG_INFO("Init flash_zone[%d] info", flash_zone);
@@ -475,8 +485,8 @@ int _init_flash_zone_info(FlashZone flash_zone) {
         flash_zone_info->wt_addr     = wt_addr;
         flash_zone_info->cycle_state = FS_ZONE_CYCLE_OFF;
 
-        APP_LOG_DEBUG("flash_zone_info->sector_op: %u", flash_zone_info->sector_op);
-        APP_LOG_DEBUG("flash_zone_info->wt_addr: %u", flash_zone_info->wt_addr);
+        // APP_LOG_DEBUG("flash_zone_info->sector_op: %u", flash_zone_info->sector_op);
+        // APP_LOG_DEBUG("flash_zone_info->wt_addr: %u", flash_zone_info->wt_addr);
 
         ret = _update_flash_zone_info(flash_zone_info);
         if (ret != GUNTER_SUCCESS) {
@@ -598,7 +608,7 @@ int _prepare_operation(FlashZone       flash_zone,
 
     flash_ret = flash_init();
     if (flash_ret != FLASH_SUCCESS) {
-        APP_LOG_ERROR("ufs: flash_init failed");
+        APP_LOG_ERROR("ufs: flash_init failed with %d", flash_ret);
         return GUNTER_FAILURE;
     }
 
@@ -628,7 +638,22 @@ int _prepare_operation(FlashZone       flash_zone,
     return GUNTER_SUCCESS;
 }
 
-int _write_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* data, uint16_t* wt_page,
+/**
+ * @brief Writes data to flash memory per page.
+ *
+ * This function writes data to flash memory per page. It calculates the length of data to be written in two parts:
+ * the first part is from the current address to the end of the partition, and the second part is from the beginning
+ * of the partition to the remaining data. It then writes the data to flash memory in two parts, taking into account
+ * the remaining space in the current page. The function also logs debug information during the write process.
+ *
+ * @param addr The address to write the data to.
+ * @param whole_data_len The total length of the data to be written.
+ * @param data The data to be written.
+ * @param range_addr_op The starting address of the partition.
+ * @param range_addr_ed The ending address of the partition.
+ * @return The total length of data written.
+ */
+int _write_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* data,
                          uint32_t range_addr_op, uint32_t range_addr_ed) {
     int8_t   flash_ret           = 0;
     uint32_t data_len            = 0;
@@ -639,8 +664,10 @@ int _write_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* data,
     uint32_t wt_addr_page_offset = FS_PAGE_OFFSET(wt_addr);
     uint32_t page_left           = FS_PAGE_SIZE - wt_addr_page_offset;
 
+#if FS_LOG_OUTPUT
     APP_LOG_DEBUG("page_left: %u", page_left);
     APP_LOG_DEBUG("whole_data_len: %u", whole_data_len);
+#endif
 
     if (wt_addr + whole_data_len <= range_addr_ed) {
         wt_len[0] = whole_data_len;
@@ -677,7 +704,9 @@ int _write_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* data,
         }
 
         while (wt_len[i]) {
+#if FS_LOG_OUTPUT
             APP_LOG_DEBUG("wt_len[%d]: %u", i, wt_len[i]);
+#endif
 
             flash_ret = flash_write_data(wt_addr, data + data_offset, len);
             if (flash_ret != GUNTER_SUCCESS) {
@@ -685,7 +714,7 @@ int _write_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* data,
                 break;
             }
 
-#if DATA_STREAM_OUTPUT
+#if FS_LOG_OUTPUT
             APP_LOG_DEBUG("wtite addr: %u", wt_addr);
             data_stream_hex(data + data_offset, len);
 #endif
@@ -695,8 +724,10 @@ int _write_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* data,
             wt_len[i] -= len;
             data_len += len;
 
+#if FS_LOG_OUTPUT
             APP_LOG_DEBUG("len: %u", len);
             APP_LOG_DEBUG("data_len: %u", data_len);
+#endif
 
             if (wt_len[i] >= FS_PAGE_SIZE) {
                 len = FS_PAGE_SIZE;
@@ -712,6 +743,16 @@ int _write_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* data,
     return data_len;
 }
 
+/**
+ * Reads data per page from a specified address range in flash memory.
+ *
+ * @param addr The starting address to read data from.
+ * @param whole_data_len The total length of the data to be read.
+ * @param buffer The buffer to store the read data.
+ * @param range_addr_op The starting address of the range to read data from.
+ * @param range_addr_ed The ending address of the range to read data from.
+ * @return The total length of data read.
+ */
 int _read_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* buffer,
                         uint32_t range_addr_op, uint32_t range_addr_ed) {
     int8_t   flash_ret           = 0;
@@ -723,8 +764,10 @@ int _read_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* buffer
     uint32_t rd_addr_page_offset = FS_PAGE_OFFSET(rd_addr);
     uint32_t page_left           = FS_PAGE_SIZE - rd_addr_page_offset;
 
+#if FS_LOG_OUTPUT
     APP_LOG_DEBUG("page_left: %u", page_left);
     APP_LOG_DEBUG("whole_data_len: %u", whole_data_len);
+#endif
 
     if (rd_addr + whole_data_len <= range_addr_ed) {
         rd_len[0] = whole_data_len;
@@ -761,7 +804,9 @@ int _read_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* buffer
         }
 
         while (rd_len[i]) {
+#if FS_LOG_OUTPUT
             APP_LOG_DEBUG("rd_len[%d]: %u", i, rd_len[i]);
+#endif
 
             flash_ret = flash_read_data(rd_addr, buffer + buffer_offset, len);
             if (flash_ret != GUNTER_SUCCESS) {
@@ -769,7 +814,7 @@ int _read_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* buffer
                 break;
             }
 
-#if DATA_STREAM_OUTPUT
+#if FS_LOG_OUTPUT
             APP_LOG_DEBUG("read addr: %u", rd_addr);
             data_stream_hex(buffer + buffer_offset, len);
 #endif
@@ -778,8 +823,10 @@ int _read_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* buffer
             rd_len[i] -= len;
             data_len += len;
 
+#if FS_LOG_OUTPUT
             APP_LOG_DEBUG("len: %u", len);
             APP_LOG_DEBUG("data_len: %u", data_len);
+#endif
 
             if (rd_len[i] >= FS_PAGE_SIZE) {
                 len = FS_PAGE_SIZE;
@@ -791,6 +838,10 @@ int _read_data_per_page(uint32_t* addr, uint32_t whole_data_len, uint8_t* buffer
     }
 
     *addr = rd_addr;
+
+#if FS_LOG_OUTPUT
+    APP_LOG_DEBUG("[%s] updated rd_addr: %u", __FUNCTION__, *addr);
+#endif
 
     return data_len;
 }
@@ -813,7 +864,7 @@ int ufs_init(void) {
 
     flash_ret = flash_init();
     if (flash_ret != FLASH_SUCCESS) {
-        APP_LOG_ERROR("ufs: flash_init failed");
+        APP_LOG_ERROR("ufs: flash_init failed with %d", flash_ret);
         return GUNTER_FAILURE;
     }
 
@@ -847,7 +898,7 @@ int ufs_reinit(void) {
 
     falsh_ret = flash_init();
     if (falsh_ret != FLASH_SUCCESS) {
-        APP_LOG_ERROR("ufs: flash_init failed");
+        APP_LOG_ERROR("ufs: flash_init failed with %d", falsh_ret);
         return GUNTER_FAILURE;
     }
 
@@ -910,9 +961,12 @@ int ufs_write_zone_data(FlashZone flash_zone, uint8_t* data, uint32_t len) {
     uint8_t  cycle_state = flash_zone_info->cycle_state; // 分区循环状态
     uint8_t  er_sector   = 0;                            // 记录是否需要擦除写入地址所在扇区
 
-    APP_LOG_DEBUG("wt_addr: %u", wt_addr);
-    APP_LOG_DEBUG("range_addr_op: %u", range_addr_op);
-    APP_LOG_DEBUG("range_addr_ed: %u", range_addr_ed);
+#if FS_LOG_OUTPUT
+    APP_LOG_DEBUG("[%s] rd_addr: %u", __FUNCTION__, rd_addr);
+    APP_LOG_DEBUG("[%s] wt_addr: %u", __FUNCTION__, wt_addr);
+    APP_LOG_DEBUG("[%s] range_addr_op: %u", __FUNCTION__, range_addr_op);
+    APP_LOG_DEBUG("[%s] range_addr_ed: %u", __FUNCTION__, range_addr_ed);
+#endif
 
     if (wt_addr < range_addr_op || wt_addr >= range_addr_ed) {
         APP_LOG_ERROR("ufs_wt: invalid wt_addr");
@@ -928,30 +982,40 @@ int ufs_write_zone_data(FlashZone flash_zone, uint8_t* data, uint32_t len) {
             cycle_state = FS_ZONE_CYCLE_ON;
         }
 
-        wt_addr_ed = range_addr_op + (wt_addr_ed - range_addr_ed);
+        wt_addr_ed = range_addr_op + (wt_addr_ed - range_addr_ed); // 实际的写入结束地址将从分区开始地址开始计算
+    }
 
-        er_sector = 1;
-        rd_sector += 1;
-        rd_addr = rd_sector * FS_SECTOR_SIZE;
+    if (cycle_state == FS_ZONE_CYCLE_ON) {
+        er_sector = 1; // 需要擦除写入结束地址所在扇区
+        rd_sector += 1; // 读取扇区向后移动一位
+        rd_addr = rd_sector * FS_SECTOR_SIZE; // 重新计算读取地址
     }
 
     if (er_sector) {
-        wt_addr_ed -= 1;
+        uint32_t wt_addr_ed_sector_base = FS_SECTOR_BASE(wt_addr_ed - 1); // 写入结束地址所在扇区基地址
 
-        uint32_t wt_addr_ed_sector_base = FS_SECTOR_BASE(wt_addr_ed);
-        flash_erase_sector(wt_addr_ed_sector_base);
+        flash_ret = flash_erase_sector(wt_addr_ed_sector_base);
+        if (flash_ret != FLASH_SUCCESS) {
+            APP_LOG_ERROR("ufs: flash_erase_sector failed");
+            return GUNTER_FAILURE;
+        }
     }
 
-    ret = _write_data_per_page(&wt_addr, len, data, &wt_page, range_addr_op, range_addr_ed);
+    ret = _write_data_per_page(&wt_addr, len, data, range_addr_op, range_addr_ed);
     if (ret != len) {
         APP_LOG_ERROR("ufs_wt: _write_data_per_page failed with %d", ret);
         return GUNTER_FAILURE;
     }
 
+    if (wt_addr < range_addr_op || wt_addr >= range_addr_ed) {
+        APP_LOG_ERROR("ufs_wt: invalid wt_addr");
+        return GUNTER_ERR_INVALID_ADDR;
+    }
+
     flash_zone_info->rd_sector   = rd_sector;
     flash_zone_info->wt_sector   = wt_sector;
     flash_zone_info->wt_page     = wt_page;
-    flash_zone_info->rd_addr     = rd_sector * FS_SECTOR_SIZE;
+    flash_zone_info->rd_addr     = rd_addr;
     flash_zone_info->wt_addr     = wt_addr;
     flash_zone_info->cycle_state = cycle_state;
 
@@ -1032,8 +1096,10 @@ int ufs_get_readable_zone_data_size(FlashZone flash_zone) {
     uint32_t wt_addr        = flash_zone_info->wt_addr;
     uint32_t whole_data_len = 0;
 
+#if FS_LOG_OUTPUT
     APP_LOG_DEBUG("rd_addr: %u", rd_addr);
     APP_LOG_DEBUG("wt_addr: %u", wt_addr);
+#endif
 
     if (rd_addr > wt_addr) {
         whole_data_len = (range_addr_ed - rd_addr) + (wt_addr - range_addr_op);
@@ -1119,6 +1185,13 @@ int ufs_read_zone_data(FlashZone flash_zone, uint8_t* buffer, const uint32_t* le
     uint32_t addr                = 0;
     uint32_t data_len            = 0; // 读取内容长度
 
+#if FS_LOG_OUTPUT
+    APP_LOG_DEBUG("[%s] rd_addr: %u", __FUNCTION__, rd_addr);
+    APP_LOG_DEBUG("[%s] wt_addr: %u", __FUNCTION__, wt_addr);
+    APP_LOG_DEBUG("[%s] range_addr_op: %u", __FUNCTION__, range_addr_op);
+    APP_LOG_DEBUG("[%s] range_addr_ed: %u", __FUNCTION__, range_addr_ed);
+#endif
+
     if (len != NULL) {
         data_len = *len;
     } else {
@@ -1154,6 +1227,12 @@ int ufs_read_zone_data(FlashZone flash_zone, uint8_t* buffer, const uint32_t* le
             APP_LOG_ERROR("ufs_rd: _read_data_per_page failed with %d", ret);
             return GUNTER_FAILURE;
         }
+
+        if (rd_addr < range_addr_op || rd_addr >= range_addr_ed) {
+            APP_LOG_ERROR("ufs_rd: invalid rd_addr");
+            return GUNTER_ERR_INVALID_ADDR;
+        }
+
     }
 
     if (erase) {
