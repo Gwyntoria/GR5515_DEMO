@@ -8,6 +8,8 @@
 #include "user_file_sys.h"
 #include "user_rtc.h"
 
+#define DC_LOG_OUTPUT 0
+
 #define INTER_MEM_ADDR_DATA 0x010F0000
 #define INTER_MEM_SIZE_DATA 0x04
 
@@ -26,8 +28,8 @@ typedef struct DataFrame {
 
 typedef struct DataPacketHeader {
     uint8_t  seq;
-    uint8_t  loc_state;
-    uint16_t length;
+    uint8_t  data_len_pack;
+    uint16_t data_len_whole;
     uint16_t frame_cnt;
     uint16_t reserved;
 } DataPacketHeader;
@@ -73,9 +75,9 @@ void _serialize_data_packet_header(DataPacketHeader* data_packet_header, uint8_t
     uint16_t index = 0;
 
     buffer[index++] = data_packet_header->seq;
-    buffer[index++] = data_packet_header->loc_state;
-    buffer[index++] = (data_packet_header->length >> 8) & 0xFF;
-    buffer[index++] = data_packet_header->length & 0xFF;
+    buffer[index++] = data_packet_header->data_len_pack;
+    buffer[index++] = (data_packet_header->data_len_whole >> 8) & 0xFF;
+    buffer[index++] = data_packet_header->data_len_whole & 0xFF;
     buffer[index++] = (data_packet_header->frame_cnt >> 8) & 0xFF;
     buffer[index++] = data_packet_header->frame_cnt & 0xFF;
     buffer[index++] = (data_packet_header->reserved >> 8) & 0xFF;
@@ -85,11 +87,11 @@ void _serialize_data_packet_header(DataPacketHeader* data_packet_header, uint8_t
 void _deserialize_data_packet_header(DataPacketHeader* data_packet_header, uint8_t* buffer) {
     uint16_t index = 0;
 
-    data_packet_header->seq       = buffer[index++];
-    data_packet_header->loc_state = buffer[index++];
-    data_packet_header->length    = (buffer[index++] << 8) | buffer[index++];
-    data_packet_header->frame_cnt = (buffer[index++] << 8) | buffer[index++];
-    data_packet_header->reserved  = (buffer[index++] << 8) | buffer[index++];
+    data_packet_header->seq            = buffer[index++];
+    data_packet_header->data_len_pack  = buffer[index++];
+    data_packet_header->data_len_whole = (buffer[index++] << 8) | buffer[index++];
+    data_packet_header->frame_cnt      = (buffer[index++] << 8) | buffer[index++];
+    data_packet_header->reserved       = (buffer[index++] << 8) | buffer[index++];
 }
 
 void _serialize_data_manager_info(DataCenter* data_manager, uint8_t* buffer) {
@@ -116,7 +118,10 @@ int _calculate_frame_cnt_in_buffer(uint8_t* buffer, uint16_t buffer_size) {
     uint16_t frame_num = 0;
 
     frame_num = count_sequence_in_buffer(buffer, (size_t)buffer_size, FRAME_HEADER, (size_t)FRAME_HEADER_SIZE);
+
+#if DC_LOG_OUTPUT
     APP_LOG_DEBUG("Frame number in buffer: %d", frame_num);
+#endif
 
     return frame_num;
 }
@@ -205,7 +210,7 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
         return GUNTER_FAILURE;
     }
 
-    APP_LOG_INFO("Write data to flash: %d", data_center_s2f->data_center.length);
+    // APP_LOG_INFO("Write data to flash: %d", data_center_s2f->data_center.length);
 
     if (data_center_s2f->data_center.length <= 0x1000) {
         ret = ufs_write_zone_data(kFlashZoneData, buffer, data_center_s2f->data_center.length);
@@ -239,7 +244,9 @@ int _alloc_data_center_f2b_mem(DataCenterF2b* data_center_f2b, uint16_t len) {
 
     uint32_t mem_size = (uint32_t)len + 1;
 
-    APP_LOG_DEBUG("mem_size: %u", mem_size);
+#if DC_LOG_OUTPUT
+    // APP_LOG_DEBUG("mem_size: %u", mem_size);
+#endif
 
     uint8_t* buffer = (uint8_t*)sys_malloc(mem_size);
     if (buffer == NULL) {
@@ -253,8 +260,11 @@ int _alloc_data_center_f2b_mem(DataCenterF2b* data_center_f2b, uint16_t len) {
     }
 
     mem_size = ring_buffer_surplus_space_get(&data_center_f2b->data_center.ring_t);
-    APP_LOG_DEBUG("mem_size: %d", mem_size);
-    APP_LOG_DEBUG("ring size: %d", data_center_f2b->data_center.ring_t.buffer_size);
+
+#if DC_LOG_OUTPUT
+    // APP_LOG_DEBUG("mem_size: %d", mem_size);
+    // APP_LOG_DEBUG("ring size: %d", data_center_f2b->data_center.ring_t.buffer_size);
+#endif
 
     data_center_f2b->data_center.length    = 0;
     data_center_f2b->data_center.frame_cnt = 0;
@@ -303,7 +313,9 @@ int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool who
         return GUNTER_ERR_NULL_POINTER;
     }
 
+#if DC_LOG_OUTPUT
     APP_LOG_INFO("Read data from flash: %d", len);
+#endif
 
     ret = ufs_read_zone_data(kFlashZoneData, buffer, (uint32_t*)&len, whole, erase);
     if (ret != len) {
@@ -312,7 +324,10 @@ int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool who
     }
 
     uint32_t ring_size = ring_buffer_surplus_space_get(&data_center_f2b->data_center.ring_t);
+
+#if DC_LOG_OUTPUT
     APP_LOG_DEBUG("ring buffer size: %d", ring_size);
+#endif
 
     if (ring_size < len) {
         APP_LOG_ERROR("Ring buffer size is not enough");
@@ -334,7 +349,7 @@ int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool who
     return GUNTER_SUCCESS;
 }
 
-int _send_data_to_ble(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint16_t len, uint8_t sequence, bool is_last_packet) {
+int _send_data_to_ble(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint8_t len, uint8_t sequence, uint16_t len_whole) {
     if (data_center_f2b == NULL) {
         APP_LOG_ERROR("Invalid data center f2b");
         return GUNTER_ERR_NULL_POINTER;
@@ -369,17 +384,16 @@ int _send_data_to_ble(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint16_t 
         return GUNTER_FAILURE;
     }
 
-    uint16_t frame_cnt = (uint16_t)_calculate_frame_cnt_in_buffer(data_buffer, len);
-    uint8_t  loc_state = is_last_packet ? 0x10 : 0x11;
+    uint16_t frame_cnt = (uint16_t)_calculate_frame_cnt_in_buffer(data_buffer, (uint16_t)len);
 
     DataPacketHeader data_packet_header;
     memset(&data_packet_header, 0, sizeof(DataPacketHeader));
 
-    data_packet_header.seq       = sequence;
-    data_packet_header.loc_state = loc_state;
-    data_packet_header.length    = len;
-    data_packet_header.frame_cnt = frame_cnt;
-    data_packet_header.reserved  = 0;
+    data_packet_header.seq            = sequence;
+    data_packet_header.data_len_pack  = len;
+    data_packet_header.data_len_whole = len_whole;
+    data_packet_header.frame_cnt      = frame_cnt;
+    data_packet_header.reserved       = 0;
 
     // write data packet header
     _serialize_data_packet_header(&data_packet_header, buffer);
@@ -549,7 +563,9 @@ int udc_test(void) {
         return GUNTER_FAILURE;
     }
 
-    APP_LOG_DEBUG("FLASH: Data length: %d", flash_data_len);
+#if DC_LOG_OUTPUT
+    // APP_LOG_DEBUG("FLASH: Data length: %d", flash_data_len);
+#endif
 
     // F2B数据中心分配内存
     ret = data_center_f2b->alloc_mem_func(data_center_f2b, (uint16_t)flash_data_len);
@@ -566,7 +582,10 @@ int udc_test(void) {
     }
 
     uint32_t center_data_len = data_center_f2b->get_data_size_func(data_center_f2b);
-    APP_LOG_DEBUG("CENTER: Data length: %d", center_data_len);
+
+#if DC_LOG_OUTPUT
+    // APP_LOG_DEBUG("CENTER: Data length: %d", center_data_len);
+#endif
 
     uint32_t pack_len = FRAME_SIZE * 10 + DATA_PACKET_HEADER_SIZE + DATA_PACKET_CHEKSUM_SIZE;
     uint8_t* buffer   = (uint8_t*)sys_malloc(pack_len);

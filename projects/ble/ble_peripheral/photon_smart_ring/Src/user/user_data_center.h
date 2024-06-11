@@ -111,10 +111,10 @@ struct DataCenterF2b {
      * @param buffer Pointer to the data buffer.
      * @param len Length of the data to be sent.
      * @param sequence Sequence number of the packet.
-     * @param is_last_packet Flag indicating whether the packet is the last one.
+     * @param len_whole Length of the whole data.
      * @return int Returns the status of the send operation.
      */
-    int (*send_ble_func)(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint16_t len, uint8_t sequence, bool is_last_packet);
+    int (*send_ble_func)(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint8_t len, uint8_t sequence, uint16_t len_whole);
 
     /**
      * @brief Function pointer to retrieve the size of data in the DataCenterF2b structure.
