@@ -192,11 +192,12 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
     int      ret      = 0;
     uint32_t ring_ret = 0;
 
-    ring_ret = ring_buffer_items_count_get(&data_center_s2f->data_center.ring_t);
-    if (ring_ret == 0) {
+    if (data_center_s2f->data_center.length == 0) {
         // APP_LOG_INFO("No data to write");
         return GUNTER_SUCCESS;
     }
+
+    APP_LOG_INFO("Save data to flash");
 
     uint8_t* buffer = (uint8_t*)sys_malloc(data_center_s2f->data_center.length);
     if (buffer == NULL) {
@@ -206,7 +207,9 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
 
     ring_ret = ring_buffer_read(&data_center_s2f->data_center.ring_t, buffer, data_center_s2f->data_center.length);
     if (ring_ret != data_center_s2f->data_center.length) {
-        APP_LOG_ERROR("Read data from ring_t buffer failed with %d, whole_len", ring_ret, data_center_s2f->data_center.length);
+        APP_LOG_ERROR("Read %u Bytes from ring_t buffer, whole_len is %d", ring_ret, data_center_s2f->data_center.length);
+        sys_free(buffer);
+        buffer = NULL;
         return GUNTER_FAILURE;
     }
 
@@ -229,6 +232,8 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
     ring_buffer_clean(&data_center_s2f->data_center.ring_t);
     data_center_s2f->data_center.length    = 0;
     data_center_s2f->data_center.frame_cnt = 0;
+
+    return GUNTER_SUCCESS;
 }
 
 int _alloc_data_center_f2b_mem(DataCenterF2b* data_center_f2b, uint16_t len) {
@@ -256,6 +261,8 @@ int _alloc_data_center_f2b_mem(DataCenterF2b* data_center_f2b, uint16_t len) {
 
     if (ring_buffer_init(&data_center_f2b->data_center.ring_t, buffer, mem_size) != true) {
         APP_LOG_ERROR("Init ring_t buffer failed");
+        sys_free(buffer);
+        buffer = NULL;
         return GUNTER_FAILURE;
     }
 
@@ -320,6 +327,8 @@ int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool who
     ret = ufs_read_zone_data(kFlashZoneData, buffer, (uint32_t*)&len, whole, erase);
     if (ret != len) {
         APP_LOG_ERROR("Read data from flash failed with %d", ret);
+        sys_free(buffer);
+        buffer = NULL;
         return GUNTER_FAILURE;
     }
 
@@ -331,12 +340,16 @@ int _recv_data_from_flash(DataCenterF2b* data_center_f2b, uint16_t len, bool who
 
     if (ring_size < len) {
         APP_LOG_ERROR("Ring buffer size is not enough");
+        sys_free(buffer);
+        buffer = NULL;
         return GUNTER_ERR_INSUFFICIENT;
     }
 
     ring_ret = ring_buffer_write(&data_center_f2b->data_center.ring_t, buffer, (uint32_t)len);
     if (ring_ret != len) {
         APP_LOG_ERROR("Write data to ring_t buffer failed with %d", ring_ret);
+        sys_free(buffer);
+        buffer = NULL;
         return GUNTER_FAILURE;
     }
 
@@ -381,6 +394,8 @@ int _send_data_to_ble(DataCenterF2b* data_center_f2b, uint8_t* buffer, uint8_t l
     ring_ret = ring_buffer_read(&data_center_f2b->data_center.ring_t, data_buffer, len);
     if (ring_ret != len) {
         APP_LOG_ERROR("Read data from ring_t buffer failed with %d", ring_ret);
+        sys_free(data_buffer);
+        data_buffer = NULL;
         return GUNTER_FAILURE;
     }
 
@@ -448,6 +463,8 @@ DataCenterS2f* get_data_center_s2f(void) {
 
     if (ring_buffer_init(&s_data_center_s2f->data_center.ring_t, buffer, S2F_BUFFER_SIZE) != true) {
         APP_LOG_ERROR("Init ring_t buffer failed");
+        sys_free(s_data_center_s2f);
+        s_data_center_s2f = NULL;
         return NULL;
     }
 

@@ -14,7 +14,7 @@
 #define LSM6DSO_SLEEP_THRESHOLD (SEC_TO_MS * 60 * 5)
 
 #define CONFIDENCE_THRESHOLD_BASE       (60)
-#define CONFIDENCE_THRESHOLD_NADT_GREEN (80)
+#define CONFIDENCE_THRESHOLD_NADT_GREEN (75)
 #define CONFIDENCE_THRESHOLD_HR         (90)
 #define CONFIDENCE_THRESHOLD_HRV        (75)
 #define CONFIDENCE_THRESHOLD_SPO2       (4)
@@ -62,8 +62,8 @@ typedef enum FuncStatus {
 extern "C" {
 #endif
 
-uint16_t func_ctrl_init(void);
-uint16_t func_ctrl_deinit(void);
+int func_ctrl_init(void);
+int func_ctrl_deinit(void);
 
 void func_ctrl_set_switch_3x2x(FuncSwitch func_switch);
 void func_ctrl_set_switch_init(FuncSwitch func_switch);
@@ -78,6 +78,8 @@ void func_ctrl_set_switch_rst(FuncSwitch func_switch);
 void func_ctrl_set_switch_act(FuncSwitch func_switch);
 void func_ctrl_set_switch_slp(FuncSwitch func_switch);
 void func_ctrl_set_switch_ble(FuncSwitch func_switch);
+void func_ctrl_set_switch_lsm(FuncSwitch func_switch);
+void func_ctrl_set_switch_fla(FuncSwitch func_switch);
 
 void func_ctrl_set_result_adt(FuncResult func_result);
 void func_ctrl_set_result_act(FuncResult func_result);
