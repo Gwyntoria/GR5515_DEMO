@@ -100,14 +100,8 @@ void gbc_service_process_event(gbc_evt_t* p_evt) {
             APP_LOG_INFO("GBC_EVT_TX_NOTIFICATION_DISABLED");
             break;
 
-        case GBC_EVT_TX_NOTIFY_COMPLETE:
-            APP_LOG_INFO("GBC_EVT_TX_NOTIFY_COMPLETE");
-            break;
-
-        case GBC_EVT_RX_RECEIVE_DATA:
-            APP_LOG_INFO("GBC_EVT_RX_RECEIVE_DATA");
-
-            data_stream_hex(p_evt->p_data, p_evt->length);
+        case GBC_EVT_TX_NOTIFICATION_COMPLETE:
+            // APP_LOG_INFO("GBC_EVT_TX_NOTIFICATION_COMPLETE");
             break;
 
         case THS_EVT_SETTINGS_CHANGED:
@@ -118,19 +112,19 @@ void gbc_service_process_event(gbc_evt_t* p_evt) {
             _gbc_settings_handler(p_evt->p_data, p_evt->length);
             break;
 
-        case GBC_EVT_DATA_INDICATION_ENABLED:
-            APP_LOG_INFO("GBC_EVT_DATA_INDICATION_ENABLED");
+        case GBC_EVT_DATA_NOTIFICATION_ENABLED:
+            APP_LOG_INFO("GBC_EVT_DATA_NOTIFICATION_ENABLED");
 
             func_ctrl_set_switch_ble(kFuncSwitchOn);
             break;
 
-        case GBC_EVT_DATA_INDICATION_DISABLED:
-            APP_LOG_INFO("GBC_EVT_DATA_INDICATION_DISABLED");
+        case GBC_EVT_DATA_NOTIFICATION_DISABLED:
+            APP_LOG_INFO("GBC_EVT_DATA_NOTIFICATION_DISABLED");
 
             func_ctrl_set_switch_ble(kFuncSwitchOff);
             break;
 
-        case GBC_EVT_DATA_INDICATION_COMPLETE:
+        case GBC_EVT_DATA_NOTIFICATION_COMPLETE:
             // APP_LOG_INFO("GBC_EVT_DATA_INDICATION_COMPLETE");
             break;
 

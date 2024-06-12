@@ -29,15 +29,13 @@ typedef enum gbc_evt_type_t {
 
     GBC_EVT_TX_NOTIFICATION_ENABLED,
     GBC_EVT_TX_NOTIFICATION_DISABLED,
-    GBC_EVT_TX_NOTIFY_COMPLETE,
-
-    GBC_EVT_RX_RECEIVE_DATA,
+    GBC_EVT_TX_NOTIFICATION_COMPLETE,
 
     THS_EVT_SETTINGS_CHANGED,
 
-    GBC_EVT_DATA_INDICATION_ENABLED,
-    GBC_EVT_DATA_INDICATION_DISABLED,
-    GBC_EVT_DATA_INDICATION_COMPLETE,
+    GBC_EVT_DATA_NOTIFICATION_ENABLED,
+    GBC_EVT_DATA_NOTIFICATION_DISABLED,
+    GBC_EVT_DATA_NOTIFICATION_COMPLETE,
 
 } gbc_evt_type_t;
 
@@ -64,7 +62,7 @@ sdk_err_t gbc_service_init(gbc_init_t* gbc_init);
 
 sdk_err_t gbc_tx_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 sdk_err_t gbc_setting_notify(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
-sdk_err_t gbc_loc_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+sdk_err_t gbc_data_notify(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 
 
 #ifdef __cplusplus
