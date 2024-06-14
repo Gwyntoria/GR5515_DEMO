@@ -461,11 +461,13 @@ int _ble_send_data() {
         sequence = 0;
         data_len_whole = 0;
 
-        ret = ufs_erase_zone_data(kFlashZoneData);
-        if (ret != GUNTER_SUCCESS) {
-            APP_LOG_ERROR("Erase zone data failed");
-            return ret;
-        }
+        // ret = ufs_erase_zone_data(kFlashZoneData);
+        // if (ret != GUNTER_SUCCESS) {
+        //     APP_LOG_ERROR("Erase zone data failed");
+        //     return ret;
+        // }
+
+        // APP_LOG_INFO("Erase zone data success");
     }
 
     return GUNTER_SUCCESS;
@@ -473,6 +475,10 @@ int _ble_send_data() {
 
 int _get_battery_percentage(void) {
     if (s_switch_bms != kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
+    if (s_switch_ble == kFuncSwitchOn) {
         return GUNTER_SUCCESS;
     }
 
@@ -501,6 +507,10 @@ int _get_temperature(void) {
         return GUNTER_SUCCESS;
     }
 
+    if (s_switch_ble == kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
     float tmp = nst112x_get_temperature();
     APP_LOG_DEBUG("Temperature: %.2f", tmp);
 
@@ -522,6 +532,10 @@ int _get_step_counter(void) {
         return GUNTER_SUCCESS;
     }
 
+    if (s_switch_ble == kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
     uint16_t step_cnt = lsm6dso_get_step_count();
     APP_LOG_DEBUG("Step Counter: %u", step_cnt);
 
@@ -538,6 +552,10 @@ int _get_step_counter(void) {
 
 int _get_lsm6dso_event() {
     if (s_switch_6ds != kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
+    if (s_switch_ble == kFuncSwitchOn) {
         return GUNTER_SUCCESS;
     }
 
@@ -572,6 +590,10 @@ int _reset_component() {
 
 int _erase_data_in_flash() {
     if (s_switch_fla != kFuncSwitchOn) {
+        return GUNTER_SUCCESS;
+    }
+
+    if (s_switch_ble == kFuncSwitchOn) {
         return GUNTER_SUCCESS;
     }
 
