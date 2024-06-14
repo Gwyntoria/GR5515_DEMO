@@ -45,16 +45,12 @@
 #include "ble_prf_utils.h"
 #include "utility.h"
 
-#define HEALTH_SERVER_TX_UUID \
-    { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x03, 0x00, 0x00, 0x01 }
-#define HEALTH_SERVER_RX_UUID \
-    { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x04, 0x00, 0x00, 0x01 }
 #define HEALTH_SERVER_HR_UUID \
-    { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x05, 0x00, 0x00, 0x01 }
+    { 0xFB, 0x34, 0x9B, 0x5f, 0x40, 0x90, 0x11, 0x10, 0x20, 0x24, 0x01, 0x10, 0x0E, 0xA0, 0x00, 0x02 }
 #define HEALTH_SERVER_HRV_UUID \
-    { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x06, 0x00, 0x00, 0x01 }
+    { 0xFB, 0x34, 0x9B, 0x5f, 0x40, 0x90, 0x11, 0x10, 0x20, 0x24, 0x01, 0x10, 0x0E, 0xA0, 0x00, 0x03 }
 #define HEALTH_SERVER_SPO2_UUID \
-    { 0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, 0x00, 0x10, 0x00, 0x00, 0x07, 0x00, 0x00, 0x01 }
+    { 0xFB, 0x34, 0x9B, 0x5f, 0x40, 0x90, 0x11, 0x10, 0x20, 0x24, 0x01, 0x10, 0x0E, 0xA0, 0x00, 0x04 }
 
 #define ATT_128_PRIMARY_SERVICE BLE_ATT_16_TO_128_ARRAY(BLE_ATT_DECL_PRIMARY_SERVICE)
 #define ATT_128_CHARACTERISTIC  BLE_ATT_16_TO_128_ARRAY(BLE_ATT_DECL_CHARACTERISTIC)
@@ -67,9 +63,6 @@
 /**@brief Goodix UART Service Attributes Indexes. */
 enum health_attr_idx_t {
     HEALTH_IDX_SVC,
-
-    HEALTH_IDX_RX_CHAR,
-    HEALTH_IDX_RX_VAL,
 
     HEALTH_IDX_HR_CHAR,
     HEALTH_IDX_HR_VAL,
@@ -92,7 +85,6 @@ struct health_env_t {
     uint16_t      hr_ntf_cfg[HEALTH_CONNECTION_MAX];
     uint16_t      hrv_ntf_cfg[HEALTH_CONNECTION_MAX];
     uint16_t      spo2_ntf_cfg[HEALTH_CONNECTION_MAX];
-    uint16_t      rr_ntf_cfg[HEALTH_CONNECTION_MAX];
 };
 
 static sdk_err_t health_init(void);
@@ -116,21 +108,6 @@ static const attm_desc_128_t health_att_db[HEALTH_IDX_NB] = {
         READ_PERM_UNSEC,
         0,
         0
-    },
-        
-    //* RX Characteristic Declaration
-    [HEALTH_IDX_RX_CHAR] = {
-        ATT_128_CHARACTERISTIC,
-        READ_PERM_UNSEC,
-        0,
-        0
-    },
-    // GUS RX Characteristic Value
-    [HEALTH_IDX_RX_VAL]  = {
-        HEALTH_SERVER_RX_UUID,
-        WRITE_REQ_PERM_UNSEC | WRITE_CMD_PERM_UNSEC,
-        (ATT_VAL_LOC_USER | ATT_UUID_TYPE_SET(UUID_TYPE_128)),
-        HEALTH_MAX_DATA_LEN
     },
 
     //* HR Characteristic Declaration
@@ -320,12 +297,6 @@ static void health_write_att_cb(uint8_t conn_idx, const gatts_write_req_cb_t* p_
     cfm.status     = BLE_SUCCESS;
 
     switch (tab_index) {
-        case HEALTH_IDX_RX_VAL:
-            event.evt_type = HEALTH_EVT_RX_DATA_RECEIVED;
-            event.p_data   = (uint8_t*)p_param->value;
-            event.length   = p_param->length;
-            break;
-
         case HEALTH_IDX_HR_CFG:
             cccd_value = le16toh(&p_param->value[0]);
             event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HR_PORT_OPENED : HEALTH_EVT_HR_PORT_CLOSED;

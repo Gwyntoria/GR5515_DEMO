@@ -62,8 +62,7 @@
 #define FLOW_OFF             0x00                         /**< Indicate that HEALTH can not receive data from peer. */
 #define HEALTH_MAX_DATA_LEN  247                          /**< Maximum length of application data packet which is transmitted via HEALTH. */
 #define HEALTH_FLOW_CTRL_LEN 1                            /**< Maximum length of ble flow control data packet which is transmitted via HEALTH. */
-#define HEALTH_SERVICE_UUID  0xFB, 0x34, 0x9B, 0x5f, 0x80, 0x00, 0x00, 0x80, \
-                             0x00, 0x10, 0x00, 0x00, 0x0E, 0x19, 0x00, 0x01 /**< The UUID of Goodix UART Service for setting advertising data. */
+#define HEALTH_SERVICE_UUID  0xFB, 0x34, 0x9B, 0x5f, 0x40, 0x90, 0x11, 0x10, 0x20, 0x24, 0x01, 0x10, 0x0E, 0xA0, 0x00, 0x01
 
 /**
  * @defgroup HEALTH_ENUM Enumerations
@@ -84,7 +83,6 @@ typedef enum health_evt_type_t {
     HEALTH_EVT_SPO2_PORT_CLOSED,
     HEALTH_EVT_SPO2_DATA_SENT,
 
-    HEALTH_EVT_RX_DATA_RECEIVED, /**< The data from the peer has been received. */
 } health_evt_type_t;
 
 /**
