@@ -133,7 +133,7 @@ void GH3X2X_HrAlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 lub
     user_3x2x_log_cache_hr(&log_hr);
 
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
-    health_hr_data_send(0, &data, 1);
+    health_notify_hr(0, &data, 1);
 
     if (pstAlgoResult->snResult[1] < CONFIDENCE_THRESHOLD_HR) {
         g_low_confidence_cnt_hr++;
@@ -203,7 +203,7 @@ void GH3X2X_Spo2AlgorithmResultReport(STGh3x2xAlgoResult * pstAlgoResult, GU32 l
     user_3x2x_log_cache_spo2(&log_spo2);
 
     uint8_t data = (uint8_t)pstAlgoResult->snResult[0];
-    health_spo2_data_send(0, &data, 1);
+    health_notify_spo2(0, &data, 1);
 
 
     if (pstAlgoResult->snResult[3] < CONFIDENCE_THRESHOLD_SPO2) {

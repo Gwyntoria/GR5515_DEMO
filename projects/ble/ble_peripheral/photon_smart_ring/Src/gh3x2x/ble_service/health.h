@@ -62,7 +62,6 @@
 #define FLOW_OFF             0x00                         /**< Indicate that HEALTH can not receive data from peer. */
 #define HEALTH_MAX_DATA_LEN  247                          /**< Maximum length of application data packet which is transmitted via HEALTH. */
 #define HEALTH_FLOW_CTRL_LEN 1                            /**< Maximum length of ble flow control data packet which is transmitted via HEALTH. */
-#define HEALTH_SERVICE_UUID  0xFB, 0x34, 0x9B, 0x5f, 0x40, 0x90, 0x11, 0x10, 0x20, 0x24, 0x01, 0x10, 0x0E, 0xA0, 0x00, 0x01
 
 /**
  * @defgroup HEALTH_ENUM Enumerations
@@ -71,17 +70,22 @@
 typedef enum health_evt_type_t {
     HEALTH_EVT_INVALID,
 
+    HEALTH_EVT_CMD_PORT_OPENED,
+    HEALTH_EVT_CMD_PORT_CLOSED,
+    HEALTH_EVT_CMD_RECEIVED,
+    HEALTH_EVT_CMD_NOTIFIED,
+
     HEALTH_EVT_HR_PORT_OPENED,
     HEALTH_EVT_HR_PORT_CLOSED,
-    HEALTH_EVT_HR_DATA_SENT,
+    HEALTH_EVT_HR_NOTIFIED,
 
     HEALTH_EVT_HRV_PORT_OPENED,
     HEALTH_EVT_HRV_PORT_CLOSED,
-    HEALTH_EVT_HRV_DATA_SENT,
+    HEALTH_EVT_HRV_NOTIFIED,
 
     HEALTH_EVT_SPO2_PORT_OPENED,
     HEALTH_EVT_SPO2_PORT_CLOSED,
-    HEALTH_EVT_SPO2_DATA_SENT,
+    HEALTH_EVT_SPO2_NOTIFIED,
 
 } health_evt_type_t;
 
@@ -134,7 +138,7 @@ sdk_err_t health_service_init(health_init_t* p_health_init);
  * @return Result of sending data.
  *****************************************************************************************
  */
-sdk_err_t health_hr_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+sdk_err_t health_notify_hr(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 
 /**
  *****************************************************************************************
@@ -147,7 +151,7 @@ sdk_err_t health_hr_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length
  * @return Result of sending data.
  *****************************************************************************************
  */
-sdk_err_t health_hrv_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+sdk_err_t health_notify_hrv(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 
 /**
  *****************************************************************************************
@@ -160,6 +164,6 @@ sdk_err_t health_hrv_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t lengt
  * @return Result of sending data.
  *****************************************************************************************
  */
-sdk_err_t health_spo2_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+sdk_err_t health_notify_spo2(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 
 #endif

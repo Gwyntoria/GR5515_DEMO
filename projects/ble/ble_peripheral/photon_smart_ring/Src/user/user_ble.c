@@ -17,52 +17,64 @@
  */
 void health_service_process_event(health_evt_t* p_evt) {
     switch (p_evt->evt_type) {
+        case HEALTH_EVT_CMD_PORT_OPENED:
+            break;
+
+        case HEALTH_EVT_CMD_PORT_CLOSED:
+            break;
+
+        case HEALTH_EVT_CMD_RECEIVED:
+            break;
+
+        case HEALTH_EVT_CMD_NOTIFIED:
+            break;
+
         case HEALTH_EVT_HR_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_HR_PORT_OPENED");
+            // APP_LOG_INFO("HEALTH_EVT_HR_PORT_OPENED");
             func_ctrl_set_switch_3x2x(kFuncSwitchOn);
             func_ctrl_set_switch_hr(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_HR_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_HR_PORT_CLOSED");
+            // APP_LOG_INFO("HEALTH_EVT_HR_PORT_CLOSED");
             func_ctrl_set_switch_3x2x(kFuncSwitchOff);
             func_ctrl_set_switch_hr(kFuncSwitchOff);
             break;
 
+        case HEALTH_EVT_HR_NOTIFIED:
+            // APP_LOG_INFO("HEALTH_EVT_HR_NOTIFIED");
+            break;
+
         case HEALTH_EVT_HRV_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_OPENED");
+            // APP_LOG_INFO("HEALTH_EVT_HRV_PORT_OPENED");
             func_ctrl_set_switch_3x2x(kFuncSwitchOn);
             func_ctrl_set_switch_hrv(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_HRV_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_HRV_PORT_CLOSED");
+            // APP_LOG_INFO("HEALTH_EVT_HRV_PORT_CLOSED");
             func_ctrl_set_switch_3x2x(kFuncSwitchOff);
             func_ctrl_set_switch_hrv(kFuncSwitchOff);
             break;
 
+        case HEALTH_EVT_HRV_NOTIFIED:
+            // APP_LOG_INFO("HEALTH_EVT_HRV_NOTIFIED");
+            break;
+
         case HEALTH_EVT_SPO2_PORT_OPENED:
-            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_OPENED");
+            // APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_OPENED");
             func_ctrl_set_switch_3x2x(kFuncSwitchOn);
             func_ctrl_set_switch_spo2(kFuncSwitchOn);
             break;
 
         case HEALTH_EVT_SPO2_PORT_CLOSED:
-            APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_CLOSED");
+            // APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_CLOSED");
             func_ctrl_set_switch_3x2x(kFuncSwitchOff);
             func_ctrl_set_switch_spo2(kFuncSwitchOff);
             break;
 
-        case HEALTH_EVT_HR_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_HR_DATA_SENT");
-            break;
-
-        case HEALTH_EVT_HRV_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_HRV_DATA_SENT");
-            break;
-
-        case HEALTH_EVT_SPO2_DATA_SENT:
-            APP_LOG_INFO("HEALTH_EVT_SPO2_DATA_SENT");
+        case HEALTH_EVT_SPO2_NOTIFIED:
+            // APP_LOG_INFO("HEALTH_EVT_SPO2_NOTIFIED");
             break;
 
         default:
