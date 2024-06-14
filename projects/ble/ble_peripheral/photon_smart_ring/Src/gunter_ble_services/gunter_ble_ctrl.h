@@ -17,8 +17,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#define GBC_SERVICE_UUID 0xFB, 0x34, 0x9B, 0x5f, 0x40, 0x90, 0x11, 0x10, 0x20, 0x24, 0x01, 0x10, 0x0E, 0xA0, 0x01, 0x01
-
 #define GBC_CONNECTION_MAX (10 < CFG_MAX_CONNECTIONS ? 10 : CFG_MAX_CONNECTIONS)
 
 #define GBC_MAX_DATA_LEN            (247)
@@ -27,11 +25,11 @@
 typedef enum gbc_evt_type_t {
     GBC_EVT_INVALID,
 
-    THS_EVT_SETTINGS_CHANGED,
+    GBC_EVT_CMD_RECEIVED,
 
-    GBC_EVT_DATA_NOTIFICATION_ENABLED,
-    GBC_EVT_DATA_NOTIFICATION_DISABLED,
-    GBC_EVT_DATA_NOTIFICATION_COMPLETE,
+    GBC_EVT_DATA_PORT_OPENED,
+    GBC_EVT_DATA_PORT_CLOSED,
+    GBC_EVT_DATA_NOTIFIED,
 
 } gbc_evt_type_t;
 
@@ -57,8 +55,8 @@ extern "C" {
 sdk_err_t gbc_service_init(gbc_init_t* gbc_init);
 
 sdk_err_t gbc_tx_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
-sdk_err_t gbc_setting_notify(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
-sdk_err_t gbc_data_notify(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+sdk_err_t gbc_notify_cmd(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+sdk_err_t gbc_notify_data(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 
 
 #ifdef __cplusplus

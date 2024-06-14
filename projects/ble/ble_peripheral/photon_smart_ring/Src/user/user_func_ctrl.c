@@ -431,7 +431,7 @@ int _ble_send_data() {
     // data_stream_hex(buffer, pack_len);
     // uint64_t time_op = rtc_get_relative_ms();
 
-    ret = gbc_data_notify(0, packet, (uint16_t)pack_len);
+    ret = gbc_notify_data(0, packet, (uint16_t)pack_len);
     APP_ERROR_CHECK(ret);
 
     sys_free(packet);

@@ -100,25 +100,25 @@ void _gbc_settings_handler(uint8_t* p_data, uint16_t length) {
 
 void gbc_service_process_event(gbc_evt_t* p_evt) {
     switch (p_evt->evt_type) {
-        case THS_EVT_SETTINGS_CHANGED:
-            APP_LOG_INFO("THS_EVT_SETTINGS_CHANGED");
+        case GBC_EVT_CMD_RECEIVED:
+            // APP_LOG_INFO("GBC_EVT_CMD_RECEIVED");
 
             _gbc_settings_handler(p_evt->p_data, p_evt->length);
             break;
 
-        case GBC_EVT_DATA_NOTIFICATION_ENABLED:
-            APP_LOG_INFO("GBC_EVT_DATA_NOTIFICATION_ENABLED");
+        case GBC_EVT_DATA_PORT_OPENED:
+            // APP_LOG_INFO("GBC_EVT_DATA_PORT_OPENED");
 
             func_ctrl_set_switch_ble(kFuncSwitchOn);
             break;
 
-        case GBC_EVT_DATA_NOTIFICATION_DISABLED:
-            APP_LOG_INFO("GBC_EVT_DATA_NOTIFICATION_DISABLED");
+        case GBC_EVT_DATA_PORT_CLOSED:
+            // APP_LOG_INFO("GBC_EVT_DATA_PORT_CLOSED");
 
             func_ctrl_set_switch_ble(kFuncSwitchOff);
             break;
 
-        case GBC_EVT_DATA_NOTIFICATION_COMPLETE:
+        case GBC_EVT_DATA_NOTIFIED:
             // APP_LOG_INFO("GBC_EVT_DATA_INDICATION_COMPLETE");
             break;
 
