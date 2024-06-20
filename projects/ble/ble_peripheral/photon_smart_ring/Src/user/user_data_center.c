@@ -232,13 +232,13 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("Write data to flash failed");
         // return ret;
+    } else {
+        APP_LOG_INFO("Save data to flash success");
     }
 
     ring_buffer_clean(&data_center_s2f->data_center.ring_t);
     data_center_s2f->data_center.length    = 0;
     data_center_s2f->data_center.frame_cnt = 0;
-
-    APP_LOG_INFO("Save data to flash success");
 
     return ret;
 }
