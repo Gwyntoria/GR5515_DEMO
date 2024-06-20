@@ -189,6 +189,11 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
         return GUNTER_ERR_NULL_POINTER;
     }
 
+    if (data_center_s2f->data_center.ring_t.p_buffer == NULL) {
+        APP_LOG_ERROR("Data center s2f buffer is NULL");
+        return GUNTER_ERR_NULL_POINTER;
+    }
+
     int      ret      = 0;
     uint32_t ring_ret = 0;
 
@@ -197,7 +202,7 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
         return GUNTER_SUCCESS;
     }
 
-    APP_LOG_INFO("Save data to flash");
+    APP_LOG_INFO("Save data to flash start");
 
     uint8_t* buffer = (uint8_t*)sys_malloc(data_center_s2f->data_center.length);
     if (buffer == NULL) {
@@ -226,14 +231,16 @@ int _send_data_into_flash(DataCenterS2f* data_center_s2f) {
 
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("Write data to flash failed");
-        return ret;
+        // return ret;
     }
 
     ring_buffer_clean(&data_center_s2f->data_center.ring_t);
     data_center_s2f->data_center.length    = 0;
     data_center_s2f->data_center.frame_cnt = 0;
 
-    return GUNTER_SUCCESS;
+    APP_LOG_INFO("Save data to flash success");
+
+    return ret;
 }
 
 int _alloc_data_center_f2b_mem(DataCenterF2b* data_center_f2b, uint16_t len) {

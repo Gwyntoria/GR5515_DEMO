@@ -1273,7 +1273,12 @@ int ufs_erase_zone_data(FlashZone flash_zone) {
                              &flash_zone_info);
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("ufs_er: _prepare_operation[%d] failed with %d", flash_zone, ret);
-        return GUNTER_FAILURE;
+
+        if (ret == -4) {
+            APP_LOG_ERROR("ufs_er: flash zone[%d] info error!", flash_zone);
+        } else {
+            return GUNTER_FAILURE;
+        }
     }
 
     uint8_t sector_cnt = range_sector_ed - range_sector_op;
@@ -1298,6 +1303,8 @@ int ufs_erase_zone_data(FlashZone flash_zone) {
         APP_LOG_ERROR("ufs: _update_flash_zone_info failed with %d", ret);
         return GUNTER_FAILURE;
     }
+
+    APP_LOG_INFO("ufs: erase flash zone[%d] success", flash_zone);
 
     return GUNTER_SUCCESS;
 }

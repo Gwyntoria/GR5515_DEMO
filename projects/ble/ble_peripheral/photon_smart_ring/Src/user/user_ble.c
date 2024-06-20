@@ -7,6 +7,15 @@
 #include "health.h"
 #include "user_func_ctrl.h"
 
+void _gh_cmd_handler(uint8_t* p_data, uint16_t length) {
+    if (length < 1) {
+        return;
+    }
+
+    data_stream_hex(p_data, length);
+
+}
+
 /**
  * @brief Process the events related to the health service.
  *
@@ -17,13 +26,8 @@
  */
 void health_service_process_event(health_evt_t* p_evt) {
     switch (p_evt->evt_type) {
-        case HEALTH_EVT_CMD_PORT_OPENED:
-            break;
-
-        case HEALTH_EVT_CMD_PORT_CLOSED:
-            break;
-
         case HEALTH_EVT_CMD_RECEIVED:
+            _gh_cmd_handler(p_evt->p_data, p_evt->length);
             break;
 
         case HEALTH_EVT_CMD_NOTIFIED:
@@ -82,7 +86,7 @@ void health_service_process_event(health_evt_t* p_evt) {
     }
 }
 
-void _gbc_settings_handler(uint8_t* p_data, uint16_t length) {
+void _gbc_cmd_handler(uint8_t* p_data, uint16_t length) {
     if (length < 1) {
         return;
     }
@@ -90,8 +94,12 @@ void _gbc_settings_handler(uint8_t* p_data, uint16_t length) {
     data_stream_hex(p_data, length);
 
     switch (p_data[0]) {
-        case GBC_SETTING_ERASE_FLASH:
+        case GBC_CMD_ERASE_FLASH:
             func_ctrl_set_switch_fla(kFuncSwitchOn);
+            break;
+
+        case GBC_CMD_SEND_DATA:
+            func_ctrl_set_switch_ble(kFuncSwitchOn);
             break;
         default:
             break;
@@ -103,19 +111,23 @@ void gbc_service_process_event(gbc_evt_t* p_evt) {
         case GBC_EVT_CMD_RECEIVED:
             // APP_LOG_INFO("GBC_EVT_CMD_RECEIVED");
 
-            _gbc_settings_handler(p_evt->p_data, p_evt->length);
+            _gbc_cmd_handler(p_evt->p_data, p_evt->length);
+            break;
+
+        case GBC_EVT_CMD_NOTIFIED:
+            // APP_LOG_INFO("GBC_EVT_CMD_NOTIFIED");
             break;
 
         case GBC_EVT_DATA_PORT_OPENED:
             // APP_LOG_INFO("GBC_EVT_DATA_PORT_OPENED");
 
-            func_ctrl_set_switch_ble(kFuncSwitchOn);
+            // func_ctrl_set_switch_ble(kFuncSwitchOn);
             break;
 
         case GBC_EVT_DATA_PORT_CLOSED:
             // APP_LOG_INFO("GBC_EVT_DATA_PORT_CLOSED");
 
-            func_ctrl_set_switch_ble(kFuncSwitchOff);
+            // func_ctrl_set_switch_ble(kFuncSwitchOff);
             break;
 
         case GBC_EVT_DATA_NOTIFIED:
