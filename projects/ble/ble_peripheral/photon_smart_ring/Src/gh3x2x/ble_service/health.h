@@ -128,6 +128,27 @@ typedef struct health_init_t {
 sdk_err_t health_service_init(health_init_t* p_health_init);
 
 /**
+ * @brief Notifies the health command to the specified connection index.
+ *
+ * This function sends the health command to the Bluetooth Low Energy (BLE) peripheral device
+ * connected at the specified connection index. The health command data is provided through the
+ * `p_data` parameter, and the length of the data is specified by the `length` parameter.
+ *
+ * @param conn_idx The connection index of the BLE peripheral device.
+ * @param p_data   Pointer to the health command data.
+ * @param length   Length of the health command data.
+ *
+ * @return The status of the notification operation. Possible values are:
+ *         - SDK_SUCCESS: The health command notification was sent successfully.
+ *         - SDK_ERR_INVALID_PARAM: Invalid parameters were provided.
+ *         - SDK_ERR_INVALID_STATE: The BLE peripheral device is not in a valid state to send notifications.
+ *         - SDK_ERR_NOT_SUPPORTED: The health command notification is not supported by the BLE peripheral device.
+ *         - SDK_ERR_NO_RESOURCES: Insufficient resources to send the health command notification.
+ *         - SDK_ERR_TIMEOUT: The health command notification operation timed out.
+ */
+sdk_err_t health_notify_cmd(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
+
+/**
  *****************************************************************************************
  * @brief Send heart rate data to peer device.
  *

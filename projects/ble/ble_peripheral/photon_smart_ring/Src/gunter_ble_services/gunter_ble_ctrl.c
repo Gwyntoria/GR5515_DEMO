@@ -45,7 +45,7 @@ enum gbc_attr_idx_t {
 typedef struct gbc_env_t {
     gbc_init_t gbc_init;                         /**< Sample Service initialization variables. */
     uint16_t   start_hdl;                        /**< Service start handle. */
-    uint16_t   setting_ntf_cfg[GBC_CONNECTION_MAX]; /**< Init Character Notification configuration of peer devices. */
+    uint16_t   cmd_ntf_cfg[GBC_CONNECTION_MAX]; /**< Init Character Notification configuration of peer devices. */
     uint16_t   data_ntf_cfg[GBC_CONNECTION_MAX]; /**< Data Character Notification configuration of peer devices. */
 } gbc_env_t;
 
@@ -67,7 +67,7 @@ static const attm_desc_128_t gbc_att_db[GBC_IDX_MAX] = {
         0,
     },
 
-    // * @brief Settings Characteristic Declaration
+    // * @brief Command Characteristic Declaration
     [GBC_IDX_CMD_CHAR] = {
         ATT_128_CHARACTERISTIC,
         READ_PERM_UNSEC,
@@ -78,11 +78,11 @@ static const attm_desc_128_t gbc_att_db[GBC_IDX_MAX] = {
         GBC_CHAR_CMD_UUID,
         (WRITE_CMD_PERM_UNSEC | NOTIFY_PERM_UNSEC),
         (ATT_VAL_LOC_USER | ATT_UUID_TYPE_SET(UUID_TYPE_128)),
-        GBC_CHAR_SETTINGS_VALUE_LEN,
+        GBC_MAX_CMD_LEN
     },
     [GBC_IDX_CMD_CFG] = {
         ATT_128_CLIENT_CHAR_CFG,
-        (READ_PERM_UNSEC | WRITE_REQ_PERM_UNSEC | WRITE_CMD_PERM_UNSEC),
+        (READ_PERM_UNSEC | WRITE_REQ_PERM_UNSEC),
         0,
         0,
     },
@@ -173,6 +173,11 @@ static void gbc_read_att_cb(uint8_t conn_idx, const gatts_read_req_cb_t* p_param
     cfm.status = BLE_SUCCESS;
 
     switch (tab_index) {
+        case GBC_IDX_CMD_CFG:
+            cfm.length = sizeof(uint16_t);
+            cfm.value  = (uint8_t*)&s_gbc_env.cmd_ntf_cfg[conn_idx];
+            break;
+
         case GBC_IDX_DATA_CFG:
             cfm.length = sizeof(uint16_t);
             cfm.value  = (uint8_t*)&s_gbc_env.data_ntf_cfg[conn_idx];
@@ -215,7 +220,7 @@ static void gbc_write_att_cb(uint8_t conn_idx, const gatts_write_req_cb_t* p_par
 
         case GBC_IDX_CMD_CFG:
             cccd_value = le16toh(&p_param->value[0]);
-            s_gbc_env.setting_ntf_cfg[conn_idx] = cccd_value;
+            s_gbc_env.cmd_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case GBC_IDX_DATA_CFG:
@@ -259,7 +264,7 @@ static void gbc_cccd_set_cb(uint8_t conn_idx, uint16_t handle, uint16_t cccd_val
 
     switch (tab_index) {
        case GBC_IDX_CMD_CFG:
-            s_gbc_env.setting_ntf_cfg[conn_idx] = cccd_value;
+            s_gbc_env.cmd_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case GBC_IDX_DATA_CFG:
@@ -304,13 +309,14 @@ sdk_err_t gbc_notify_cmd(uint8_t conn_idx, uint8_t* p_data, uint16_t length) {
     sdk_err_t        error_code = SDK_ERR_NTF_DISABLED;
     gatts_noti_ind_t send_cmd;
 
-    if (PRF_CLI_START_NTF == s_gbc_env.setting_ntf_cfg[conn_idx]) {
+    if (PRF_CLI_START_NTF == s_gbc_env.cmd_ntf_cfg[conn_idx]) {
             // Fill in the parameter structure
             send_cmd.type = BLE_GATT_NOTIFICATION;
             send_cmd.handle = prf_find_handle_by_idx(GBC_IDX_CMD_VAL, s_gbc_env.start_hdl, (uint8_t*)&s_gbc_features);
             // pack measured value in database
             send_cmd.length = length;
             send_cmd.value = p_data;
+            s_now_notify_cmp_type = GBC_EVT_CMD_NOTIFIED;
             // send notification to peer device
             error_code = ble_gatts_noti_ind(conn_idx, &send_cmd);
     }

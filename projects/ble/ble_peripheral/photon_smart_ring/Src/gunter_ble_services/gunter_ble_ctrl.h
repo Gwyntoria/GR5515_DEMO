@@ -19,13 +19,14 @@
 
 #define GBC_CONNECTION_MAX (10 < CFG_MAX_CONNECTIONS ? 10 : CFG_MAX_CONNECTIONS)
 
-#define GBC_MAX_DATA_LEN            (247)
-#define GBC_CHAR_SETTINGS_VALUE_LEN (20)
+#define GBC_MAX_DATA_LEN (247)
+#define GBC_MAX_CMD_LEN  (20)
 
 typedef enum gbc_evt_type_t {
     GBC_EVT_INVALID,
 
     GBC_EVT_CMD_RECEIVED,
+    GBC_EVT_CMD_NOTIFIED,
 
     GBC_EVT_DATA_PORT_OPENED,
     GBC_EVT_DATA_PORT_CLOSED,
@@ -54,7 +55,6 @@ extern "C" {
 
 sdk_err_t gbc_service_init(gbc_init_t* gbc_init);
 
-sdk_err_t gbc_tx_data_send(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 sdk_err_t gbc_notify_cmd(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 sdk_err_t gbc_notify_data(uint8_t conn_idx, uint8_t* p_data, uint16_t length);
 
