@@ -4,6 +4,7 @@
 #include "app_log.h"
 #include "gh3x2x_demo.h"
 #include "NST112/nst112x.h"
+#include "ble_error.h"
 
 #include "gunter_ble_ctrl.h"
 #include "user_battery.h"
@@ -15,6 +16,7 @@
 #include "user_rtc.h"
 #include "user_timer.h"
 #include "user_3x2x_log.h"
+#include "user_ble.h"
 
 GU16 g_low_confidence_cnt_hr   = 0;
 GU16 g_low_confidence_cnt_spo2 = 0;
@@ -355,6 +357,11 @@ int _ble_send_data() {
 
     if (flash_data_len == 0) {
         APP_LOG_INFO("No data in flash");
+
+        uint8_t response = GBC_RSP_FLASH_EMPTY;
+        sdk_err_t err = gbc_notify_cmd(0, &response, GBC_RSP_TYPE_SIZE);
+        APP_ERROR_CHECK(err);
+
         s_switch_ble = kFuncSwitchOff;
         return GUNTER_SUCCESS;
 
@@ -375,6 +382,14 @@ int _ble_send_data() {
     ret = data_center_f2b->alloc_mem_func(data_center_f2b, data_len);
     if (ret != GUNTER_SUCCESS) {
         APP_LOG_ERROR("Alloc memory failed");
+
+        uint8_t response = GBC_RSP_FLASH_ERROR;
+        sdk_err_t err = gbc_notify_cmd(0, &response, GBC_RSP_TYPE_SIZE);
+        APP_ERROR_CHECK(err);
+
+        s_switch_ble = kFuncSwitchOff;
+        sequence = 0;
+        data_len_whole = 0;
         return GUNTER_FAILURE;
     }
 
@@ -388,6 +403,14 @@ int _ble_send_data() {
         if (ret != GUNTER_SUCCESS) {
             APP_LOG_ERROR("Free memory failed");
         }
+
+        uint8_t response = GBC_RSP_FLASH_ERROR;
+        sdk_err_t err = gbc_notify_cmd(0, &response, GBC_RSP_TYPE_SIZE);
+        APP_ERROR_CHECK(err);
+
+        s_switch_ble = kFuncSwitchOff;
+        sequence = 0;
+        data_len_whole = 0;
 
         return GUNTER_FAILURE;
     }
@@ -408,6 +431,14 @@ int _ble_send_data() {
             APP_LOG_ERROR("Free memory failed");
         }
 
+        uint8_t response = GBC_RSP_FLASH_ERROR;
+        sdk_err_t err = gbc_notify_cmd(0, &response, GBC_RSP_TYPE_SIZE);
+        APP_ERROR_CHECK(err);
+
+        s_switch_ble = kFuncSwitchOff;
+        sequence = 0;
+        data_len_whole = 0;
+
         return GUNTER_ERR_NULL_POINTER;
     }
 
@@ -425,14 +456,22 @@ int _ble_send_data() {
             APP_LOG_ERROR("Free memory failed");
         }
 
+        uint8_t response = GBC_RSP_FLASH_ERROR;
+        sdk_err_t err = gbc_notify_cmd(0, &response, GBC_RSP_TYPE_SIZE);
+        APP_ERROR_CHECK(err);
+
+        s_switch_ble = kFuncSwitchOff;
+        sequence = 0;
+        data_len_whole = 0;
+
         return GUNTER_FAILURE;
     }
 
     // data_stream_hex(buffer, pack_len);
     // uint64_t time_op = rtc_get_relative_ms();
 
-    ret = gbc_notify_data(0, packet, (uint16_t)pack_len);
-    APP_ERROR_CHECK(ret);
+    sdk_err_t err = gbc_notify_data(0, packet, (uint16_t)pack_len);
+    APP_ERROR_CHECK(err);
 
     sys_free(packet);
     packet = NULL;

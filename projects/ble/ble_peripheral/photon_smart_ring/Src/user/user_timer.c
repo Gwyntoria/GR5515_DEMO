@@ -147,7 +147,7 @@ void lsm6dso_start_timer(void) {
     error_code = app_timer_create(&s_lsm6dso_timer_id, ATIMER_REPEAT, _lsm6dso_timeout_handler);
     APP_ERROR_CHECK(error_code);
 
-    error_code = app_timer_start(s_lsm6dso_timer_id, 10, NULL);
+    error_code = app_timer_start(s_lsm6dso_timer_id, 20, NULL);
     APP_ERROR_CHECK(error_code);
 
     APP_LOG_INFO("lsm6dso timer start success");
