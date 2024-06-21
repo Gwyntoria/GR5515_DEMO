@@ -14,6 +14,9 @@
 #include "app_spi.h"
 #include "user_common.h"
 
+#define FLASH_OPERATE_LOCK()   GLOBAL_EXCEPTION_DISABLE()
+#define FLASH_OPERATE_UNLOCK() GLOBAL_EXCEPTION_ENABLE()
+
 static void flash_spi_callback(app_spi_evt_t* p_evt) {
     switch (p_evt->type) {
         case APP_SPI_EVT_TX_CPLT:
@@ -48,7 +51,11 @@ int8_t flash_read_rfid(uint8_t* flash_id) // flash_id must > 3byte
     uint8_t Send_Data   = GD25LE128E_RDID; // 0x9F
     uint8_t Get_Data[4] = {0};
 
-    app_spi_transmit_receive_async(APP_SPI_ID_MASTER, &Send_Data, Get_Data, 4);
+    FLASH_OPERATE_LOCK();
+
+    app_spi_transmit_receive_sync(APP_SPI_ID_MASTER, &Send_Data, Get_Data, 4, 0x10);
+
+    FLASH_OPERATE_UNLOCK();
     // APP_LOG_DEBUG("flash_read_rfid: Get_Data[0] = 0x%x , Get_Data[1] = 0x%x , Get_Data[2] = 0x%x , Get_Data[3] =
     // 0x%x",Get_Data[0],Get_Data[1],Get_Data[2],Get_Data[3]);
     if (flash_id != NULL) {
@@ -124,8 +131,13 @@ int8_t flash_read_status(void) {
     uint8_t rd_buf[2] = {0};
     uint8_t send_cmd  = GD25LE128E_RDSR_L;
 
-    app_spi_transmit_receive_sync(APP_SPI_ID_MASTER, &send_cmd, rd_buf, 2, 0x1000);
+    FLASH_OPERATE_LOCK();
+    
+    app_spi_transmit_receive_sync(APP_SPI_ID_MASTER, &send_cmd, rd_buf, 2, 0x10);
     // APP_LOG_DEBUG("GD25LE128E_RDSR_L = 0x%x ",rd_buf[1]);
+
+    FLASH_OPERATE_UNLOCK();
+
     if ((rd_buf[1] & 0x01) == 1) {
         return FLASH_STATUS_BUSY;
     } else {
@@ -137,11 +149,14 @@ int8_t flash_erase_chip(void) {
     int     ret = 0;
     uint8_t send_cmd;
 
-    send_cmd = GD25LE128E_WREN;
-    app_spi_transmit_sync(APP_SPI_ID_MASTER, &send_cmd, 1, 0x1000);
+    FLASH_OPERATE_LOCK();
 
+    send_cmd = GD25LE128E_WREN;
+    app_spi_transmit_sync(APP_SPI_ID_MASTER, &send_cmd, 1, 0x10);
     send_cmd = GD25LE128E_CE;
-    app_spi_transmit_sync(APP_SPI_ID_MASTER, &send_cmd, 1, 0x1000);
+    app_spi_transmit_sync(APP_SPI_ID_MASTER, &send_cmd, 1, 0x10);
+
+    FLASH_OPERATE_UNLOCK();
 
     ret = flash_read_status();
     while (ret) {
@@ -156,6 +171,8 @@ int8_t flash_erase_sector(uint32_t address) {
     int     ret         = 0;
     uint8_t send_cmd[4] = {0};
 
+    FLASH_OPERATE_LOCK();
+
     send_cmd[0] = GD25LE128E_WREN;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, send_cmd, 1, 0x1000);
 
@@ -164,6 +181,8 @@ int8_t flash_erase_sector(uint32_t address) {
     send_cmd[2] = (uint8_t)(address >> 8);
     send_cmd[3] = (uint8_t)address;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, send_cmd, 4, 0x1000);
+
+    FLASH_OPERATE_UNLOCK();
 
     ret = flash_read_status();
     while (ret) {
@@ -178,6 +197,8 @@ int8_t flash_erase_block_64k(uint32_t address) {
     int     ret         = 0;
     uint8_t send_cmd[4] = {0};
 
+    FLASH_OPERATE_LOCK();
+
     send_cmd[0] = GD25LE128E_WREN;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, send_cmd, 1, 0x1000);
 
@@ -186,6 +207,8 @@ int8_t flash_erase_block_64k(uint32_t address) {
     send_cmd[2] = (uint8_t)(address >> 8);
     send_cmd[3] = (uint8_t)address;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, send_cmd, 4, 0x1000);
+
+    FLASH_OPERATE_UNLOCK();
 
     ret = flash_read_status();
     while (ret) {
@@ -205,6 +228,8 @@ int8_t flash_write_data(uint32_t address, uint8_t* data, uint16_t data_size) {
 
     int8_t  ret = 0;
     uint8_t send_cmd[4];
+    
+    FLASH_OPERATE_LOCK();
 
     send_cmd[0] = GD25LE128E_WREN;
     app_spi_transmit_sync(APP_SPI_ID_MASTER, send_cmd, 1, 0x1000);
@@ -223,6 +248,8 @@ int8_t flash_write_data(uint32_t address, uint8_t* data, uint16_t data_size) {
     app_spi_transmit_sync(APP_SPI_ID_MASTER, wt_buf, data_size + 4, 0x1000);
     sys_free(wt_buf);
 
+    FLASH_OPERATE_UNLOCK();
+
     ret = flash_read_status();
     while (ret) {
         delay_ms(30);
@@ -240,6 +267,8 @@ int8_t flash_read_data(uint32_t address, uint8_t* data, uint16_t data_size) {
 
     uint8_t send_cmd[4] = {0};
 
+    FLASH_OPERATE_LOCK();
+
     address     = address & 0xFFFFFF;
     send_cmd[0] = GD25LE128E_READ;
     send_cmd[1] = (uint8_t)(address >> 16);
@@ -252,6 +281,8 @@ int8_t flash_read_data(uint32_t address, uint8_t* data, uint16_t data_size) {
     app_spi_transmit_receive_sync(APP_SPI_ID_MASTER, send_cmd, rd_buf, data_size + 4, 0x1000);
     memcpy(data, rd_buf + 4, data_size);
     sys_free(rd_buf);
+
+    FLASH_OPERATE_UNLOCK();
 
     // printf("flash_read_data:");
     // for (uint16_t i = 0; i < data_size; i++) {
