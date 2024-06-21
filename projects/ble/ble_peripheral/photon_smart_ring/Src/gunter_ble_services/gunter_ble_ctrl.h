@@ -28,8 +28,8 @@ typedef enum gbc_evt_type_t {
     GBC_EVT_CMD_RECEIVED,
     GBC_EVT_CMD_NOTIFIED,
 
-    GBC_EVT_DATA_PORT_OPENED,
-    GBC_EVT_DATA_PORT_CLOSED,
+    // GBC_EVT_DATA_PORT_OPENED,
+    // GBC_EVT_DATA_PORT_CLOSED,
     GBC_EVT_DATA_NOTIFIED,
 
 } gbc_evt_type_t;

@@ -340,25 +340,25 @@ static void health_write_att_cb(uint8_t conn_idx, const gatts_write_req_cb_t* p_
 
         case HEALTH_IDX_CMD_CFG:
             cccd_value = le16toh(&p_param->value[0]);
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_CMD_PORT_OPENED : HEALTH_EVT_CMD_PORT_CLOSED;
+            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_CMD_PORT_OPENED : HEALTH_EVT_CMD_PORT_CLOSED;
             s_health_env.cmd_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_HR_CFG:
             cccd_value = le16toh(&p_param->value[0]);
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HR_PORT_OPENED : HEALTH_EVT_HR_PORT_CLOSED;
+            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HR_PORT_OPENED : HEALTH_EVT_HR_PORT_CLOSED;
             s_health_env.hr_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_HRV_CFG:
             cccd_value = le16toh(&p_param->value[0]);
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HRV_PORT_OPENED : HEALTH_EVT_HRV_PORT_CLOSED;
+            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HRV_PORT_OPENED : HEALTH_EVT_HRV_PORT_CLOSED;
             s_health_env.hrv_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_SPO2_CFG:
             cccd_value = le16toh(&p_param->value[0]);
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_SPO2_PORT_OPENED : HEALTH_EVT_SPO2_PORT_CLOSED;
+            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_SPO2_PORT_OPENED : HEALTH_EVT_SPO2_PORT_CLOSED;
             s_health_env.spo2_ntf_cfg[conn_idx] = cccd_value;
             break;
 
@@ -397,22 +397,22 @@ static void health_cccd_set_cb(uint8_t conn_idx, uint16_t handle, uint16_t cccd_
 
     switch (tab_index) {
         case HEALTH_IDX_CMD_CFG:
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_CMD_PORT_OPENED : HEALTH_EVT_CMD_PORT_CLOSED;
+            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_CMD_PORT_OPENED : HEALTH_EVT_CMD_PORT_CLOSED;
             s_health_env.cmd_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_HR_CFG:
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HR_PORT_OPENED : HEALTH_EVT_HR_PORT_CLOSED;
+            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HR_PORT_OPENED : HEALTH_EVT_HR_PORT_CLOSED;
             s_health_env.hr_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_HRV_CFG:
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HRV_PORT_OPENED : HEALTH_EVT_HRV_PORT_CLOSED;
+            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_HRV_PORT_OPENED : HEALTH_EVT_HRV_PORT_CLOSED;
             s_health_env.hrv_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case HEALTH_IDX_SPO2_CFG:
-            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_SPO2_PORT_OPENED : HEALTH_EVT_SPO2_PORT_CLOSED;
+            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? HEALTH_EVT_SPO2_PORT_OPENED : HEALTH_EVT_SPO2_PORT_CLOSED;
             s_health_env.spo2_ntf_cfg[conn_idx] = cccd_value;
             break;
 
