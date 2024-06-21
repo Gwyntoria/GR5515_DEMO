@@ -7,6 +7,38 @@
 #include "health.h"
 #include "user_func_ctrl.h"
 
+static ble_notify_status s_notify_status_health_cmd  = BLE_NOTIFY_CLOSED;
+static ble_notify_status s_notify_status_health_hr   = BLE_NOTIFY_CLOSED;
+static ble_notify_status s_notify_status_health_hrv  = BLE_NOTIFY_CLOSED;
+static ble_notify_status s_notify_status_health_spo2 = BLE_NOTIFY_CLOSED;
+static ble_notify_status s_notify_status_gbc_cmd     = BLE_NOTIFY_CLOSED;
+static ble_notify_status s_notify_status_gbc_data    = BLE_NOTIFY_CLOSED;
+
+bool is_ble_notify_opened(ble_notify_type type) {
+    switch (type) {
+        case BLE_NOTIFY_HEALTH_CMD:
+            return s_notify_status_health_cmd == BLE_NOTIFY_OPENED;
+
+        case BLE_NOTIFY_HEALTH_HR:
+            return s_notify_status_health_hr == BLE_NOTIFY_OPENED;
+
+        case BLE_NOTIFY_HEALTH_HRV:
+            return s_notify_status_health_hrv == BLE_NOTIFY_OPENED;
+
+        case BLE_NOTIFY_HEALTH_SPO2:
+            return s_notify_status_health_spo2 == BLE_NOTIFY_OPENED;
+
+        case BLE_NOTIFY_GBC_CMD:
+            return s_notify_status_gbc_cmd == BLE_NOTIFY_OPENED;
+
+        case BLE_NOTIFY_GBC_DATA:
+            return s_notify_status_gbc_data == BLE_NOTIFY_OPENED;
+
+        default:
+            return false;
+    }
+}
+
 void _gh_cmd_handler(uint8_t* p_data, uint16_t length) {
     if (length < 1) {
         return;
@@ -62,6 +94,16 @@ void _gh_cmd_handler(uint8_t* p_data, uint16_t length) {
  */
 void health_service_process_event(health_evt_t* p_evt) {
     switch (p_evt->evt_type) {
+        case HEALTH_EVT_CMD_PORT_OPENED:
+            // APP_LOG_INFO("HEALTH_EVT_CMD_PORT_OPENED");
+            s_notify_status_health_cmd = BLE_NOTIFY_OPENED;
+            break;
+
+        case HEALTH_EVT_CMD_PORT_CLOSED:
+            // APP_LOG_INFO("HEALTH_EVT_CMD_PORT_CLOSED");
+            s_notify_status_health_cmd = BLE_NOTIFY_CLOSED;
+            break;
+
         case HEALTH_EVT_CMD_RECEIVED:
             _gh_cmd_handler(p_evt->p_data, p_evt->length);
             break;
@@ -69,49 +111,43 @@ void health_service_process_event(health_evt_t* p_evt) {
         case HEALTH_EVT_CMD_NOTIFIED:
             break;
 
-            // case HEALTH_EVT_HR_PORT_OPENED:
+        case HEALTH_EVT_HR_PORT_OPENED:
             // APP_LOG_INFO("HEALTH_EVT_HR_PORT_OPENED");
-            // func_ctrl_set_switch_3x2x(kFuncSwitchOn);
-            // func_ctrl_set_switch_hr(kFuncSwitchOn);
-            // break;
+            s_notify_status_health_hr = BLE_NOTIFY_OPENED;
+            break;
 
-            // case HEALTH_EVT_HR_PORT_CLOSED:
+        case HEALTH_EVT_HR_PORT_CLOSED:
             // APP_LOG_INFO("HEALTH_EVT_HR_PORT_CLOSED");
-            // func_ctrl_set_switch_3x2x(kFuncSwitchOff);
-            // func_ctrl_set_switch_hr(kFuncSwitchOff);
-            // break;
+            s_notify_status_health_hr = BLE_NOTIFY_CLOSED;
+            break;
 
         case HEALTH_EVT_HR_NOTIFIED:
             // APP_LOG_INFO("HEALTH_EVT_HR_NOTIFIED");
             break;
 
-            // case HEALTH_EVT_HRV_PORT_OPENED:
+        case HEALTH_EVT_HRV_PORT_OPENED:
             // APP_LOG_INFO("HEALTH_EVT_HRV_PORT_OPENED");
-            // func_ctrl_set_switch_3x2x(kFuncSwitchOn);
-            // func_ctrl_set_switch_hrv(kFuncSwitchOn);
-            // break;
+            s_notify_status_health_hr = BLE_NOTIFY_OPENED;
+            break;
 
-            // case HEALTH_EVT_HRV_PORT_CLOSED:
+        case HEALTH_EVT_HRV_PORT_CLOSED:
             // APP_LOG_INFO("HEALTH_EVT_HRV_PORT_CLOSED");
-            // func_ctrl_set_switch_3x2x(kFuncSwitchOff);
-            // func_ctrl_set_switch_hrv(kFuncSwitchOff);
-            // break;
+            s_notify_status_health_hrv = BLE_NOTIFY_CLOSED;
+            break;
 
         case HEALTH_EVT_HRV_NOTIFIED:
             // APP_LOG_INFO("HEALTH_EVT_HRV_NOTIFIED");
             break;
 
-            // case HEALTH_EVT_SPO2_PORT_OPENED:
+        case HEALTH_EVT_SPO2_PORT_OPENED:
             // APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_OPENED");
-            // func_ctrl_set_switch_3x2x(kFuncSwitchOn);
-            // func_ctrl_set_switch_spo2(kFuncSwitchOn);
-            // break;
+            s_notify_status_health_spo2 = BLE_NOTIFY_OPENED;
+            break;
 
-            // case HEALTH_EVT_SPO2_PORT_CLOSED:
+        case HEALTH_EVT_SPO2_PORT_CLOSED:
             // APP_LOG_INFO("HEALTH_EVT_SPO2_PORT_CLOSED");
-            // func_ctrl_set_switch_3x2x(kFuncSwitchOff);
-            // func_ctrl_set_switch_spo2(kFuncSwitchOff);
-            // break;
+            s_notify_status_health_spo2 = BLE_NOTIFY_CLOSED;
+            break;
 
         case HEALTH_EVT_SPO2_NOTIFIED:
             // APP_LOG_INFO("HEALTH_EVT_SPO2_NOTIFIED");
@@ -146,6 +182,16 @@ void _gbc_cmd_handler(uint8_t* p_data, uint16_t length) {
 
 void gbc_service_process_event(gbc_evt_t* p_evt) {
     switch (p_evt->evt_type) {
+        case GBC_EVT_CMD_PORT_OPENED:
+            // APP_LOG_INFO("GBC_EVT_CMD_PORT_OPENED");
+            s_notify_status_gbc_cmd = BLE_NOTIFY_OPENED;
+            break;
+        
+        case GBC_EVT_CMD_PORT_CLOSED:
+            // APP_LOG_INFO("GBC_EVT_CMD_PORT_CLOSED");
+            s_notify_status_gbc_cmd = BLE_NOTIFY_CLOSED;
+            break;
+
         case GBC_EVT_CMD_RECEIVED:
             // APP_LOG_INFO("GBC_EVT_CMD_RECEIVED");
 
@@ -156,17 +202,15 @@ void gbc_service_process_event(gbc_evt_t* p_evt) {
             // APP_LOG_INFO("GBC_EVT_CMD_NOTIFIED");
             break;
 
-        // case GBC_EVT_DATA_PORT_OPENED:
+        case GBC_EVT_DATA_PORT_OPENED:
             // APP_LOG_INFO("GBC_EVT_DATA_PORT_OPENED");
+            s_notify_status_gbc_data = BLE_NOTIFY_OPENED;
+            break;
 
-            // func_ctrl_set_switch_ble(kFuncSwitchOn);
-            // break;
-
-        // case GBC_EVT_DATA_PORT_CLOSED:
+        case GBC_EVT_DATA_PORT_CLOSED:
             // APP_LOG_INFO("GBC_EVT_DATA_PORT_CLOSED");
-
-            // func_ctrl_set_switch_ble(kFuncSwitchOff);
-            // break;
+            s_notify_status_gbc_data = BLE_NOTIFY_CLOSED;
+            break;
 
         case GBC_EVT_DATA_NOTIFIED:
             // APP_LOG_INFO("GBC_EVT_DATA_INDICATION_COMPLETE");

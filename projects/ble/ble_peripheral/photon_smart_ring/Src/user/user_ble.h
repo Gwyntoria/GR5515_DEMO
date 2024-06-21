@@ -35,11 +35,27 @@
 #define GBC_RSP_FLASH_ERROR 0x52
 #define GBC_RSP_UNKNOWN_CMD 0xFF
 
+typedef enum ble_notify_status {
+    BLE_NOTIFY_CLOSED = 0,
+    BLE_NOTIFY_OPENED = 1,
+} ble_notify_status;
+
+typedef enum ble_notify_type {
+    BLE_NOTIFY_HEALTH_CMD  = 0,
+    BLE_NOTIFY_HEALTH_HR   = 1,
+    BLE_NOTIFY_HEALTH_HRV  = 2,
+    BLE_NOTIFY_HEALTH_SPO2 = 3,
+    BLE_NOTIFY_GBC_CMD     = 4,
+    BLE_NOTIFY_GBC_DATA    = 5,
+} ble_notify_type;
+
 #ifdef __cplusplus
 #if __cplusplus
 extern "C" {
 #endif
 #endif
+
+bool is_ble_notify_opened(ble_notify_type type);
 
 void health_service_process_event(health_evt_t* p_evt);
 void gbc_service_process_event(gbc_evt_t* p_evt);

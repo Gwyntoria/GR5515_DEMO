@@ -220,12 +220,13 @@ static void gbc_write_att_cb(uint8_t conn_idx, const gatts_write_req_cb_t* p_par
 
         case GBC_IDX_CMD_CFG:
             cccd_value = le16toh(&p_param->value[0]);
+            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? GBC_EVT_CMD_PORT_OPENED : GBC_EVT_CMD_PORT_CLOSED;
             s_gbc_env.cmd_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case GBC_IDX_DATA_CFG:
             cccd_value = le16toh(&p_param->value[0]);
-            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? GBC_EVT_DATA_PORT_OPENED : GBC_EVT_DATA_PORT_CLOSED;
+            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? GBC_EVT_DATA_PORT_OPENED : GBC_EVT_DATA_PORT_CLOSED;
             s_gbc_env.data_ntf_cfg[conn_idx] = cccd_value;
             break;
 
@@ -264,11 +265,12 @@ static void gbc_cccd_set_cb(uint8_t conn_idx, uint16_t handle, uint16_t cccd_val
 
     switch (tab_index) {
        case GBC_IDX_CMD_CFG:
+            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? GBC_EVT_CMD_PORT_OPENED : GBC_EVT_CMD_PORT_CLOSED;
             s_gbc_env.cmd_ntf_cfg[conn_idx] = cccd_value;
             break;
 
         case GBC_IDX_DATA_CFG:
-            // event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? GBC_EVT_DATA_PORT_OPENED : GBC_EVT_DATA_PORT_CLOSED;
+            event.evt_type = (PRF_CLI_START_NTF == cccd_value) ? GBC_EVT_DATA_PORT_OPENED : GBC_EVT_DATA_PORT_CLOSED;
             s_gbc_env.data_ntf_cfg[conn_idx] = cccd_value;
             break;
 
