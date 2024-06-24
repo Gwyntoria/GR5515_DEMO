@@ -9,6 +9,8 @@
 
 /**
  * @defgroup health service request
+ * 
+ * 0x01~0x0F
  */
 #define HEALTH_REQ_OPEN_HR    0x01
 #define HEALTH_REQ_CLOSE_HR   0x02
@@ -19,21 +21,27 @@
 
 /**
  * @defgroup health service response
+ * 
+ * 0x10~0x1F
  */
-#define HEALTH_RSP_UNKNOWN_CMD 0xFF
+#define HEALTH_RSP_UNKNOWN_CMD 0x10
 
 /**
  * @defgroup gbc service request
+ * 
+ * 0x21~0x2F
  */
-#define GBC_REQ_ERASE_FLASH 0x01
-#define GBC_REQ_SEND_DATA   0x02
+#define GBC_REQ_ERASE_FLASH 0x21
+#define GBC_REQ_SEND_DATA   0x22
 
 /**
  * @defgroup gbc service response
+ * 
+ * 0x30~0x3F
  */
-#define GBC_RSP_FLASH_EMPTY 0x51
-#define GBC_RSP_FLASH_ERROR 0x52
-#define GBC_RSP_UNKNOWN_CMD 0xFF
+#define GBC_RSP_UNKNOWN_CMD 0x30
+#define GBC_RSP_FLASH_EMPTY 0x31
+#define GBC_RSP_FLASH_ERROR 0x32
 
 typedef enum ble_notify_status {
     BLE_NOTIFY_CLOSED = 0,
